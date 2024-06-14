@@ -55,7 +55,6 @@ const Dashboard: React.FC = () => {
       details: 'Incorporate at least 30 minutes of exercise into your daily routine...',
       color: 'bg-red-500',
     },
-    // Add more recommendations here
   ];
 
   const [pings, setPings] = useState<Ping[]>([
@@ -231,7 +230,8 @@ const Dashboard: React.FC = () => {
     </table>
   </div>
 </div>
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Your Recent Recommendations</h2>
+          
+<h2 className="text-2xl font-bold mb-4 text-gray-800">Your Recent Recommendations</h2>
             <ul className="space-y-4">
               {recommendations.map((rec, index) => (
                 <li key={index} className={`${rec.color} bg-opacity-20 p-6 rounded-lg shadow text-${rec.color.split('-')[1]}-800`}>
