@@ -17,8 +17,10 @@ import PingForm from "../components/PingForm";
 import {Hospital as THospital } from "../types"; 
 const demoHospitals = [
   {
-    id: "1",
-    name: "Yusuf Dantsoho Memorial Hospital",
+    $id: "1",
+    hospitalName: "Yusuf Dantsoho Memorial Hospital",
+    hospitalNumber:1234,
+    email:'',
     address: "123 Health St, Kaduna, Nigeria",
     lat: 10.5272,
     lng: 7.4396,
@@ -27,7 +29,7 @@ const demoHospitals = [
     distance: 5,
   },
   {
-    id: "2",
+    $id: "2",
     name: "Ahmadu Bello University Teaching Hospital",
     address: "456 Care Blvd, Zaria, Nigeria",
     lat: 11.0801,
@@ -37,7 +39,7 @@ const demoHospitals = [
     distance: 10,
   },
   {
-    id: "3",
+    $id: "3",
     name: "Garki Hospital",
     address: "789 Wellness Ave, Abuja, Nigeria",
     lat: 9.0765,
@@ -47,7 +49,7 @@ const demoHospitals = [
     distance: 7,
   },
   {
-    id: "4",
+    $id: "4",
     name: "Lagos University Teaching Hospital",
     address: "1010 Medical Rd, Lagos, Nigeria",
     lat: 6.5244,
@@ -57,7 +59,7 @@ const demoHospitals = [
     distance: 15,
   },
   {
-    id: "5",
+    $id: "5",
     name: "Aminu Kano Teaching Hospital",
     address: "2020 Care Way, Kano, Nigeria",
     lat: 12.0022,
