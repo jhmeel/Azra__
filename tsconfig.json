@@ -15,5 +15,5 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["src", "src/client/tailwind.config.ts", "postcss.config.js"]
+  "include": ["src", "tailwind.config.ts"]
 }

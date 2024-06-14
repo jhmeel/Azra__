@@ -4,10 +4,9 @@ const config ={
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
+    "./src/client/**/*.{ts,tsx}",
+    "./src/client/src/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
-    "./constants/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
