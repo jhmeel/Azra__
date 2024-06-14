@@ -18,5 +18,6 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=client-builder /app/dist ./dist
 COPY --from=client-builder /app/src ./src
+COPY --from=client-builder /app/package.json ./
 EXPOSE 8000
 CMD ["npm", "run", "start"]
