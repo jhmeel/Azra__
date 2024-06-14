@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const socket = io("http://localhost:8000");
 
 interface PingChatTabProps {
-  selectedHospital: Hospital;
+  selectedHospital: Hospital|null;
   pingDetails: Ping;
 }
 
@@ -37,7 +37,7 @@ function PingChatTab({
   useEffect(() => {
     const loadChatHistory = async () => {
       const chatHistory = await localforage.getItem<Message[]>(
-        `chat_${pingDetails.fullname}:${selectedHospital.$id}`
+        `chat_${pingDetails.fullname}:${selectedHospital?.$id}`
       );
       if (chatHistory) {
         setMessages(chatHistory);
@@ -62,15 +62,15 @@ function PingChatTab({
     return () => {
       socket.off("message");
     };
-  }, [selectedHospital.$id, pingDetails]);
+  }, [selectedHospital?.$id, pingDetails]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     localforage.setItem(
-      `chat_${pingDetails.fullname}:${selectedHospital.$id}`,
+      `chat_${pingDetails.fullname}:${selectedHospital?.$id}`,
       messages
     );
-  }, [messages, selectedHospital.$id]);
+  }, [messages, selectedHospital?.$id]);
 
   const handleMessageChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value);
@@ -104,7 +104,7 @@ function PingChatTab({
       toast.success(newMessage.image);
       socket.emit("sendMessage", {
         ...newMessage,
-        hospitalId: selectedHospital.$id,
+        hospitalId: selectedHospital?.$id,
       });
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInputMessage("");
@@ -113,7 +113,7 @@ function PingChatTab({
   };
 
   const handleCall = () => {
-    window.location.href = "tel:" + selectedHospital.hospitalName;
+    window.location.href = "tel:" + selectedHospital?.hospitalName;
   };
 
   return (
@@ -129,7 +129,7 @@ function PingChatTab({
           <div className="flex items-center">
             <HospitalIcon size={40} className="text-blue-500 md:mr-2" />
             <h2 className="text-16 font-semibold">
-              {selectedHospital.hospitalName}
+              {selectedHospital?.hospitalName}
             </h2>
           </div>
           <button
@@ -145,7 +145,7 @@ function PingChatTab({
         <div className="text-center mb-4">
           <Typewriter
             options={{
-              strings: `Welcome to ${selectedHospital.hospitalName}! How can we assist you today?`,
+              strings: `Welcome to ${selectedHospital?.hospitalName}! How can we assist you today?`,
               autoStart: true,
               loop: false,
             }}

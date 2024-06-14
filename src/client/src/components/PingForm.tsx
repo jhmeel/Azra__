@@ -14,7 +14,7 @@ function PingForm({
   selectedHospital,
   onClose,
 }: {
-  selectedHospital: Hospital;
+  selectedHospital: Hospital|null;
   onClose: () => void;
 }) {
   const [fullName, setFullName] = useState<string>("");
@@ -69,7 +69,7 @@ function PingForm({
         fullname: fullName,
         complaints,
         image,
-        hospitalId: selectedHospital.$id,
+        hospitalId: selectedHospital?.$id,
       })
     );
     onClose();
@@ -86,7 +86,7 @@ function PingForm({
           <X size={20} />
         </button>
         <h2 className="text-xl font-semibold mb-6 text-center">
-          Ping-- {selectedHospital.hospitalName}
+          Ping-- {selectedHospital?.hospitalName}
         </h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
