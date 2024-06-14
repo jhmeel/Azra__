@@ -15,7 +15,7 @@ export type Hospital = {
   hospitalName: string;
   hospitalNumber: string;
   avatar: string;
-  status: boolean;
+  status: string;
   email: string;
   phone: string;
   coordinates: string;

@@ -22,7 +22,7 @@ const demoHospitals: THospital[] = [
     hospitalName: "Yusuf Dantsoho Memorial Hospital",
     hospitalNumber: "1234", 
     avatar: "https://example.com/hospital1.jpg",
-    status: true, 
+    status: "available", 
     email: '', 
     phone: '', 
     coordinates: "10.5272,7.4396", 
@@ -32,7 +32,7 @@ const demoHospitals: THospital[] = [
     hospitalName: "Ahmadu Bello University Teaching Hospital",
     hospitalNumber: "5678", 
     avatar: "https://example.com/hospital2.jpg",
-    status: false, 
+    status: 'unavailable', 
     email: '', 
     phone: '', 
     coordinates: "11.0801,7.7069", 
@@ -42,7 +42,7 @@ const demoHospitals: THospital[] = [
     hospitalName: "Garki Hospital",
     hospitalNumber: "91011", 
     avatar: "https://example.com/hospital3.jpg",
-    status: true, 
+    status: "available", 
     email: '', 
     phone: '', 
     coordinates: "9.0765,7.4983", 
@@ -52,7 +52,7 @@ const demoHospitals: THospital[] = [
     hospitalName: "Lagos University Teaching Hospital",
     hospitalNumber: "121314", 
     avatar: "https://example.com/hospital4.jpg",
-    status: false, 
+    status: 'unavailable', 
     email: '', 
     phone: '', 
     coordinates: "6.5244,3.3792", 
@@ -62,7 +62,7 @@ const demoHospitals: THospital[] = [
     hospitalName: "Aminu Kano Teaching Hospital",
     hospitalNumber: "151617", 
     avatar: "https://example.com/hospital5.jpg",
-    status: true, 
+    status: "available", 
     email: '', 
     phone: '', 
     coordinates: "12.0022,8.5167", 
@@ -453,21 +453,21 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredHospitals.map((hospital) => (
               <div
-                key={hospital.id}
+                key={hospital.$id}
                 className={`card rounded-lg shadow-lg p-6 reveal-bottom hover:shadow-2xl transition duration-300 bg-white relative`}
               >
                 <div className="flex items-center mb-4">
                   <img
                     src={hospital.avatar}
-                    alt={hospital.name}
+                    alt={hospital.hospitalName}
                     className="rounded-full w-12 h-12 mr-4"
                   />
                   <div>
                     <div className="font-bold text-lg mb-1 text-teal-500">
-                      {hospital.name}
+                      {hospital.hospitalName}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {hospital.address}
+                      {hospital.coordinates}
                     </div>
                     <div
                       className={`text-sm ${
@@ -488,7 +488,12 @@ const Home = () => {
                       ></span>
                     </div>
                     <div className="text-sm text-gray-500">
-                      Distance: {hospital.distance} km
+                      Distance: {getDistanceFromLatLonInKm(
+        userLocation.lat,
+        userLocation.lng,
+        parseFloat(hospital.coordinates.split(',')[0]),
+        parseFloat(hospital.coordinates.split(',')[1])
+      )} km
                     </div>
                   </div>
                 </div>
@@ -523,11 +528,11 @@ const Home = () => {
             />
             {hospitals.map((hospital) => (
               <Marker
-                key={hospital.id}
-                position={{ lat: hospital.lat, lng: hospital.lng }}
+                key={hospital.$id}
+                position={{ lat: hospital.coordinates.split(',')[0], lng: hospital.coordinates.split(',')[1] }}
                 icon={{ url: "https://example.com/hospital-marker.png" }}
                 label={{
-                  text: hospital.name,
+                  text: hospital.hospitalName,
                   color: "white",
                   fontSize: "12px",
                 }}
