@@ -1,42 +1,29 @@
-FROM node:20.12.2-alpine3.18 as base
+# Use an official Node.js image as the base image
+FROM node:latest
 
-# All deps stage
-FROM base as deps
-WORKDIR /app
-ADD package.json package-lock.json ./
-RUN npm ci
+WORKDIR .
 
-# Production only deps stage
-FROM base as production-deps
-WORKDIR /app
-ADD package.json package-lock.json .env ./
-RUN npm ci --omit=dev
+COPY package*.json ./
 
-# Install pino-pretty
-RUN npm install pino-pretty
+RUN npm install
 
-# Build stage
-FROM base as build
-WORKDIR /app
-COPY --from=deps /app/node_modules /app/node_modules
-ADD . .
-RUN node ace build
 
-# Production stage
 FROM base
-ARG PORT
-ENV TZ=UTC
-ENV HOST=0.0.0.0
-ENV LOG_LEVEL=info
-ENV APP_KEY=KsSHcSwIiCsxg2jQvoF7DPsnqzpnfiVd
-ENV NODE_ENV=production
-ENV DB_HOST=127.0.0.1
-ENV DB_PORT=5432
-ENV DB_USER=postgres
-ENV DB_DATABASE=pipeops
-ENV PORT $PORT
-WORKDIR /app
-COPY --from=production-deps /app/node_modules /app/node_modules
-COPY --from=build /app/build /app
-EXPOSE 8080
-CMD ["node", "./bin/server.js"]
+
+ENV APPWRITE_SECRET_KEY=54c01ae771791cca7b355b80c8286f3f8527f4c1b0bbd2e0aeeb4bc1a24b4ea76065ef9e2ad5df92862532daf9514800f95c8be469664a5d9fee25a404912191a5e9a3e3c22e16da3e954d7838022a849e22f47d096d3bdba6fc7bae982c48c2faae9fcda59226a2570c0b1f0d8ea9c4e1ed233c49eb200349f990fc2d9f4138
+ENV APPWRITE_BUCKET_ID=665f7a090031f1e3b1f0
+ENV APPWRITE_DATABASE_ID=Azra_Hospital_ID
+ENV HOSPITAL_COLLECTION_ID=Hospitals_Collection
+ENV PROJECT_ID=665a709d0033a1c40e0b
+ENV PINGS_COLLECTION_ID=6660da5a001b1e74ab91
+
+
+COPY . .
+
+RUN npm run build
+
+
+
+EXPOSE 8000
+
+CMD ["npm", "start"]
