@@ -1,22 +1,22 @@
-# Stage 1: Build the React app
-FROM node:18-alpine as build
-
-# Set working directory
+# Install dependencies only when needed
+FROM node:18-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
 
-COPY ..
+# Build the client code only
+FROM node:18-alpine AS client-builder
+WORKDIR /app
+COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+RUN npm run build
 
-RUN npm install 
-
-
-# Build the React app
-RUN npm run build 
-
-
-# Set environment variable to production
+# Production image, copy all the files and run Vite + Express
+FROM node:18-alpine AS runner
+WORKDIR /app
 ENV NODE_ENV=production
-# Expose port 8000
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=client-builder /app/dist ./dist
+COPY --from=client-builder /app/src ./src
 EXPOSE 8000
-
-# Start the server
-CMD ["tsx", "src/server/main.ts"]
+CMD ["npm", "run", "start"]
