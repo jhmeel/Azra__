@@ -40,13 +40,13 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Logging Middleware
 app.use((req, res, next) => {
-  if (req.url.includes("/api")) {
+  //if (req.url.includes("/api")) {
     logger.info(
       `NEW REQUEST: IP ${req.ip || req.connection.remoteAddress} => ${
         req.method
       } ${req.url}`
     );
-  }
+    //}
 
   next();
 });
