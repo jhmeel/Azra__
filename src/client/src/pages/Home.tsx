@@ -146,17 +146,30 @@ const Home = () => {
     setSelectedDistance(distance);
   };
 
+  const handleDistanceFilter = (distance: string) => {
+    setSelectedDistance(distance);
+  };
+  
   const filteredHospitals = hospitals.filter((hospital) => {
     const matchesSearch = hospital.hospitalName
       .toLowerCase()
-      .includes(searchQuery?.toLowerCase());
+      .includes(searchQuery.toLowerCase());
     const matchesStatus =
       selectedStatus === "" || hospital.status === selectedStatus;
-    const matchesDistance =
+  
+    // Calculate distance only if selected distance is provided
+    const withinDistance =
       selectedDistance === "" ||
-      hospital.distance <= parseInt(selectedDistance);
-    return matchesSearch && matchesStatus && matchesDistance;
+      getDistanceFromLatLonInKm(
+        userLocation.lat,
+        userLocation.lng,
+        parseFloat(hospital.lat),
+        parseFloat(hospital.lng)
+      ) <= parseFloat(selectedDistance);
+  
+    return matchesSearch && matchesStatus && withinDistance;
   });
+  
 
   return (
     <div className="landing-page">
