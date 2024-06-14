@@ -12,12 +12,24 @@ import logger from "./src/utils/logger.js";
 import Router from "./src/routes.js";
 import ChatController from "./src/chat.js";
 import { errorMiddleware } from "./src/middlewares/error.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+
+
+// Get the current file URL and convert it to a path
+const __filename = fileURLToPath(import.meta.url);
+// Get the directory path of the current file
+const __dirname = path.dirname(__filename);
+
+// Serve static client files from the dist directory
+const distDir = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(distDir));
 
 // Middleware
 
