@@ -82,8 +82,7 @@ export const Signup = catchAsync(async (req:Request, res:Response, next:NextFunc
 
 export const Login = catchAsync(async (req:Request, res:Response, next:NextFunction) => {
   const { email, password } = req.body;
-
-  // Validate input
+ 
   const { error } = loginSchema.validate(req.body);
   if (error) return next(new ErrorHandler(400, error.details[0].message));
 
