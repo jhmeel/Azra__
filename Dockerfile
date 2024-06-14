@@ -19,6 +19,9 @@ RUN npm run build --prefix client
 # Stage 2: Set up the server
 FROM node:18-alpine
 
+# Install tsx globally
+RUN npm install -g tsx
+
 # Set working directory
 WORKDIR /app
 
@@ -38,4 +41,4 @@ COPY --from=build /app/client/dist ./client/dist
 EXPOSE 8000
 
 # Start the server
-CMD ["node", "server/main.ts"]
+CMD ["tsx", "server/main.ts"]
