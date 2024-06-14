@@ -15,6 +15,7 @@ import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 import Footer from "../components/Footer";
 import PingForm from "../components/PingForm";
 import {Hospital as THospital } from "../types"; 
+import { getDistanceFromLatLonInKm } from "../utils/formatter";
 const demoHospitals: THospital[] = [
   {
     $id: "1",
@@ -142,10 +143,6 @@ const Home = () => {
     setSelectedStatus(status);
   };
 
-  const handleDistanceFilter = (distance:string) => {
-    setSelectedDistance(distance);
-  };
-
   const handleDistanceFilter = (distance: string) => {
     setSelectedDistance(distance);
   };
@@ -163,8 +160,8 @@ const Home = () => {
       getDistanceFromLatLonInKm(
         userLocation.lat,
         userLocation.lng,
-        parseFloat(hospital.lat),
-        parseFloat(hospital.lng)
+        parseFloat(hospital.coordinates.split(',')[0]),
+        parseFloat(hospital.coordinates.split(',')[1])
       ) <= parseFloat(selectedDistance);
   
     return matchesSearch && matchesStatus && withinDistance;
