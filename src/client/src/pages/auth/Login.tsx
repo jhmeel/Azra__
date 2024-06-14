@@ -31,7 +31,7 @@ const LoginForm = () => {
     }
   }, [admin, dispatch, error, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch<any>(login({ email, password }));
   };

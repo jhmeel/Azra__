@@ -14,58 +14,58 @@ import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 
 import Footer from "../components/Footer";
 import PingForm from "../components/PingForm";
-import {Hospital as THospital } from "../types"; 
+import { Hospital as THospital } from "../types";
 import { getDistanceFromLatLonInKm } from "../utils/formatter";
 const demoHospitals: THospital[] = [
   {
     $id: "1",
     hospitalName: "Yusuf Dantsoho Memorial Hospital",
-    hospitalNumber: "1234", 
+    hospitalNumber: "1234",
     avatar: "https://example.com/hospital1.jpg",
-    status: "available", 
-    email: '', 
-    phone: '', 
-    coordinates: "10.5272,7.4396", 
+    status: "available",
+    email: "",
+    phone: "",
+    coordinates: "10.5272,7.4396",
   },
   {
     $id: "2",
     hospitalName: "Ahmadu Bello University Teaching Hospital",
-    hospitalNumber: "5678", 
+    hospitalNumber: "5678",
     avatar: "https://example.com/hospital2.jpg",
-    status: 'unavailable', 
-    email: '', 
-    phone: '', 
-    coordinates: "11.0801,7.7069", 
+    status: "unavailable",
+    email: "",
+    phone: "",
+    coordinates: "11.0801,7.7069",
   },
   {
     $id: "3",
     hospitalName: "Garki Hospital",
-    hospitalNumber: "91011", 
+    hospitalNumber: "91011",
     avatar: "https://example.com/hospital3.jpg",
-    status: "available", 
-    email: '', 
-    phone: '', 
-    coordinates: "9.0765,7.4983", 
+    status: "available",
+    email: "",
+    phone: "",
+    coordinates: "9.0765,7.4983",
   },
   {
     $id: "4",
     hospitalName: "Lagos University Teaching Hospital",
-    hospitalNumber: "121314", 
+    hospitalNumber: "121314",
     avatar: "https://example.com/hospital4.jpg",
-    status: 'unavailable', 
-    email: '', 
-    phone: '', 
-    coordinates: "6.5244,3.3792", 
+    status: "unavailable",
+    email: "",
+    phone: "",
+    coordinates: "6.5244,3.3792",
   },
   {
     $id: "5",
     hospitalName: "Aminu Kano Teaching Hospital",
-    hospitalNumber: "151617", 
+    hospitalNumber: "151617",
     avatar: "https://example.com/hospital5.jpg",
-    status: "available", 
-    email: '', 
-    phone: '', 
-    coordinates: "12.0022,8.5167", 
+    status: "available",
+    email: "",
+    phone: "",
+    coordinates: "12.0022,8.5167",
   },
 ];
 
@@ -73,16 +73,18 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hospitals, setHospitals] = useState<THospital[]>([]);
   const [userLocation, setUserLocation] = useState({
-    lat: 0, 
-    lng: 0, 
+    lat: 0,
+    lng: 0,
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("available");
   const [selectedDistance, setSelectedDistance] = useState("5");
   const [pingFormActive, setPingormActive] = useState<boolean>(false);
-  const [selectedHospial, setSelectedHospital] = useState<THospital|null>(null);
- 
-  const handlePing = (hospital:THospital) => {
+  const [selectedHospial, setSelectedHospital] = useState<THospital | null>(
+    null
+  );
+
+  const handlePing = (hospital: THospital) => {
     setPingormActive(!pingFormActive);
     setSelectedHospital(hospital);
   };
@@ -91,7 +93,6 @@ const Home = () => {
     googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY",
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -135,38 +136,46 @@ const Home = () => {
     );
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleStatusFilter = (status:string) => {
+  const handleStatusFilter = (status: string) => {
     setSelectedStatus(status);
   };
 
   const handleDistanceFilter = (distance: string) => {
     setSelectedDistance(distance);
   };
-  
+
   const filteredHospitals = hospitals.filter((hospital) => {
     const matchesSearch = hospital.hospitalName
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchesStatus =
       selectedStatus === "" || hospital.status === selectedStatus;
-  
+
     // Calculate distance only if selected distance is provided
     const withinDistance =
       selectedDistance === "" ||
       getDistanceFromLatLonInKm(
         userLocation.lat,
         userLocation.lng,
-        parseFloat(hospital.coordinates.split(',')[0]),
-        parseFloat(hospital.coordinates.split(',')[1])
+        parseFloat(hospital.coordinates.split(",")[0]),
+        parseFloat(hospital.coordinates.split(",")[1])
       ) <= parseFloat(selectedDistance);
-  
+
     return matchesSearch && matchesStatus && withinDistance;
   });
-  
+
+  const svgIcon = encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin">
+      <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+  `);
+
+  const pinIconUrl = `data:image/svg+xml,${svgIcon}`;
 
   return (
     <div className="landing-page">
@@ -488,12 +497,14 @@ const Home = () => {
                       ></span>
                     </div>
                     <div className="text-sm text-gray-500">
-                      Distance: {getDistanceFromLatLonInKm(
-        userLocation.lat,
-        userLocation.lng,
-        parseFloat(hospital.coordinates.split(',')[0]),
-        parseFloat(hospital.coordinates.split(',')[1])
-      )} km
+                      Distance:{" "}
+                      {getDistanceFromLatLonInKm(
+                        userLocation.lat,
+                        userLocation.lng,
+                        parseFloat(hospital.coordinates.split(",")[0]),
+                        parseFloat(hospital.coordinates.split(",")[1])
+                      )}{" "}
+                      km
                     </div>
                   </div>
                 </div>
@@ -529,8 +540,11 @@ const Home = () => {
             {hospitals.map((hospital) => (
               <Marker
                 key={hospital.$id}
-                position={{ lat: hospital.coordinates.split(',')[0], lng: hospital.coordinates.split(',')[1] }}
-                icon={{ url: "https://example.com/hospital-marker.png" }}
+                position={{
+                  lat: hospital.coordinates.split(",")[0],
+                  lng: hospital.coordinates.split(",")[1],
+                }}
+                icon={{ url: pinIconUrl }}
                 label={{
                   text: hospital.hospitalName,
                   color: "white",

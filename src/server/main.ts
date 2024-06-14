@@ -10,7 +10,7 @@ import helmet from "helmet";
 import Config from "./src/config/config.js";
 import logger from "./src/utils/logger.js";
 import Router from "./src/routes.js";
-import ChatController from "./src/chat.js"; 
+import ChatController from "./src/chat.js";
 import { errorMiddleware } from "./src/middlewares/error.js";
 
 dotenv.config();
@@ -28,11 +28,14 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Logging Middleware
 app.use((req, res, next) => {
-  logger.info(
-    `NEW REQUEST: IP ${req.ip || req.connection.remoteAddress} => ${
-      req.method
-    } ${req.url}`
-  );
+  if (req.url.includes("/api")) {
+    logger.info(
+      `NEW REQUEST: IP ${req.ip || req.connection.remoteAddress} => ${
+        req.method
+      } ${req.url}`
+    );
+  }
+
   next();
 });
 
