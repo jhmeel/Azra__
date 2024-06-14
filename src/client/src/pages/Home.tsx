@@ -15,58 +15,56 @@ import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 import Footer from "../components/Footer";
 import PingForm from "../components/PingForm";
 import {Hospital as THospital } from "../types"; 
-const demoHospitals = [
+const demoHospitals: THospital[] = [
   {
     $id: "1",
     hospitalName: "Yusuf Dantsoho Memorial Hospital",
-    hospitalNumber:1234,
-    email:'',
-    address: "123 Health St, Kaduna, Nigeria",
-    lat: 10.5272,
-    lng: 7.4396,
+    hospitalNumber: "1234", 
     avatar: "https://example.com/hospital1.jpg",
-    status: "available",
-    distance: 5,
+    status: true, 
+    email: '', 
+    phone: '', 
+    coordinates: "10.5272,7.4396", 
   },
   {
     $id: "2",
-    name: "Ahmadu Bello University Teaching Hospital",
-    address: "456 Care Blvd, Zaria, Nigeria",
-    lat: 11.0801,
-    lng: 7.7069,
+    hospitalName: "Ahmadu Bello University Teaching Hospital",
+    hospitalNumber: "5678", 
     avatar: "https://example.com/hospital2.jpg",
-    status: "not-available",
-    distance: 10,
+    status: false, 
+    email: '', 
+    phone: '', 
+    coordinates: "11.0801,7.7069", 
   },
   {
     $id: "3",
-    name: "Garki Hospital",
-    address: "789 Wellness Ave, Abuja, Nigeria",
-    lat: 9.0765,
-    lng: 7.4983,
+    hospitalName: "Garki Hospital",
+    hospitalNumber: "91011", 
     avatar: "https://example.com/hospital3.jpg",
-    status: "available",
-    distance: 7,
+    status: true, 
+    email: '', 
+    phone: '', 
+    coordinates: "9.0765,7.4983", 
   },
   {
     $id: "4",
-    name: "Lagos University Teaching Hospital",
-    address: "1010 Medical Rd, Lagos, Nigeria",
-    lat: 6.5244,
-    lng: 3.3792,
+    hospitalName: "Lagos University Teaching Hospital",
+    hospitalNumber: "121314", 
     avatar: "https://example.com/hospital4.jpg",
-    status: "not-available",
-    distance: 15,
+    status: false, 
+    email: '', 
+    phone: '', 
+    coordinates: "6.5244,3.3792", 
   },
   {
     $id: "5",
-    name: "Aminu Kano Teaching Hospital",
-    address: "2020 Care Way, Kano, Nigeria",
-    lat: 12.0022,
-    lng: 8.5167,
+    hospitalName: "Aminu Kano Teaching Hospital",
+    hospitalNumber: "151617", 
     avatar: "https://example.com/hospital5.jpg",
-    status: "available",
-    distance: 3,
+    status: true, 
+    email: '', 
+    phone: '', 
+    coordinates: "12.0022,8.5167", 
   },
 ];
 
@@ -149,9 +147,9 @@ const Home = () => {
   };
 
   const filteredHospitals = hospitals.filter((hospital) => {
-    const matchesSearch = hospital.name
+    const matchesSearch = hospital.hospitalName
       .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+      .includes(searchQuery?.toLowerCase());
     const matchesStatus =
       selectedStatus === "" || hospital.status === selectedStatus;
     const matchesDistance =
