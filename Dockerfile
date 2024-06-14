@@ -1,48 +1,41 @@
-# Stage 1: Build the Vite application
-FROM node:18 AS builder
+# Stage 1: Build the React app
+FROM node:18-alpine as build
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json into the container
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json
+COPY package.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
-COPY . .
+# Copy the client files
+COPY client ./client
 
-# Build the Vite application
-RUN npm run build
+# Build the React app
+RUN npm run build --prefix client
 
-# Stage 2: Compile TypeScript and setup the server
-FROM node:18
+# Stage 2: Set up the server
+FROM node:18-alpine
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json into the container
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json
+COPY package.json ./
 
-# Install only production dependencies
-RUN npm install --only=production
+# Install dependencies
+RUN npm install
 
-# Copy the built files from the builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/server ./server
+# Copy the server files
+COPY server ./server
 
-# Install TypeScript globally to compile the server code
-RUN npm install -g typescript
+# Copy the built React app from the previous stage
+COPY --from=build /app/client/dist ./client/dist
 
-# Compile the TypeScript server code
-RUN tsc -p server/tsconfig.json
-
+# Expose port 8000
 EXPOSE 8000
 
-# Set environment variable to production
-ENV NODE_ENV=production
-
-# Run the application
-CMD ["node", "server/main.js"]
+# Start the server
+CMD ["node", "server/main.ts"]

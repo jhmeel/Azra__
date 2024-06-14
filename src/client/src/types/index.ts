@@ -5,7 +5,7 @@ export type SignupFormData = {
   phone: string;
   confirmPassword: string;
   hospitalName: string;
-  hospitalNumber: string;
+  hospitalNumber: string;    
   coordinates: { lat: number; lng: number };
   acceptTerms: boolean;
 };

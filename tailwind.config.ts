@@ -3,10 +3,9 @@ import type { Config } from "tailwindcss";
 const config ={
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./src/client/**/*.{ts,tsx}",
-    "./src/client/src/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "/src/client/src/**/*.{ts,tsx}",
+    "/src/components/src/**/*.{ts,tsx}",
+    "/src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -16,7 +15,7 @@ const config ={
       screens: {
         "2xl": "1400px",
       },
-    },
+    },  
 }, extend: {
   fontFamily: {
     sans: ['Roboto', 'sans-serif'],
