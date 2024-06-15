@@ -1,5 +1,15 @@
 import { useEffect } from "react";
+import styled from "styled-components";
 import { cardio } from "ldrs";
+
+const Section = styled.section`
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(to right, #38b2ac, #2f855a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 
 const MainLoader = () => {
   useEffect(() => {
@@ -7,9 +17,9 @@ const MainLoader = () => {
   }, []);
 
   return (
-    <section className="w-full h-screen bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center">
+    <Section>
       <l-cardio size="50" stroke="4" speed="2" color="white"></l-cardio>
-    </section>
+    </Section>
   );
 };
 

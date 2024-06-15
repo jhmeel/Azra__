@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import styled from "styled-components";
 import { Camera, LoaderIcon, X } from "lucide-react";
 import { RootState } from "../store.js";
 import { useDispatch } from "react-redux";
@@ -14,7 +15,7 @@ function PingForm({
   selectedHospital,
   onClose,
 }: {
-  selectedHospital: Hospital|null;
+  selectedHospital: Hospital | null;
   onClose: () => void;
 }) {
   const [fullName, setFullName] = useState<string>("");
@@ -26,6 +27,7 @@ function PingForm({
     (state: RootState) => state.ping
   );
   const dispatch = useDispatch();
+
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -37,7 +39,7 @@ function PingForm({
       dispatch({ type: NEW_PING_RESET });
       onClose();
     }
-  }, [dispatch, error, message]);
+  }, [dispatch, error, message, onClose]);
 
   const handleFullNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFullName(e.target.value);
@@ -77,106 +79,210 @@ function PingForm({
   };
 
   return (
-    <div className="fixed p-2 top-0 left-0 w-full h-full flex justify-center items-center bg-opacity-50 bg-gray-800 bg-blur">
-      <div className="max-w-md w-full px-4 py-8 bg-white shadow-md rounded-md relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-        >
+    <Overlay>
+      <FormContainer>
+        <CloseButton onClick={onClose}>
           <X size={20} />
-        </button>
-        <h2 className="text-xl font-semibold mb-6 text-center">
-          Ping-- {selectedHospital?.hospitalName}
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="fullName" className="block mb-1 font-medium">
-              Full Name
-            </label>
-            <input
+        </CloseButton>
+        <Title>Ping-- {selectedHospital?.hospitalName}</Title>
+        <Form onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input
               type="text"
               id="fullName"
               value={fullName}
               onChange={handleFullNameChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
               placeholder="Enter your full name"
               required
             />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="complaints" className="block mb-1 font-medium">
-              Complaints
-            </label>
-            <textarea
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="complaints">Complaints</Label>
+            <TextArea
               id="complaints"
               value={complaints}
               onChange={handleComplaintsChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
               rows={4}
               placeholder="Enter your complaints"
               required
-            ></textarea>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="image" className="block mb-1 font-medium">
-              Upload Image
-            </label>
-            <input
+            ></TextArea>
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="image">Upload Image</Label>
+            <FileInput
               type="file"
               id="image"
               onChange={handleImageChange}
               accept="image/*"
-              className="hidden"
             />
             {image ? (
-              <div className="flex items-center justify-between border border-gray-300 rounded-md p-2">
-                <img
-                  src={image}
-                  alt="Uploaded"
-                  className="w-12 h-12 mr-2 object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="text-red-500 hover:text-red-600 focus:outline-none"
-                >
+              <ImagePreview>
+                <PreviewImage src={image} alt="Uploaded" />
+                <RemoveImageButton onClick={handleRemoveImage}>
                   <X size={16} />
-                </button>
-              </div>
+                </RemoveImageButton>
+              </ImagePreview>
             ) : (
-              <label
-                htmlFor="image"
-                className="flex items-center cursor-pointer text-indigo-500 hover:text-indigo-600"
-              >
+              <FileLabel htmlFor="image">
                 <Camera className="mr-2" size={20} />
                 Upload Image
-              </label>
+              </FileLabel>
             )}
-          </div>
-          <div className="text-center">
-            <button
-              disabled={loading}
-              type="submit"
-              className={`w-full px-4 py-2 flex align-middle justify-center gap-5 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                loading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600"
-              }`}
-            >
-              {loading && <LoaderIcon size={20} className="animate-spin" />}
-              {!loading && "Submit"}
-            </button>
-          </div>
-        </form>
-      </div>
+          </FormGroup>
+          <SubmitButton disabled={loading} type="submit">
+            {loading && <LoaderIcon size={20} className="animate-spin" />}
+            {!loading && "Submit"}
+          </SubmitButton>
+        </Form>
+      </FormContainer>
       {showChat && (
         <PingChatRoom
           pingDetails={{ image, complaints, fullname: fullName }}
           selectedHospital={selectedHospital}
         />
       )}
-    </div>
+    </Overlay>
   );
 }
 
 export default PingForm;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(31, 41, 55, 0.5);
+  padding: 8px;
+`;
+
+const FormContainer = styled.div`
+  max-width: 400px;
+  width: 100%;
+  padding: 32px;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #4b5563;
+  &:hover {
+    color: #1f2937;
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+const Title = styled.h2`
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+`;
+
+const Form = styled.form``;
+
+const FormGroup = styled.div`
+  margin-bottom: 16px;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
+const FileLabel = styled.label`
+  display: flex;
+  align-items: center;
+  color: #6366f1;
+  cursor: pointer;
+  &:hover {
+    color: #4f46e5;
+  }
+`;
+
+const ImagePreview = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+`;
+
+const PreviewImage = styled.img`
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+`;
+
+const RemoveImageButton = styled.button`
+  color: #ef4444;
+  &:hover {
+    color: #dc2626;
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 12px;
+  color: white;
+  background-color: #3b82f6;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  &:hover {
+    background-color: #2563eb;
+  }
+  &:focus {
+    outline: none;
+  }
+  &:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+  }
+`;

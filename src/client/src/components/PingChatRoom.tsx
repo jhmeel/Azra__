@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, ChangeEvent, FormEvent } from "react";
+import styled from "styled-components";
 import io from "socket.io-client";
 import localforage from "localforage";
 import Typewriter from "typewriter-effect";
@@ -15,7 +16,7 @@ import { toast } from "sonner";
 const socket = io("http://localhost:8000");
 
 interface PingChatTabProps {
-  selectedHospital: Hospital|null;
+  selectedHospital: Hospital | null;
   pingDetails: Ping;
 }
 
@@ -25,10 +26,193 @@ type Message = {
   image?: string;
 };
 
-function PingChatTab({
-  selectedHospital,
-  pingDetails,
-}: PingChatTabProps) {
+const Container = styled.div`
+  position: fixed;
+  top: 10px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(31, 41, 55, 0.6);
+  padding: 8px;
+`;
+
+const ChatContainer = styled.div`
+  max-width: 768px;
+  width: 100%;
+  padding: 16px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #4b5563;
+  &:hover {
+    color: #1f2937;
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px;
+`;
+
+const HospitalInfo = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const HospitalName = styled.h2`
+  font-size: 16px;
+  font-weight: 600;
+  margin-left: 8px;
+`;
+
+const CallButton = styled.button`
+  color: #3b82f6;
+  &:hover {
+    color: #2563eb;
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+const MessagesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-height: 384px;
+  overflow-y: auto;
+`;
+
+const MessageItem = styled.div<{ isPatient: boolean }>`
+  align-self: ${(props) => (props.isPatient ? "flex-end" : "flex-start")};
+  background-color: ${(props) => (props.isPatient ? "#BFDBFE" : "#F3F4F6")};
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 320px;
+  word-break: break-word;
+`;
+
+const MessageImage = styled.img`
+  width: 100%;
+  height: auto;
+`;
+
+const MessageText = styled.div`
+  padding: 16px;
+`;
+
+const Form = styled.form`
+  max-width: 768px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 16px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+  }
+  gap: 8px;
+`;
+
+const TextInput = styled.input`
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
+const FileLabel = styled.label`
+  display: flex;
+  align-items: center;
+  color: #6366f1;
+  cursor: pointer;
+  &:hover {
+    color: #4f46e5;
+  }
+`;
+
+const ImagePreview = styled.div`
+  position: relative;
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+`;
+
+const PreviewImage = styled.img`
+  max-width: 320px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const RemoveImageButton = styled.button`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 50%;
+  padding: 4px;
+  &:focus {
+    outline: none;
+  }
+`;
+
+const SendButton = styled.button`
+  margin-top: 8px;
+  @media (min-width: 768px) {
+    margin-top: 0;
+    margin-left: 8px;
+  }
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 4px;
+  &:hover {
+    background-color: #2563eb;
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [image, setImage] = useState<string | undefined>(undefined);
@@ -117,31 +301,23 @@ function PingChatTab({
   };
 
   return (
-    <div className="fixed top-10 p-2 left-0 w-full h-full flex flex-col justify-center items-center bg-opacity-60 bg-gray-800">
-      <div className="max-w-3xl w-full px-4 bg-white shadow-md rounded-md relative">
-        <button
-          onClick={()=>{}}
-          className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-        >
+    <Container>
+      <ChatContainer>
+        <CloseButton onClick={() => {}}>
           <XIcon size={20} />
-        </button>
-        <div className="flex flex-col md:flex-row items-center justify-between mb-6 p-4">
-          <div className="flex items-center">
+        </CloseButton>
+        <Header>
+          <HospitalInfo>
             <HospitalIcon size={40} className="text-blue-500 md:mr-2" />
-            <h2 className="text-16 font-semibold">
-              {selectedHospital?.hospitalName}
-            </h2>
-          </div>
-          <button
-            onClick={handleCall}
-            className="text-blue-500 hover:text-blue-600 focus:outline-none"
-          >
+            <HospitalName>{selectedHospital?.hospitalName}</HospitalName>
+          </HospitalInfo>
+          <CallButton onClick={handleCall}>
             <Phone
               className="border mt-10 p-2 rounded cursor-pointer bg-white shadow-sm"
               size={35}
             />
-          </button>
-        </div>
+          </CallButton>
+        </Header>
         <div className="text-center mb-4">
           <Typewriter
             options={{
@@ -151,79 +327,53 @@ function PingChatTab({
             }}
           />
         </div>
-        <div className="flex flex-col space-y-4 px-4 max-h-96 overflow-y-auto">
+        <MessagesContainer>
           {messages.map((message, index) => (
-            <div
+            <MessageItem
               key={index}
-              className={`rounded-lg shadow-md ${
-                message.sender.startsWith("patient")
-                  ? "self-end bg-blue-100"
-                  : "self-start bg-gray-100"
-              } max-w-xs break-words`}
+              isPatient={message.sender.startsWith("patient")}
             >
               {message.image && (
-                <img
-                  src={message.image}
-                  alt="Uploaded"
-                  className="w-full h-auto"
-                />
+                <MessageImage src={message.image} alt="Uploaded" />
               )}
-              <div className="p-4">{message.text}</div>
-            </div>
+              <MessageText>{message.text}</MessageText>
+            </MessageItem>
           ))}
           <div ref={messagesEndRef} />
-        </div>
-      </div>
-      <form
-        onSubmit={handleSendMessage}
-        className="max-w-3xl w-full mb-5 bg-white shadow-md rounded-md relative mt-4 p-4"
-      >
-        <div className="flex flex-col md:flex-row items-center">
-          <input
+        </MessagesContainer>
+      </ChatContainer>
+      <Form onSubmit={handleSendMessage}>
+        <FormGroup>
+          <TextInput
             type="text"
             value={inputMessage}
             onChange={handleMessageChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
             placeholder="Type your message..."
           />
-          <input
+          <FileInput
             type="file"
             id="image"
             onChange={handleImageChange}
             accept="image/*"
-            className="hidden"
           />
           {!image ? (
-            <label
-              htmlFor="image"
-              className="flex items-center cursor-pointer text-indigo-500 hover:text-indigo-600 ml-2"
-            >
+            <FileLabel htmlFor="image">
               <UploadIcon size={24} />
-            </label>
+            </FileLabel>
           ) : (
-            <div className="relative mt-2 flex justify-center">
-              <img
-                src={image}
-                alt="Selected"
-                className="max-w-xs rounded-md shadow-md"
-              />
-              <button
-                onClick={handleRemoveImage}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 focus:outline-none"
-              >
+            <ImagePreview>
+              <PreviewImage src={image} alt="Selected" />
+              <RemoveImageButton onClick={handleRemoveImage}>
                 <XIcon size={16} />
-              </button>
-            </div>
+              </RemoveImageButton>
+            </ImagePreview>
           )}
-          <button
-            type="submit"
-            className="md:ml-2 mt-2 md:mt-0 px-4 py-2 bg-blue-500 text-white rounded-md hover focus"
-          >
+          <SendButton type="submit">
             <SendIcon size={16} />
-          </button>
-        </div>
-      </form>
-    </div>
+          </SendButton>
+        </FormGroup>
+      </Form>
+    </Container>
   );
 }
 

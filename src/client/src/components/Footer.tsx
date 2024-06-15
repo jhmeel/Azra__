@@ -1,35 +1,60 @@
 import { Facebook, Twitter, Instagram } from "lucide-react";
+import styled from "styled-components";
+
+const FooterWrapper = styled.footer`
+  background-color: #2d3748;
+  padding: 1rem;
+  text-align: center;
+  color: white;
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+`;
+
+const IconLink = styled.a`
+  .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #d1d5db;
+    transition: color 0.3s;
+
+    &:hover {
+      color: white;
+    }
+  }
+`;
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-800 py-4 text-center text-white">
-      <div className="flex justify-center space-x-4">
-        <a
+    <FooterWrapper>
+      <IconWrapper>
+        <IconLink
           href="https://www.facebook.com/healthhub"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Facebook className="w-6 h-6 text-gray-300 hover:text-white" />
-        </a>
-        <a
+          <Facebook className="icon" />
+        </IconLink>
+        <IconLink
           href="https://twitter.com/healthhub"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Twitter className="w-6 h-6 text-gray-300 hover:text-white" />
-        </a>
-        <a
+          <Twitter className="icon" />
+        </IconLink>
+        <IconLink
           href="https://www.instagram.com/healthhub"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Instagram className="w-6 h-6 text-gray-300 hover:text-white" />
-        </a>
-      </div>
-      <p className="mt-4">
-        &copy; {new Date().getFullYear()} Azra. All rights reserved.
-      </p>
-    </footer>
+          <Instagram className="icon" />
+        </IconLink>
+      </IconWrapper>
+      <p>&copy; {new Date().getFullYear()} Azra. All rights reserved.</p>
+    </FooterWrapper>
   );
 };
 

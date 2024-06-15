@@ -1,20 +1,248 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useCallback, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import signupImage from "../../assets/OnlineDoctor-bro .svg";
-import { Countries } from "../../utils/formatter";
+import { Countries} from "../../utils/formatter";
 import { Link, useNavigate } from "react-router-dom";
 import { SignupFormData } from "../../types";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
-import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { CLEAR_ERRORS } from "../../constants";
 import { signup } from "../../actions";
 import { LoaderIcon } from "lucide-react";
+import styled from "styled-components";
 
-const SignupForm: React.FC = () => {
+// Styled components
+const Container = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  padding: 1rem;
+`;
+
+const FormContainer = styled.div`
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 80rem;
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+  }
+`;
+
+const ImageWrapper = styled.div`
+  width: 100%;
+  margin-bottom: 2rem;
+
+  @media (min-width: 1024px) {
+    width: 50%;
+    margin-bottom: 0;
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+`;
+
+const FormWrapper = styled.div`
+  width: 100%;
+  padding-left: 2rem;
+
+  @media (min-width: 1024px) {
+    width: 50%;
+  }
+`;
+
+const Title = styled.h2`
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+`;
+
+const Message = styled.p<{ success: boolean }>`
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  ${({ success }) =>
+    success
+      ? `background-color: #d1fae5; color: #065f46;`
+      : `background-color: #fee2e2; color: #991b1b;`}
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #4b5563;
+`;
+
+const Input = styled.input<{ error?: boolean }>`
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid ${({ error }) => (error ? "#ef4444" : "#d1d5db")};
+  border-radius: 0.375rem;
+  outline: none;
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+`;
+
+const ErrorMessage = styled.p`
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #ef4444;
+`;
+
+const PhoneInputWrapper = styled.div`
+  display: flex;
+`;
+
+const CountrySelect = styled.select`
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-right: none;
+  border-radius: 0.375rem 0 0 0.375rem;
+  outline: none;
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+`;
+
+const PhoneInput = styled(Input)`
+  border-radius: 0 0.375rem 0.375rem 0;
+`;
+
+const LocationButton = styled.button`
+  width: 100%;
+  padding: 0.5rem 1rem;
+  color: black;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  outline: none;
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+`;
+
+const SubmitButton = styled.button<{ loading: boolean }>`
+  width: 100%;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: white;
+  border-radius: 0.375rem;
+  background-color: ${({ loading }) => (loading ? "#60a5fa" : "#3b82f6")};
+  cursor: ${({ loading }) => (loading ? "not-allowed" : "pointer")};
+  &:hover {
+    background-color: ${({ loading }) => (loading ? "#60a5fa" : "#2563eb")};
+  }
+`;
+
+const TermsWrapper = styled.div`
+  display: flex;
+  align-items: center;
+
+  input {
+    margin-right: 0.5rem;
+  }
+
+  a {
+    color: #3b82f6;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const LoginText = styled.p`
+  text-align: center;
+  margin-top: 1rem;
+  color: #4b5563;
+
+  a {
+    color: #3b82f6;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const Drawer = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+`;
+
+const DrawerContent = styled.div`
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 40rem;
+  height: 75vh;
+  @media (min-width: 768px) {
+    height: auto;
+  }
+`;
+
+const DrawerHeader = styled.div`
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #d1d5db;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  button {
+    color: #6b7280;
+    &:hover {
+      color: #374151;
+    }
+  }
+`;
+
+const DrawerBody = styled.div`
+  padding: 1rem;
+  height: 100%;
+`;
+
+// Define the props for the SignupForm component
+interface SignupFormProps {
+  onSubmit: SubmitHandler<SignupFormData>;
+}
+
+// SignupForm Component
+const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
   const {
     register,
     handleSubmit,
@@ -22,17 +250,18 @@ const SignupForm: React.FC = () => {
     formState: { errors },
   } = useForm<SignupFormData>();
   const [message, setMessage] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState(Countries[0]);
+  const [selectedCountry, setSelectedCountry] = useState<any>(Countries[0]);
   const { admin, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -43,15 +272,6 @@ const SignupForm: React.FC = () => {
       navigate("/dashboard");
     }
   }, [admin, dispatch, error, navigate]);
-  const onSubmit = (data: SignupFormData) => {
-    if (data.password !== data.confirmPassword) {
-      setMessage("Passwords do not match");
-      return;
-    }
-    dispatch<any>(signup(data));
-
-    console.log(data);
-  };
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
@@ -65,288 +285,213 @@ const SignupForm: React.FC = () => {
     [setValue]
   );
 
+  const handleRemoveLocation = () => {
+    setSelectedLocation(null);
+    setDrawerOpen(false);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 lg:p-4">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full lg:max-w-6xl flex flex-col lg:flex-row">
-        <div className="lg:w-1/2 mb-8 lg:mb-0">
-          <img
-            src={signupImage}
-            alt="Signup Illustration"
-            className="w-full h-auto"
-          />
-        </div>
-        <div className="lg:w-1/2 lg:pl-8">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Sign Up</h2>
+    <Container>
+      <FormContainer>
+        <ImageWrapper>
+          <img src={signupImage} alt="Signup Illustration" />
+        </ImageWrapper>
+        <FormWrapper>
+          <Title>Sign Up</Title>
           {message && (
-            <p
-              className={`mb-4 p-4 rounded ${
-                message.includes("success")
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
+            <Message success={message.includes("success")}>
               {message}
-            </p>
+            </Message>
           )}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <Form onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label
-                htmlFor="hospitalName"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Hospital Name
-              </label>
-              <input
-                id="hospitalName"
-                type="text"
-                {...register("hospitalName", {
-                  required: "Hospital name is required",
-                })}
-                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.hospitalName ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.hospitalName && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.hospitalName.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="hospitalNumber"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Hospital Number
-              </label>
-              <input
-                id="hospitalNumber"
-                type="text"
-                {...register("hospitalNumber", {
-                  required: "Hospital number is required",
-                })}
-                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.hospitalNumber ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.hospitalNumber && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.hospitalNumber.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="email"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                {...register("email", { required: "Email is required" })}
-                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.email && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="phone"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Phone Number
-              </label>
-              <div className="flex">
-                <select
-                  value={selectedCountry.code}
-                  onChange={(e) =>
-                    setSelectedCountry(
-                      Countries.find((c) => c.code === e.target.value)!
-                    )
-                  }
-                  className="custom-scrollbar px-4 py-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
-                >
-                  {Countries.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.domain}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  id="phone"
-                  type="tel"
-                  {...register("phone", {
-                    required: "Phone number is required",
-                  })}
-                  className={`w-full px-4 py-2 border rounded-r focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.phone ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-              </div>
-              {errors.phone && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.phone.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                {...register("password", { required: "Password is required" })}
-                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.password && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                {...register("confirmPassword", {
-                  required: "Please confirm your password",
-                })}
-                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <p className="mb-2 font-medium text-gray-700">Location</p>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(true)}
-                className="w-full px-4 py-2 text-black rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Select Hospital Location
-              </button>
-              {selectedLocation && (
-                <p className="mt-2 text-sm text-gray-600">
-                  Selected Location: {selectedLocation.lat},{" "}
-                  {selectedLocation.lng}
-                </p>
-              )}
-            </div>
-            <button
-              disabled={loading}
-              type="submit"
-              className={`w-full px-4 py-2 flex align-middle justify-center gap-5 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                loading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600"
-              }`}
-            >
-              {loading && <LoaderIcon size={20} className="animate-spin" />}
-              {!loading && "Sign Up"}
-            </button>
-            <p className="text-gray-600 text-center mt-4">
-              Already have an account?{" "}
-              <Link to="/login" className="text-blue-500 hover:underline">
-                Login
-              </Link>
-            </p>
-            <div>
-              <input
-                type="checkbox"
-                {...register("acceptTerms", {
-                  required:
-                    "Please accept the terms of service and privacy policy",
-                })}
-                className="mr-2"
-              />
-              <label htmlFor="acceptTerms" className="text-gray-700">
-                I accept the{" "}
-                <a href="/terms-of-service" className="text-blue-500">
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a href="/privacy-policy" className="text-blue-500">
-                  Privacy Policy
-                </a>
-              </label>
-              {errors.acceptTerms && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.acceptTerms.message}
-                </p>
-              )}
-            </div>
-          </form>
-        </div>
-      </div>
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 h-3/4 md:h-auto">
-            <div className="p-4 flex justify-between items-center border-b">
-              <h3 className="text-lg font-semibold">
-                Select Hospital Location
-              </h3>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                className="text-gray-500 hover:text-gray-700 focus:outline-none"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4 h-full">
-              <LoadScript googleMapsApiKey={""}>
-                <GoogleMap
-                  mapContainerStyle={{ height: "100%", width: "100%" }}
-                  center={{ lat: 0, lng: 0 }}
-                  zoom={2}
-                  onClick={handleMapClick}
-                >
-                  {selectedLocation && <Marker position={selectedLocation} />}
-                </GoogleMap>
-              </LoadScript>
-            </div>
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              type="text"
+              id="firstName"
+              {...register("firstName", { required: "First name is required" })}
+              error={!!errors.firstName}
+            />
+            {errors.firstName && (
+              <ErrorMessage>{errors.firstName.message}</ErrorMessage>
+            )}
           </div>
-        </div>
-      )}
-    </div>
-  );
+          <div>
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              type="text"
+              id="lastName"
+              {...register("lastName", { required: "Last name is required" })}
+              error={!!errors.lastName}
+            />
+            {errors.lastName && (
+              <ErrorMessage>{errors.lastName.message}</ErrorMessage>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              type="email"
+              id="email"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Invalid email address",
+                },
+              })}
+              error={!!errors.email}
+            />
+            {errors.email && (
+              <ErrorMessage>{errors.email.message}</ErrorMessage>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              type="password"
+              id="password"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              })}
+              error={!!errors.password}
+            />
+            {errors.password && (
+              <ErrorMessage>{errors.password.message}</ErrorMessage>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              type="password"
+              id="confirmPassword"
+              {...register("confirmPassword", {
+                required: "Confirm Password is required",
+              })}
+              error={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && (
+              <ErrorMessage>{errors.confirmPassword.message}</ErrorMessage>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="phone">Phone Number</Label>
+            <PhoneInputWrapper>
+              <CountrySelect
+                id="countryCode"
+                {...register("countryCode", { required: true })}
+              >
+                {Countries.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.name} (+{country.dialCode})
+                  </option>
+                ))}
+              </CountrySelect>
+              <PhoneInput
+                type="tel"
+                id="phone"
+                placeholder="Phone Number"
+                {...register("phone", {
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^\d{6,14}$/,
+                    message: "Invalid phone number",
+                  },
+                })}
+                error={!!errors.phone}
+              />
+            </PhoneInputWrapper>
+            {errors.phone && (
+              <ErrorMessage>{errors.phone.message}</ErrorMessage>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="address">Address</Label>
+            <Input
+              type="text"
+              id="address"
+              {...register("address", { required: "Address is required" })}
+              error={!!errors.address}
+            />
+            {errors.address && (
+              <ErrorMessage>{errors.address.message}</ErrorMessage>
+            )}
+          </div>
+          <div>
+            <LocationButton
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+            >
+              {selectedLocation
+                ? `Location Selected (${selectedLocation.lat}, ${selectedLocation.lng})`
+                : "Select Location"}
+            </LocationButton>
+            {selectedLocation && (
+                <Drawer open={drawerOpen}>
+                  <DrawerContent>
+                    <DrawerHeader>
+                      <h3>Selected Location</h3>
+                      <button onClick={() => handleRemoveLocation()}>
+                        Remove Selection
+                      </button>
+                    </DrawerHeader>
+                    <DrawerBody>
+                      <LoadScript
+                        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""}
+                      >
+                        <GoogleMap
+                          mapContainerStyle={{
+                            width: "100%",
+                            height: "100%",
+                          }}
+                          center={{
+                            lat: selectedLocation.lat,
+                            lng: selectedLocation.lng,
+                          }}
+                          zoom={15}
+                          onClick={handleMapClick}
+                        >
+                          <Marker
+                            position={{
+                              lat: selectedLocation.lat,
+                              lng: selectedLocation.lng,
+                            }}
+                          />
+                        </GoogleMap>
+                      </LoadScript>
+                    </DrawerBody>
+                  </DrawerContent>
+                </Drawer>
+              )}
+          </div>
+          <SubmitButton type="submit" loading={loading}>
+            {loading ? <LoaderIcon size={20} /> : "Sign Up"}
+          </SubmitButton>
+        </Form>
+        <TermsWrapper>
+          <input
+            type="checkbox"
+            id="terms"
+            {...register("terms", { required: "You must accept the terms to sign up" })}
+          />
+          <Label htmlFor="terms">
+            I accept the <Link to="/terms">Terms and Conditions</Link>
+          </Label>
+        </TermsWrapper>
+        {errors.terms && (
+          <ErrorMessage>{errors.terms.message}</ErrorMessage>
+        )}
+        <LoginText>
+          Already have an account? <Link to="/login">Log in here</Link>
+        </LoginText>
+      </FormWrapper>
+    </FormContainer>
+  </Container>
+);
 };
 
 export default SignupForm;

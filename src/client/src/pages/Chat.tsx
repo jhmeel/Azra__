@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Send, File, Phone, Menu, X } from "lucide-react";
 import { Hospital } from "../types";
 import io from "socket.io-client";
-import { useSelector,useDispatch  } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
-import axiosInstance from "../utils/axiosInstance";
 import { getActiveChats } from "../actions";
-
+import styled from "styled-components";
 
 interface Message {
   sender: Hospital;
@@ -20,6 +17,250 @@ interface Message {
 
 const socket = io("http://localhost:8000");
 
+const Container = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f7fafc;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+`;
+
+const Sidebar = styled.div<{ isOpen: boolean }>`
+  width: 100%;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  position: fixed;
+  z-index: 10;
+  transition: transform 0.3s ease;
+  transform: ${({ isOpen }) => (isOpen ? "translateX(0)" : "translateX(-100%)")};
+
+  @media (min-width: 768px) {
+    width: 33%;
+    max-width: 300px;
+    position: relative;
+    transform: translateX(0);
+  }
+`;
+
+const SidebarHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+`;
+
+const UserAvatar = styled.img`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+`;
+
+const UserInfo = styled.div`
+  margin-left: 16px;
+`;
+
+const UserName = styled.h2`
+  font-size: 20px;
+  font-weight: 600;
+`;
+
+const UserStatus = styled.p`
+  color: #38a169;
+`;
+
+const CloseButton = styled.button`
+  display: block;
+  background: none;
+  border: none;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const ChatsTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+`;
+
+const ChatList = styled.ul``;
+
+const ChatItem = styled.li`
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #edf2f7;
+  }
+`;
+
+const ChatAvatar = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+`;
+
+const ChatInfo = styled.div`
+  margin-left: 16px;
+`;
+
+const ChatName = styled.p`
+  font-size: 14px;
+  font-weight: 600;
+`;
+
+const ChatStatus = styled.p`
+  font-size: 12px;
+  color: #a0aec0;
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-left: auto;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    margin-left: 0;
+  }
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+
+  @media (min-width: 768px) {
+    justify-content: flex-start;
+  }
+`;
+
+const OpenSidebarButton = styled.button`
+  background: none;
+  border: none;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const CurrentChatInfo = styled.div`
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+`;
+
+const CurrentChatAvatar = styled.img`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+`;
+
+const CurrentChatDetails = styled.div`
+  margin-left: 16px;
+`;
+
+const CurrentChatName = styled.h2`
+  font-size: 14px;
+  font-weight: 600;
+`;
+
+const CurrentChatStatus = styled.p`
+  color: #38a169;
+  font-size: 12px;
+`;
+
+const MessagesContainer = styled.div`
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: #f7fafc;
+`;
+
+const MessageWrapper = styled.div<{ isSender: boolean }>`
+  display: flex;
+  justify-content: ${({ isSender }) => (isSender ? "flex-end" : "flex-start")};
+  margin-bottom: 16px;
+`;
+
+const MessageContent = styled.div<{ isSender: boolean }>`
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: ${({ isSender }) => (isSender ? "#4299e1" : "#edf2f7")};
+  color: ${({ isSender }) => (isSender ? "#ffffff" : "#2d3748")};
+`;
+
+const InputSection = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 67%;
+    max-width: calc(100% - 300px);
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
+const FileLabel = styled.label`
+  cursor: pointer;
+  margin-right: 16px;
+  color: #a0aec0;
+`;
+
+const SelectedFileName = styled.span`
+  margin-right: 16px;
+  color: #a0aec0;
+`;
+
+const TextInput = styled.input`
+  flex: 1;
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+  &:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+  }
+`;
+
+const SendButton = styled.button`
+  background-color: #4299e1;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 const Chat: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -27,15 +268,11 @@ const Chat: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const { chatHistory, activeChats } = useSelector((state: RootState) => state.chat);
+  const { hospital: currentAdmin } = useSelector((state: RootState) => state.chat);
 
-  const { chatHistory, activeChats }  = useSelector(
-    (state: RootState) => state.chat
-  );
-  const { hospital:currentAdmin}  = useSelector(
-    (state: RootState) => state.chat
-  );
+  const dispatch = useDispatch();
 
-  const dispatch = useDispatch()
   useEffect(() => {
     socket.on("loadMessages", (loadedMessages) => {
       setMessages(loadedMessages);
@@ -89,149 +326,92 @@ const Chat: React.FC = () => {
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
     }
-
   };
 
-  
-
   useEffect(() => {
- 
-   dispatch<any>(getActiveChats('tok'));
-  }, []);
-
-
-
-
+    dispatch<any>(getActiveChats('tok'));
+  }, [dispatch]);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
-      <div
-        className={`w-full md:w-1/3 lg:w-1/4 bg-white shadow-lg p-4 fixed md:relative ${
-          isSidebarOpen ? "block" : "hidden"
-        } md:block z-10 transition-transform transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <img
-              className="w-12 h-12 rounded-full"
-              src="url/to/profile/image"
-              alt="User"
-            />
-            <div className="ml-4">
-              <h2 className="text-xl font-semibold">Pedrik Ronner</h2>
-              <p className="text-green-500">Active now</p>
-            </div>
+    <Container>
+      <Sidebar isOpen={isSidebarOpen}>
+        <SidebarHeader>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <UserAvatar src="url/to/profile/image" alt="User" />
+            <UserInfo>
+              <UserName>Pedrik Ronner</UserName>
+              <UserStatus>Active now</UserStatus>
+            </UserInfo>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden">
-            <X className="text-gray-600" />
-          </button>
-        </div>
-        <h3 className="text-lg font-semibold mb-4">Recent Chats</h3>
-        <ul>
+          <CloseButton onClick={() => setIsSidebarOpen(false)}>
+            <X />
+          </CloseButton>
+        </SidebarHeader>
+        <ChatsTitle>Recent Chats</ChatsTitle>
+        <ChatList>
           {activeChats?.length > 0 &&
             activeChats?.map((hospital: Hospital) => (
-              <li
-                key={hospital.$id}
-                className="flex items-center mb-4 p-2 rounded-lg hover:bg-gray-200 cursor-pointer"
-                onClick={() => openChat(hospital)}
-              >
-                <img className="w-10 h-10 rounded-full" src={hospital.avatar} alt={hospital.hospitalName} />
-                <div className="ml-4">
-                  <p className="text-sm font-semibold">{hospital.hospitalName}</p>
-                  <p className="text-xs text-gray-500">{hospital.status}</p>
-                </div>
-              </li>
+              <ChatItem key={hospital.$id} onClick={() => openChat(hospital)}>
+                <ChatAvatar src={hospital.avatar} alt={hospital.hospitalName} />
+                <ChatInfo>
+                  <ChatName>{hospital.hospitalName}</ChatName>
+                  <ChatStatus>{hospital.status}</ChatStatus>
+                </ChatInfo>
+              </ChatItem>
             ))}
-        </ul>
-      </div>
-      <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col md:ml-0 ml-auto relative">
-        <div className="flex items-center p-4 bg-white shadow-lg justify-between md:justify-start">
-          <button onClick={() => setIsSidebarOpen(true)} className="md:hidden">
-            <Menu className="text-gray-600" />
-          </button>
+        </ChatList>
+      </Sidebar>
+      <MainContent>
+        <Header>
+          <OpenSidebarButton onClick={() => setIsSidebarOpen(true)}>
+            <Menu />
+          </OpenSidebarButton>
           {currentChat && (
-            <div className="flex items-center md:ml-4">
-              <img
-                className="w-12 h-12 rounded-full"
-                src={currentChat.avatar}
-              />
-              <div className="ml-4">
-                <h2 className="text-14 font-semibold">{currentChat.hospitalName}</h2>
-                <p className="text-green-500 text-12">Active now</p>
-              </div>
-              <Phone
-              size={18}
-                className="text-gray-500 ml-auto md:ml-4 cursor-pointer"
-                onClick={handleCall}
-              />
-            </div>
+            <CurrentChatInfo>
+              <CurrentChatAvatar src={currentChat.avatar} />
+              <CurrentChatDetails>
+                <CurrentChatName>{currentChat.hospitalName}</CurrentChatName>
+                <CurrentChatStatus>Active now</CurrentChatStatus>
+              </CurrentChatDetails>
+              <Phone size={18} className="icon" onClick={handleCall} />
+            </CurrentChatInfo>
           )}
-        </div>
-        <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+        </Header>
+        <MessagesContainer>
           {messages.length > 0 ? (
             messages.map((msg: Message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  msg.sender.$id === currentAdmin.$id
-                    ? "justify-end"
-                    : "justify-start"
-                } mb-4`}
-              >
-                <div
-                  className={`p-3 rounded-lg shadow ${
-                    msg.sender.$id === currentAdmin.$id
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-900"
-                  }`}
-                >
+              <MessageWrapper key={index} isSender={msg.sender.$id === currentAdmin.$id}>
+                <MessageContent isSender={msg.sender.$id === currentAdmin.$id}>
                   {msg.type === "text" ? (
                     <p>{msg.content}</p>
                   ) : (
-                    <img
-                      src={msg.content}
-                      alt="Attachment"
-                      className="w-32 h-32 object-cover rounded-lg"
-                    />
+                    <img src={msg.content} alt="Attachment" style={{width:32, height:32, objectFit:'cover', borderRadius:'10px'}} />
                   )}
-                </div>
-              </div>
+                </MessageContent>
+              </MessageWrapper>
             ))
           ) : (
-            <div className="text-center text-gray-500">No messages yet.</div>
+            <div style={{textAlign:'center', color:'grey'}}>No messages yet.</div>
           )}
-        </div>
-        <div className="p-4 bg-white flex items-center border-t fixed bottom-0 left-0 w-full md:w-2/3 lg:w-3/4">
-          <input
-            type="file"
-            id="fileInput"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <label htmlFor="fileInput" className="cursor-pointer">
-            <File className="text-gray-500 mr-4" />
-          </label>
-          {selectedFile && (
-            <span className="text-gray-500 mr-4">{selectedFile.name}</span>
-          )}
-          <input
+        </MessagesContainer>
+        <InputSection>
+          <FileInput type="file" id="fileInput" onChange={handleFileChange} />
+          <FileLabel htmlFor="fileInput">
+            <File />
+          </FileLabel>
+          {selectedFile && <SelectedFileName>{selectedFile.name}</SelectedFileName>}
+          <TextInput
             type="text"
             placeholder="Type something..."
-            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
           />
-          <button
-            className="bg-blue-500 text-white p-2 rounded-lg ml-2 flex items-center justify-center"
-            onClick={handleSendMessage}
-          >
+          <SendButton onClick={handleSendMessage}>
             <Send />
-          </button>
-        </div>
-      </div>
-    </div>
+          </SendButton>
+        </InputSection>
+      </MainContent>
+    </Container>
   );
 };
 

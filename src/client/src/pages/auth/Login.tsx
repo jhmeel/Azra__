@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
+import styled from "styled-components";
 import loginImage from "../../assets/OnlineDoctor-bro .svg";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, EyeOff, EyeIcon, Lock, LoaderIcon } from "lucide-react";
 import { RootState } from "../../store";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { CLEAR_ERRORS } from "../../constants";
 import { toast } from "sonner";
 import { login } from "../../actions";
@@ -37,84 +37,227 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 lg:p-4">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full lg:max-w-6xl flex flex-col lg:flex-row">
-        <div className="lg:w-1/2 mb-8 lg:mb-0">
-          <img src={loginImage} className="w-full h-auto" />
-        </div>
-        <div className="md:w-1/2 md:pl-8">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Login</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-              <label
-                htmlFor="email"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <div className="flex items-center">
-                <Mail className="absolute left-3 top-14 transform -translate-y-1/2 text-gray-500" />
-                <input
+    <Wrapper>
+      <Container>
+        <ImageWrapper>
+          <Image src={loginImage} alt="Login" />
+        </ImageWrapper>
+        <FormWrapper>
+          <Title>Login</Title>
+          <Form onSubmit={handleSubmit}>
+            <FormGroup>
+              <Label htmlFor="email">Email</Label>
+              <InputWrapper>
+                <MailIcon />
+                <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
-              </div>
-            </div>
-            <div className="relative">
-              <label
-                htmlFor="password"
-                className="block mb-2 font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="flex items-center">
-                <Lock className="absolute left-3 top-14 transform -translate-y-1/2 text-gray-500" />
-                <input
+              </InputWrapper>
+            </FormGroup>
+            <FormGroup>
+              <Label htmlFor="password">Password</Label>
+              <InputWrapper>
+                <LockIcon />
+                <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   minLength={8}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
-                <button
+                <TogglePasswordButton
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 focus:outline-none"
                 >
-                  {showPassword ? <EyeOff /> : <EyeIcon />}
-                </button>
-              </div>
-            </div>
-            <button
-              disabled={loading}
-              type="submit"
-              className={`w-full px-4 py-2 flex align-middle justify-center gap-5 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                loading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600"
-              }`}
-            >
-              {loading && <LoaderIcon size={20} className="animate-spin" />}
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </TogglePasswordButton>
+              </InputWrapper>
+            </FormGroup>
+            <SubmitButton disabled={loading} type="submit">
+              {loading && <Loader size={20} className="animate-spin" />}
               {!loading && "Login"}
-            </button>
-            <p className="text-gray-600 text-center mt-4">
+            </SubmitButton>
+            <SignupPrompt>
               Don't have an account?{" "}
-              <Link to="/signup" className="text-blue-500 hover:underline">
-                Sign Up
-              </Link>
-            </p>
-          </form>
-        </div>
-      </div>
-    </div>
+              <StyledLink to="/signup">Sign Up</StyledLink>
+            </SignupPrompt>
+          </Form>
+        </FormWrapper>
+      </Container>
+    </Wrapper>
   );
 };
 
 export default LoginForm;
+
+const Wrapper = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  padding: 16px;
+`;
+
+const Container = styled.div`
+  background-color: white;
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  @media (min-width: 1024px) {
+    flex-direction: row;
+  }
+`;
+
+const ImageWrapper = styled.div`
+  width: 100%;
+  margin-bottom: 32px;
+  @media (min-width: 1024px) {
+    width: 50%;
+    margin-bottom: 0;
+  }
+`;
+
+const Image = styled.img`
+  width: 100%;
+  height: auto;
+`;
+
+const FormWrapper = styled.div`
+  width: 100%;
+  @media (min-width: 1024px) {
+    width: 50%;
+    padding-left: 32px;
+  }
+`;
+
+const Title = styled.h2`
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 24px;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const FormGroup = styled.div`
+  position: relative;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #4b5563;
+`;
+
+const InputWrapper = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const MailIcon = styled(Mail)`
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+`;
+
+const LockIcon = styled(Lock)`
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+`;
+
+
+const EyeOffIcon = styled(EyeOff)`
+  color: #6b7280;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+`;
+
+const TogglePasswordButton = styled.button`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+  }
+`;
+
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 12px;
+  color: white;
+  background-color: #3b82f6;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  &:hover {
+    background-color: #2563eb;
+  }
+  &:focus {
+    outline: none;
+  }
+  &:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+  }
+`;
+
+const Loader = styled(LoaderIcon)`
+  animation: spin 1s linear infinite;
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const SignupPrompt = styled.p`
+  text-align: center;
+  color: #6b7280;
+  margin-top: 16px;
+`;
+
+const StyledLink = styled(Link)`
+  color: #3b82f6;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
