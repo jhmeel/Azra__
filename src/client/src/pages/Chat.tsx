@@ -7,6 +7,7 @@ import { RootState } from "../store";
 import { getActiveChats } from "../actions";
 import styled from "styled-components";
 
+// Interface for the Message object
 interface Message {
   sender: Hospital;
   to: Hospital;
@@ -15,8 +16,12 @@ interface Message {
   content: string;
 }
 
+// Initialize the Socket.IO client
 const socket = io("http://localhost:8000");
 
+// Styled components
+
+// Container component for the entire chat UI
 const Container = styled.div`
   min-height: 100vh;
   display: flex;
@@ -28,6 +33,7 @@ const Container = styled.div`
   }
 `;
 
+// Sidebar component for displaying active chats
 const Sidebar = styled.div<{ isOpen: boolean }>`
   width: 100%;
   background-color: #ffffff;
@@ -46,6 +52,7 @@ const Sidebar = styled.div<{ isOpen: boolean }>`
   }
 `;
 
+// Header section of the sidebar
 const SidebarHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -53,25 +60,30 @@ const SidebarHeader = styled.div`
   margin-bottom: 24px;
 `;
 
+// User avatar in the sidebar header
 const UserAvatar = styled.img`
   width: 48px;
   height: 48px;
   border-radius: 50%;
 `;
 
+// User information in the sidebar header
 const UserInfo = styled.div`
   margin-left: 16px;
 `;
 
+// User name in the sidebar header
 const UserName = styled.h2`
   font-size: 20px;
   font-weight: 600;
 `;
 
+// User status in the sidebar header
 const UserStatus = styled.p`
   color: #38a169;
 `;
 
+// Close button for the sidebar on mobile
 const CloseButton = styled.button`
   display: block;
   background: none;
@@ -82,14 +94,17 @@ const CloseButton = styled.button`
   }
 `;
 
+// Title for the active chats list
 const ChatsTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
 `;
 
+// List of active chats
 const ChatList = styled.ul``;
 
+// Individual chat item in the list
 const ChatItem = styled.li`
   display: flex;
   align-items: center;
@@ -104,26 +119,31 @@ const ChatItem = styled.li`
   }
 `;
 
+// Avatar of the hospital in the chat item
 const ChatAvatar = styled.img`
   width: 40px;
   height: 40px;
   border-radius: 50%;
 `;
 
+// Information section of the chat item
 const ChatInfo = styled.div`
   margin-left: 16px;
 `;
 
+// Hospital name in the chat item
 const ChatName = styled.p`
   font-size: 14px;
   font-weight: 600;
 `;
 
+// Status in the chat item
 const ChatStatus = styled.p`
   font-size: 12px;
   color: #a0aec0;
 `;
 
+// Main content area for displaying messages
 const MainContent = styled.div`
   flex: 1;
   display: flex;
@@ -137,6 +157,7 @@ const MainContent = styled.div`
   }
 `;
 
+// Header section of the main content area
 const Header = styled.div`
   display: flex;
   align-items: center;
@@ -150,6 +171,7 @@ const Header = styled.div`
   }
 `;
 
+// Open sidebar button for mobile
 const OpenSidebarButton = styled.button`
   background: none;
   border: none;
@@ -159,32 +181,38 @@ const OpenSidebarButton = styled.button`
   }
 `;
 
+// Information section of the current chat in the header
 const CurrentChatInfo = styled.div`
   display: flex;
   align-items: center;
   margin-left: 16px;
 `;
 
+// Avatar of the current chat hospital
 const CurrentChatAvatar = styled.img`
   width: 48px;
   height: 48px;
   border-radius: 50%;
 `;
 
+// Details section of the current chat
 const CurrentChatDetails = styled.div`
   margin-left: 16px;
 `;
 
+// Name of the current chat hospital
 const CurrentChatName = styled.h2`
   font-size: 14px;
   font-weight: 600;
 `;
 
+// Status of the current chat hospital
 const CurrentChatStatus = styled.p`
   color: #38a169;
   font-size: 12px;
 `;
 
+// Container for displaying messages
 const MessagesContainer = styled.div`
   flex: 1;
   padding: 16px;
@@ -192,12 +220,14 @@ const MessagesContainer = styled.div`
   background-color: #f7fafc;
 `;
 
+// Wrapper for individual messages
 const MessageWrapper = styled.div<{ isSender: boolean }>`
   display: flex;
   justify-content: ${({ isSender }) => (isSender ? "flex-end" : "flex-start")};
   margin-bottom: 16px;
 `;
 
+// Content of the message
 const MessageContent = styled.div<{ isSender: boolean }>`
   padding: 12px;
   border-radius: 8px;
@@ -206,6 +236,7 @@ const MessageContent = styled.div<{ isSender: boolean }>`
   color: ${({ isSender }) => (isSender ? "#ffffff" : "#2d3748")};
 `;
 
+// Input section for sending messages
 const InputSection = styled.div`
   display: flex;
   align-items: center;
@@ -223,33 +254,39 @@ const InputSection = styled.div`
   }
 `;
 
+// Input for file attachments
 const FileInput = styled.input`
   display: none;
 `;
 
+// Label for the file input
 const FileLabel = styled.label`
   cursor: pointer;
   margin-right: 16px;
   color: #a0aec0;
 `;
 
+// Display for the selected file name
 const SelectedFileName = styled.span`
   margin-right: 16px;
   color: #a0aec0;
 `;
 
+// Input for typing messages
 const TextInput = styled.input`
   flex: 1;
   padding: 8px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   outline: none;
+
   &:focus {
     border-color: #4299e1;
     box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
   }
 `;
 
+// Send button for messages
 const SendButton = styled.button`
   background-color: #4299e1;
   color: #ffffff;
@@ -261,18 +298,18 @@ const SendButton = styled.button`
   justify-content: center;
 `;
 
+// Chat component
 const Chat: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentChat, setCurrentChat] = useState<Hospital | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const { chatHistory, activeChats } = useSelector((state: RootState) => state.chat);
   const { hospital: currentAdmin } = useSelector((state: RootState) => state.chat);
-
   const dispatch = useDispatch();
 
+  // Load messages when the component mounts and listen for new messages
   useEffect(() => {
     socket.on("loadMessages", (loadedMessages) => {
       setMessages(loadedMessages);
@@ -288,6 +325,7 @@ const Chat: React.FC = () => {
     };
   }, []);
 
+  // Handle sending a new message
   const handleSendMessage = () => {
     if (newMessage.trim() && currentChat) {
       const message: Message = {
@@ -306,18 +344,21 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Handle file attachment selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setSelectedFile(event.target.files[0]);
     }
   };
 
+  // Handle initiating a call
   const handleCall = () => {
     if (currentChat) {
       window.location.href = "tel:" + currentChat.phone;
     }
   };
 
+  // Open a chat with a specific hospital
   const openChat = (hospital: Hospital) => {
     setCurrentChat(hospital);
     socket.emit("join", {
@@ -328,6 +369,7 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Fetch active chats when the component mounts
   useEffect(() => {
     dispatch<any>(getActiveChats('tok'));
   }, [dispatch]);
@@ -347,19 +389,24 @@ const Chat: React.FC = () => {
             <X />
           </CloseButton>
         </SidebarHeader>
-        <ChatsTitle>Recent Chats</ChatsTitle>
-        <ChatList>
-          {activeChats?.length > 0 &&
-            activeChats?.map((hospital: Hospital) => (
-              <ChatItem key={hospital.$id} onClick={() => openChat(hospital)}>
-                <ChatAvatar src={hospital.avatar} alt={hospital.hospitalName} />
-                <ChatInfo>
-                  <ChatName>{hospital.hospitalName}</ChatName>
-                  <ChatStatus>{hospital.status}</ChatStatus>
-                </ChatInfo>
-              </ChatItem>
-            ))}
-        </ChatList>
+        {activeChats?.length > 0 ? (
+          <>
+            <ChatsTitle>Recent Chats</ChatsTitle>
+            <ChatList>
+              {activeChats?.map((hospital: Hospital) => (
+                <ChatItem key={hospital.$id} onClick={() => openChat(hospital)}>
+                  <ChatAvatar src={hospital.avatar} alt={hospital.hospitalName} />
+                  <ChatInfo>
+                    <ChatName>{hospital.hospitalName}</ChatName>
+                    <ChatStatus>{hospital.status}</ChatStatus>
+                  </ChatInfo>
+                </ChatItem>
+              ))}
+            </ChatList>
+          </>
+        ) : (
+          <p style={{ textAlign: 'center', color: 'grey' }}>No active chats</p>
+        )}
       </Sidebar>
       <MainContent>
         <Header>
@@ -385,13 +432,13 @@ const Chat: React.FC = () => {
                   {msg.type === "text" ? (
                     <p>{msg.content}</p>
                   ) : (
-                    <img src={msg.content} alt="Attachment" style={{width:32, height:32, objectFit:'cover', borderRadius:'10px'}} />
+                    <img src={msg.content} alt="Attachment" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '10px' }} />
                   )}
                 </MessageContent>
               </MessageWrapper>
             ))
           ) : (
-            <div style={{textAlign:'center', color:'grey'}}>No messages yet.</div>
+            <div style={{ textAlign: 'center', color: 'grey' }}>No messages yet.</div>
           )}
         </MessagesContainer>
         <InputSection>

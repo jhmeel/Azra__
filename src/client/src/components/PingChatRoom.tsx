@@ -42,7 +42,8 @@ const Container = styled.div`
 
 const ChatContainer = styled.div`
   max-width: 768px;
-  height: 100vh;
+  max-height: 90vh;
+  height: 90vh;
   @media (max-width: 767px) {
     max-width: 100%;
   }
@@ -103,9 +104,9 @@ const MessagesContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  max-height: 384px;
-  @media(max-width:767px){
-    max-height: 550px;
+  height: 85%;
+  @media (max-width: 767px) {
+    height: 85%;
   }
 
   overflow-y: auto;
@@ -255,7 +256,6 @@ function PingChatTab() {
       ]);
     };
 
-    
     loadChatHistory();
 
     socket.on("message", (message: Message) => {
@@ -266,7 +266,6 @@ function PingChatTab() {
       socket.off("message");
     };
   }, [pSelectedHospital?.$id]);
-
 
   const persistMessage = async (messages: Message[]) => {
     const prev: Array<Message> =
