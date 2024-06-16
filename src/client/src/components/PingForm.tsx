@@ -11,6 +11,7 @@ import { newPing } from "../actions/index.js";
 import { Hospital } from "../types/index.js";
 import PingChatRoom from "./PingChatRoom.js";
 import { useNavigate } from "react-router-dom";
+import localforage from "localforage";
 
 function PingForm({
   selectedHospital,
@@ -65,12 +66,13 @@ function PingForm({
     setImage("");
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     navigate("/ping-chat", {
       state: { image, complaints, fullName, hospital: selectedHospital },
     });
+    await localforage.setItem(`AZRA_PATIENT_${selectedHospital?.hospitalName}`, fullName);
 
     dispatch<any>(
       newPing("token", {

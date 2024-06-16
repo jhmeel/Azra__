@@ -1,9 +1,18 @@
 import React, { ChangeEvent, useState } from "react";
 import styled from "styled-components";
-import { HospitalIcon, MessageCircle, Send, Search } from "lucide-react";
+import {
+  HospitalIcon,
+  MessageCircle,
+  Send,
+  Search,
+  Expand,
+} from "lucide-react";
 import { getDistanceFromLatLonInKm } from "../utils/formatter";
 import { Hospital } from "../types";
 import PingForm from "./PingForm";
+import localforage from "localforage";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const SectionWrapper = styled.section`
   width: 100%;
@@ -156,13 +165,20 @@ const demoHospitals: Hospital[] = [
   },
 ];
 
-const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) => {
+const HospitalCards = ({
+  userLocation,
+  hospitals = demoHospitals,
+  isLoading,
+}) => {
   const [selectedStatus, setSelectedStatus] = useState("available");
   const [selectedDistance, setSelectedDistance] = useState("0");
   const [searchQuery, setSearchQuery] = useState("");
   const [pingFormActive, setPingFormActive] = useState<boolean>(false);
-  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
+    null
+  );
 
+  const navigate = useNavigate();
   const handleStatusFilter = (value: string) => {
     setSelectedStatus(value);
   };
@@ -200,6 +216,17 @@ const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) =
     setSelectedHospital(hospital);
   };
 
+  const openChat = async (hospital: Hospital) => {
+    const patient = await localforage.getItem(`AZRA_PATIENT_${hospital.hospitalName}`);
+    if (patient) {
+      navigate("/ping-chat", {
+        state: { fullName: patient, hospital },
+      });
+    }else{
+        toast.error(`You have no chat history with ${hospital.hospitalName}!`)
+    }
+
+  };
   return (
     <>
       <SectionWrapper>
@@ -301,7 +328,7 @@ const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) =
               }}
             />
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: "flex", gap: "8px" }}>
             <StatusFilter
               value={selectedStatus}
               onChange={(e) => handleStatusFilter(e.target.value)}
@@ -371,7 +398,10 @@ const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) =
                     <div
                       style={{
                         fontSize: "0.875rem",
-                        color: hospital.status === "available" ? "#48bb78" : "#f56565",
+                        color:
+                          hospital.status === "available"
+                            ? "#48bb78"
+                            : "#f56565",
                         marginBottom: "0.5rem",
                       }}
                     >
@@ -405,7 +435,9 @@ const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) =
                     marginBottom: "1rem",
                   }}
                 ></div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <button
                     onClick={() => handlePing(hospital)}
                     style={{
@@ -413,16 +445,29 @@ const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) =
                       color: "white",
                       padding: "0.4rem .8rem",
                       borderRadius: "0.5rem",
-                      fontSize:"14px",
+                      fontSize: "14px",
                       display: "flex",
                       alignItems: "center",
                       cursor: "pointer",
                       transition: "background-color 0.3s ease",
                     }}
                   >
-                    <HospitalIcon style={{ marginRight: "2", color: "white", width:'16px' }} />{" "}
+                    <HospitalIcon
+                      style={{
+                        marginRight: "2",
+                        color: "white",
+                        width: "16px",
+                      }}
+                    />{" "}
                     Ping
                   </button>
+
+                  <Expand
+                    size={14}
+                    color="grey"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => openChat(hospital)}
+                  />
                 </div>
               </Card>
             ))}

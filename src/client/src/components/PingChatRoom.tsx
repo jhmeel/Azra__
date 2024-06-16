@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Hospital, Ping } from "../types/index.js";
 import { toast } from "sonner";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 const socket = io("http://localhost:8000");
 
@@ -37,12 +37,15 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: rgba(31, 41, 55, 0.6);
-  padding: 8px;
+  background-color: rgba(255, 255, 255, 0.6);
 `;
 
 const ChatContainer = styled.div`
   max-width: 768px;
+  height: 100vh;
+  @media (max-width: 767px) {
+    max-width: 100%;
+  }
   width: 100%;
   padding: 16px;
   background-color: white;
@@ -66,14 +69,12 @@ const CloseButton = styled.button`
 
 const Header = styled.div`
   display: flex;
-  flex-direction: column;
-  @media (min-width: 768px) {
-    flex-direction: row;
-    justify-content: space-between;
-  }
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 10px 5px;
   align-items: center;
+  margin-top: 5px;
   margin-bottom: 24px;
-  padding: 16px;
 `;
 
 const HospitalInfo = styled.div`
@@ -103,6 +104,10 @@ const MessagesContainer = styled.div`
   gap: 16px;
   padding: 16px;
   max-height: 384px;
+  @media(max-width:767px){
+    max-height: 550px;
+  }
+
   overflow-y: auto;
 `;
 
@@ -117,7 +122,7 @@ const MessageItem = styled.div<{ isPatient: boolean }>`
 
 const MessageImage = styled.img`
   width: 100%;
-  height: auto;
+  max-height: 150px;
 `;
 
 const MessageText = styled.div`
@@ -127,21 +132,17 @@ const MessageText = styled.div`
 const Form = styled.form`
   max-width: 768px;
   width: 100%;
-  margin-top: 16px;
-  padding: 16px;
-  background-color: white;
+  padding: 10px 10px 20px 10px;
+  background-color: #ccc;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
 `;
 
 const FormGroup = styled.div`
   display: flex;
-  flex-direction: column;
-  @media (min-width: 768px) {
-    flex-direction: row;
-    align-items: center;
-  }
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 3px;
 `;
 
 const TextInput = styled.input`
@@ -177,7 +178,7 @@ const ImagePreview = styled.div`
 `;
 
 const PreviewImage = styled.img`
-  max-width: 320px;
+  max-width: 45px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
@@ -201,7 +202,7 @@ const SendButton = styled.button`
     margin-top: 0;
     margin-left: 8px;
   }
-  padding: 8px 16px;
+  padding: 5px 10px;
   background-color: #3b82f6;
   color: white;
   border-radius: 4px;
@@ -227,7 +228,7 @@ function PingChatTab() {
     hospital: pSelectedHospital,
   } = location.state || {};
 
-  console.log(location.state)
+  const navigate = useNavigate();
   useEffect(() => {
     const loadChatHistory = async () => {
       const chatHistory = await localforage.getItem<Message[]>(
@@ -235,16 +236,26 @@ function PingChatTab() {
       );
       if (chatHistory) {
         setMessages(chatHistory);
+      } else if (pComplaints) {
+        setMessages([
+          {
+            sender: `patient:${pFullname}@${new Date().toLocaleTimeString()}`,
+            text: pComplaints,
+            image: pImage,
+          },
+        ]);
       }
-      setMessages([
+
+      persistMessage([
         {
           sender: `patient:${pFullname}@${new Date().toLocaleTimeString()}`,
-          text: `${pFullname}\n${pComplaints}`,
+          text: pComplaints,
           image: pImage,
         },
       ]);
     };
 
+    
     loadChatHistory();
 
     socket.on("message", (message: Message) => {
@@ -256,12 +267,27 @@ function PingChatTab() {
     };
   }, [pSelectedHospital?.$id]);
 
+
+  const persistMessage = async (messages: Message[]) => {
+    const prev: Array<Message> =
+      (await localforage.getItem(
+        `chat_${pFullname}:${pSelectedHospital?.$id}`
+      )) || [];
+    if (prev) {
+      const update = [...prev, ...messages];
+      await localforage.setItem(
+        `chat_${pFullname}:${pSelectedHospital?.$id}`,
+        update
+      );
+    } else {
+      await localforage.setItem(
+        `chat_${pFullname}:${pSelectedHospital?.$id}`,
+        messages
+      );
+    }
+  };
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    localforage.setItem(
-      `chat_${pFullname}:${pSelectedHospital?.$id}`,
-      messages
-    );
+    persistMessage(messages);
   }, [messages, pSelectedHospital?.$id]);
 
   const handleMessageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -291,7 +317,7 @@ function PingChatTab() {
         text: inputMessage,
         image,
       };
-      toast.success(newMessage.image);
+
       socket.emit("sendMessage", {
         ...newMessage,
         hospitalId: pSelectedHospital?.$id,
@@ -309,19 +335,20 @@ function PingChatTab() {
   return (
     <Container>
       <ChatContainer>
-        <CloseButton onClick={() => {}}>
+        <CloseButton
+          onClick={() => {
+            navigate("/");
+          }}
+        >
           <XIcon size={20} />
         </CloseButton>
         <Header>
           <HospitalInfo>
-            <HospitalIcon size={40} className="text-blue-500 md:mr-2" />
+            <HospitalIcon size={20} style={{ color: "blue" }} />
             <HospitalName>{pSelectedHospital?.hospitalName}</HospitalName>
           </HospitalInfo>
           <CallButton onClick={handleCall}>
-            <Phone
-              className="border mt-10 p-2 rounded cursor-pointer bg-white shadow-sm"
-              size={35}
-            />
+            <Phone size={20} />
           </CallButton>
         </Header>
         <div className="text-center mb-4">
@@ -342,6 +369,9 @@ function PingChatTab() {
               {message.image && (
                 <MessageImage src={message.image} alt="Uploaded" />
               )}
+              <MessageText>
+                {message.sender.replace("patient:", "")}
+              </MessageText>
               <MessageText>{message.text}</MessageText>
             </MessageItem>
           ))}
@@ -364,13 +394,13 @@ function PingChatTab() {
           />
           {!image ? (
             <FileLabel htmlFor="image">
-              <UploadIcon size={24} />
+              <UploadIcon size={16} />
             </FileLabel>
           ) : (
             <ImagePreview>
               <PreviewImage src={image} alt="Selected" />
               <RemoveImageButton onClick={handleRemoveImage}>
-                <XIcon size={16} />
+                <XIcon size={14} />
               </RemoveImageButton>
             </ImagePreview>
           )}
