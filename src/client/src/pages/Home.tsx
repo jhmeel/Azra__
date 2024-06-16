@@ -216,7 +216,7 @@ const Home = () => {
 export default Home;
 const Header = styled.header`
   background: linear-gradient(to right, #4fd1c5, #38b2ac);
-  padding: 2rem 0;
+  padding-bottom:2.5rem;
   color: white;
   position: relative;
   overflow: hidden;

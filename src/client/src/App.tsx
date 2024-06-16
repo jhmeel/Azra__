@@ -7,6 +7,7 @@ import ChatWindow from "./pages/Chat";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/Notfound";
 import MainLoader from "./components/Loaders/MainLoader";
+const PingChat = lazy(() =>import("./components/PingChatRoom"))
 const Home = lazy(() => import("./pages/Home"));
 const Signup = lazy(() => import("./pages/auth/Signup"));
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -53,7 +54,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/chat" element={<ChatWindow />} />
+          <Route path="/chat" element={<Chat/>} />
+          <Route path="/ping-chat" element={<PingChat />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import styled from "styled-components";
-import { Camera, LoaderIcon, X } from "lucide-react";
+import { AlertOctagonIcon, Camera, LoaderIcon, X } from "lucide-react";
 import { RootState } from "../store.js";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -68,7 +68,7 @@ function PingForm({
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    navigate("/chat", {
+    navigate("/ping-chat", {
       state: { image, complaints, fullName, hospital: selectedHospital },
     });
 
@@ -88,13 +88,16 @@ function PingForm({
         <CloseButton onClick={onClose}>
           <X size={20} />
         </CloseButton>
-        <Title>Ping-- {selectedHospital?.hospitalName}</Title>
+        <Title>
+          <AlertOctagonIcon /> {selectedHospital?.hospitalName}
+        </Title>
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label htmlFor="fullName">Full Name</Label>
             <Input
               type="text"
               id="fullName"
+              autoFocus
               value={fullName}
               onChange={handleFullNameChange}
               placeholder="Enter your full name"
@@ -113,7 +116,6 @@ function PingForm({
             ></TextArea>
           </FormGroup>
           <FormGroup>
-            <Label htmlFor="image">Upload Image</Label>
             <FileInput
               type="file"
               id="image"
@@ -129,7 +131,11 @@ function PingForm({
               </ImagePreview>
             ) : (
               <FileLabel htmlFor="image">
-                <Camera className="mr-2" size={18} />
+                <Camera
+                  className="mr-2"
+                  size={18}
+                  style={{ marginRight: "5px" }}
+                />
                 Upload Image
               </FileLabel>
             )}
@@ -172,8 +178,8 @@ const FormContainer = styled.div`
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 15px;
+  right: 10px;
   color: #4b5563;
   &:hover {
     color: #1f2937;
