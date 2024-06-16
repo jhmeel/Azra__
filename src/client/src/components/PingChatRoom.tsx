@@ -12,11 +12,12 @@ import {
 } from "lucide-react";
 import { Hospital, Ping } from "../types/index.js";
 import { toast } from "sonner";
+import { useLocation } from "react-router-dom";
 
 const socket = io("http://localhost:8000");
 
 interface PingChatTabProps {
-  selectedHospital: Hospital | null;
+  pSelectedHospital: Hospital | null;
   pingDetails: Ping;
 }
 
@@ -212,27 +213,34 @@ const SendButton = styled.button`
   }
 `;
 
-function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
+function PingChatTab() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [image, setImage] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const location = useLocation();
+  const {
+    image: pImage,
+    complaints: pComplaints,
+    fullName: pFullname,
+    hospital: pSelectedHospital,
+  } = location.state || {};
+
+  console.log(location.state)
   useEffect(() => {
     const loadChatHistory = async () => {
       const chatHistory = await localforage.getItem<Message[]>(
-        `chat_${pingDetails.fullname}:${selectedHospital?.$id}`
+        `chat_${pFullname}:${pSelectedHospital?.$id}`
       );
       if (chatHistory) {
         setMessages(chatHistory);
       }
       setMessages([
         {
-          sender: `patient:${
-            pingDetails.fullname
-          }@${new Date().toLocaleTimeString()}`,
-          text: `${pingDetails.fullname}\n${pingDetails.complaints}`,
-          image: pingDetails.image,
+          sender: `patient:${pFullname}@${new Date().toLocaleTimeString()}`,
+          text: `${pFullname}\n${pComplaints}`,
+          image: pImage,
         },
       ]);
     };
@@ -246,15 +254,15 @@ function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
     return () => {
       socket.off("message");
     };
-  }, [selectedHospital?.$id, pingDetails]);
+  }, [pSelectedHospital?.$id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     localforage.setItem(
-      `chat_${pingDetails.fullname}:${selectedHospital?.$id}`,
+      `chat_${pFullname}:${pSelectedHospital?.$id}`,
       messages
     );
-  }, [messages, selectedHospital?.$id]);
+  }, [messages, pSelectedHospital?.$id]);
 
   const handleMessageChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value);
@@ -279,16 +287,14 @@ function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
     e.preventDefault();
     if (inputMessage.trim() || image) {
       const newMessage: Message = {
-        sender: `patient:${
-          pingDetails.fullname
-        }@${new Date().toLocaleTimeString()}`,
+        sender: `patient:${pFullname}@${new Date().toLocaleTimeString()}`,
         text: inputMessage,
         image,
       };
       toast.success(newMessage.image);
       socket.emit("sendMessage", {
         ...newMessage,
-        hospitalId: selectedHospital?.$id,
+        hospitalId: pSelectedHospital?.$id,
       });
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInputMessage("");
@@ -297,7 +303,7 @@ function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
   };
 
   const handleCall = () => {
-    window.location.href = "tel:" + selectedHospital?.hospitalName;
+    window.location.href = "tel:" + pSelectedHospital?.hospitalName;
   };
 
   return (
@@ -309,7 +315,7 @@ function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
         <Header>
           <HospitalInfo>
             <HospitalIcon size={40} className="text-blue-500 md:mr-2" />
-            <HospitalName>{selectedHospital?.hospitalName}</HospitalName>
+            <HospitalName>{pSelectedHospital?.hospitalName}</HospitalName>
           </HospitalInfo>
           <CallButton onClick={handleCall}>
             <Phone
@@ -321,7 +327,7 @@ function PingChatTab({ selectedHospital, pingDetails }: PingChatTabProps) {
         <div className="text-center mb-4">
           <Typewriter
             options={{
-              strings: `Welcome to ${selectedHospital?.hospitalName}! How can we assist you today?`,
+              strings: `Welcome to ${pSelectedHospital?.hospitalName}! How can we assist you today?`,
               autoStart: true,
               loop: false,
             }}

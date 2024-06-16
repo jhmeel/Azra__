@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { newPing } from "../actions/index.js";
 import { Hospital } from "../types/index.js";
 import PingChatRoom from "./PingChatRoom.js";
+import { useNavigate } from "react-router-dom";
 
 function PingForm({
   selectedHospital,
@@ -21,12 +22,12 @@ function PingForm({
   const [fullName, setFullName] = useState<string>("");
   const [complaints, setComplaints] = useState<string>("");
   const [image, setImage] = useState<string | undefined>("");
-  const [showChat, setShowChat] = useState(false);
 
   const { message, error, loading } = useSelector(
     (state: RootState) => state.ping
   );
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
@@ -66,6 +67,11 @@ function PingForm({
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    navigate("/chat", {
+      state: { image, complaints, fullName, hospital: selectedHospital },
+    });
+
     dispatch<any>(
       newPing("token", {
         fullname: fullName,
@@ -74,8 +80,6 @@ function PingForm({
         hospitalId: selectedHospital?.$id,
       })
     );
-    onClose();
-    setShowChat(true);
   };
 
   return (
@@ -125,7 +129,7 @@ function PingForm({
               </ImagePreview>
             ) : (
               <FileLabel htmlFor="image">
-                <Camera className="mr-2" size={20} />
+                <Camera className="mr-2" size={18} />
                 Upload Image
               </FileLabel>
             )}
@@ -136,12 +140,6 @@ function PingForm({
           </SubmitButton>
         </Form>
       </FormContainer>
-      {showChat && (
-        <PingChatRoom
-          pingDetails={{ image, complaints, fullname: fullName }}
-          selectedHospital={selectedHospital}
-        />
-      )}
     </Overlay>
   );
 }
@@ -159,6 +157,7 @@ const Overlay = styled.div`
   align-items: center;
   background: rgba(31, 41, 55, 0.5);
   padding: 8px;
+  overflow-x: hidden;
 `;
 
 const FormContainer = styled.div`
@@ -186,7 +185,7 @@ const CloseButton = styled.button`
 
 const Title = styled.h2`
   text-align: center;
-  font-size: 24px;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 24px;
 `;

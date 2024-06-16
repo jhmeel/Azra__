@@ -61,7 +61,7 @@ const Input = styled.input`
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
-width:100%;
+  width: 100%;
 
   &:focus {
     outline: none;
@@ -73,7 +73,7 @@ width:100%;
 const Select = styled.select`
   padding: 0.5rem 2rem;
   border: 1px solid #e2e8f0;
-  max-width:300px;
+  max-width: 300px;
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -102,14 +102,66 @@ const AlertMessage = styled.div`
   color: #4299e1;
 `;
 
-const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
+// Example hospital data
+const demoHospitals: Hospital[] = [
+  {
+    $id: "1",
+    hospitalName: "Yusuf Dantsoho Memorial Hospital",
+    hospitalNumber: "1234",
+    avatar: "https://example.com/hospital1.jpg",
+    status: "available",
+    email: "",
+    phone: "",
+    coordinates: "10.5272,7.4396",
+  },
+  {
+    $id: "2",
+    hospitalName: "Ahmadu Bello University Teaching Hospital",
+    hospitalNumber: "5678",
+    avatar: "https://example.com/hospital2.jpg",
+    status: "unavailable",
+    email: "",
+    phone: "",
+    coordinates: "11.0801,7.7069",
+  },
+  {
+    $id: "3",
+    hospitalName: "Garki Hospital",
+    hospitalNumber: "91011",
+    avatar: "https://example.com/hospital3.jpg",
+    status: "available",
+    email: "",
+    phone: "",
+    coordinates: "9.0765,7.4983",
+  },
+  {
+    $id: "4",
+    hospitalName: "Lagos University Teaching Hospital",
+    hospitalNumber: "121314",
+    avatar: "https://example.com/hospital4.jpg",
+    status: "unavailable",
+    email: "",
+    phone: "",
+    coordinates: "6.5244,3.3792",
+  },
+  {
+    $id: "5",
+    hospitalName: "Aminu Kano Teaching Hospital",
+    hospitalNumber: "151617",
+    avatar: "https://example.com/hospital5.jpg",
+    status: "available",
+    email: "",
+    phone: "",
+    coordinates: "12.0022,8.5167",
+  },
+];
+
+const HospitalCards = ({ userLocation, hospitals = demoHospitals, isLoading }) => {
   const [selectedStatus, setSelectedStatus] = useState("available");
-  const [selectedDistance, setSelectedDistance] = useState("5");
+  const [selectedDistance, setSelectedDistance] = useState("0");
   const [searchQuery, setSearchQuery] = useState("");
   const [pingFormActive, setPingFormActive] = useState<boolean>(false);
-  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
-    null
-  );
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
 
   const handleStatusFilter = (value: string) => {
     setSelectedStatus(value);
@@ -128,7 +180,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
 
     // Calculate distance only if selected distance is provided
     const withinDistance =
-      selectedDistance === "" ||
+      selectedDistance === "0" ||
       getDistanceFromLatLonInKm(
         userLocation.lat,
         userLocation.lng,
@@ -137,11 +189,12 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
       ) <= parseFloat(selectedDistance);
 
     return matchesSearch && matchesStatus && withinDistance;
-  }) 
+  });
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
+
   const handlePing = (hospital: Hospital) => {
     setPingFormActive(!pingFormActive);
     setSelectedHospital(hospital);
@@ -157,7 +210,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
                 display: "flex",
                 alignItems: "center",
                 marginBottom: "0.75rem",
-                gap:'10px'
+                gap: "10px",
               }}
             >
               <HospitalIcon
@@ -176,7 +229,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                     gap:'10px',
+                gap: "10px",
                 marginBottom: "0.75rem",
               }}
             >
@@ -197,7 +250,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
                 display: "flex",
                 alignItems: "center",
                 marginBottom: "0.75rem",
-                     gap:'10px'
+                gap: "10px",
               }}
             >
               <Send
@@ -228,7 +281,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
         <div
           style={{
             display: "flex",
-            flexDirection:'row',
+            flexDirection: "row",
             justifyContent: "center",
             marginBottom: "2rem",
             gap: "1rem",
@@ -241,31 +294,31 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
               style={{
                 position: "absolute",
                 top: "50%",
-                width:'20px',
+                width: "20px",
                 left: "1rem",
                 transform: "translateY(-50%)",
                 color: "#cbd5e0",
               }}
             />
           </div>
-          <div style={{display:'flex',gap:'8px'}}>
-          <StatusFilter
-            value={selectedStatus}
-            onChange={(e) => handleStatusFilter(e.target.value)}
-          >
-            <StatusOption value="available">Available</StatusOption>
-            <StatusOption value="not-available">Not Available</StatusOption>
-          </StatusFilter>
-          <DistanceFilter
-            value={selectedDistance}
-            onChange={(e) => handleDistanceFilter(e.target.value)}
-          >
-            <DistanceOption value="5">Within 5 km</DistanceOption>
-            <DistanceOption value="10">Within 10 km</DistanceOption>
-            <DistanceOption value="15">Within 15 km</DistanceOption>
-          </DistanceFilter>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <StatusFilter
+              value={selectedStatus}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+            >
+              <StatusOption value="available">Available</StatusOption>
+              <StatusOption value="unavailable">Not Available</StatusOption>
+            </StatusFilter>
+            <DistanceFilter
+              value={selectedDistance}
+              onChange={(e) => handleDistanceFilter(e.target.value)}
+            >
+              <DistanceOption value="0">Any Distance</DistanceOption>
+              <DistanceOption value="5">Within 5 km</DistanceOption>
+              <DistanceOption value="10">Within 10 km</DistanceOption>
+              <DistanceOption value="15">Within 15 km</DistanceOption>
+            </DistanceFilter>
           </div>
-         
         </div>
 
         {isLoading ? (
@@ -276,7 +329,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
           </AlertMessage>
         ) : (
           <CardGrid>
-            {filteredHospitals.map((hospital:Hospital) => (
+            {filteredHospitals.map((hospital: Hospital) => (
               <Card key={hospital.$id}>
                 <div
                   style={{
@@ -318,11 +371,7 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
                     <div
                       style={{
                         fontSize: "0.875rem",
-                        color: `${
-                          hospital.status === "available"
-                            ? "#48bb78"
-                            : "#f56565"
-                        }`,
+                        color: hospital.status === "available" ? "#48bb78" : "#f56565",
                         marginBottom: "0.5rem",
                       }}
                     >
@@ -356,25 +405,22 @@ const HospitalCards = ({ userLocation, hospitals, isLoading }) => {
                     marginBottom: "1rem",
                   }}
                 ></div>
-                <div
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <button
                     onClick={() => handlePing(hospital)}
                     style={{
                       backgroundColor: "#4299e1",
                       color: "white",
-                      padding: "0.5rem 1rem",
+                      padding: "0.4rem .8rem",
                       borderRadius: "0.5rem",
+                      fontSize:"14px",
                       display: "flex",
                       alignItems: "center",
                       cursor: "pointer",
                       transition: "background-color 0.3s ease",
                     }}
                   >
-                    <HospitalIcon
-                      style={{ marginRight: "2", color: "white" }}
-                    />{" "}
+                    <HospitalIcon style={{ marginRight: "2", color: "white", width:'16px' }} />{" "}
                     Ping
                   </button>
                 </div>

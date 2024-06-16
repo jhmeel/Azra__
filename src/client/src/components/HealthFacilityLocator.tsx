@@ -1,18 +1,19 @@
-import React from 'react';
-import styled from 'styled-components';
-import { GoogleMap, Marker } from '@react-google-maps/api';
-import { Link } from 'react-router-dom';
-import { MessageCircleDashed } from 'lucide-react';
-import PingForm from './PingForm';
-import { Hospital } from '../types';
+import React from "react";
+import styled from "styled-components";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { Link } from "react-router-dom";
+import { MessageCircleDashed } from "lucide-react";
+import PingForm from "./PingForm";
+import { Hospital } from "../types";
 
 const Section = styled.section`
   margin: 3rem auto;
   width: 100%;
+  padding: 0 8px;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 2rem;
   text-align: center;
@@ -51,10 +52,7 @@ const GreenSectionTitle = styled.h2`
   display: flex;
   align-items: center;
   justify-content: center;
-
-  svg {
-    margin-right: 0.5rem;
-  }
+  gap: 5px;
 `;
 
 const GreenSectionText = styled.p`
@@ -68,7 +66,7 @@ const CollaborateLink = styled(Link)`
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  font-size:14px;
+  font-size: 14px;
   text-decoration: none;
   transition: background-color 0.3s;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -78,9 +76,12 @@ const CollaborateLink = styled(Link)`
   }
 `;
 
-
-
-const HealthFacilityLocator = ({ isLoaded, userLocation, hospitals, pinIconUrl}) => {
+const HealthFacilityLocator = ({
+  isLoaded,
+  userLocation,
+  hospitals,
+  pinIconUrl,
+}) => {
   return (
     <div>
       <Section>
@@ -95,7 +96,7 @@ const HealthFacilityLocator = ({ isLoaded, userLocation, hospitals, pinIconUrl})
               position={userLocation}
               icon={{ url: "https://example.com/location-marker.png" }}
             />
-            {hospitals.map((hospital:Hospital) => (
+            {hospitals.map((hospital: Hospital) => (
               <Marker
                 key={hospital.$id}
                 position={{
@@ -125,9 +126,7 @@ const HealthFacilityLocator = ({ isLoaded, userLocation, hospitals, pinIconUrl})
             Join a network of care providers. Chat with fellow hospitals, share
             space availability, and exchange ideas to enhance patient care.
           </GreenSectionText>
-          <CollaborateLink to="/chat">
-            Start Collaborating
-          </CollaborateLink>
+          <CollaborateLink to="/chat">Start Collaborating</CollaborateLink>
         </Container>
       </GreenSection>
     </div>

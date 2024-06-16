@@ -1,23 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import ScrollReveal from "scrollreveal";
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import {useLoadScript } from "@react-google-maps/api";
 import {
-  HospitalIcon,
-  MessageCircleDashed,
-  Search,
-  Send,
-  MessageCircle,
-  Hospital,
+
   Menu,
   X,
 } from "lucide-react";
 import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 import styled from "styled-components";
-import Footer from "../components/Footer";
-import PingForm from "../components/PingForm";
 import { Hospital as THospital } from "../types";
-import { getDistanceFromLatLonInKm } from "../utils/formatter";
 import HospitalCards from "../components/HospitalItem";
 import HealthFacilityLocator from "../components/HealthFacilityLocator";
 const demoHospitals: THospital[] = [
@@ -114,6 +105,12 @@ const Home = () => {
       duration: 1000,
       delay: 300,
     });
+    sr.reveal(".reveal-top", {
+      origin: "top",
+      distance: "50px",
+      duration: 1000,
+      delay: 300,
+    });
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -130,16 +127,15 @@ const Home = () => {
 
   return (
     <div className="landing-page">
-      <Header className="reveal-left">
+      <Header className="reveal-top">
         <Container>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <Logo src="" alt="Logo" />
             <Title>Azra</Title>
           </div>
           <Nav>
-            <NavLink href="/blog">Blog</NavLink>
-            <NavLink href="/community">Community</NavLink>
             <NavLink href="/about">About</NavLink>
+            <NavLink href="/blog">Blog</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <ButtonLink href="/signup">Register Hospital</ButtonLink>
           </Nav>
@@ -160,17 +156,17 @@ const Home = () => {
                 <X onClick={() => setIsMobileMenuOpen(false)} />
               </div>
               <MobileNavContent>
-                <MobileNavLink href="/blog" onClick={toggleMobileMenu}>
-                  Blog
-                </MobileNavLink>
-                <MobileNavLink href="/community" onClick={toggleMobileMenu}>
-                  Community
-                </MobileNavLink>
                 <MobileNavLink href="/about" onClick={toggleMobileMenu}>
                   About
                 </MobileNavLink>
                 <MobileNavLink href="/contact" onClick={toggleMobileMenu}>
                   Contact
+                </MobileNavLink>
+                <MobileNavLink href="/blog" onClick={toggleMobileMenu}>
+                  Blog
+                </MobileNavLink>
+                <MobileNavLink href="/dashboard" onClick={toggleMobileMenu}>
+                  Dashboard
                 </MobileNavLink>
                 <ButtonLink primary href="/signup" onClick={toggleMobileMenu}>
                   Register Hospital
@@ -342,7 +338,6 @@ const SectionTitle = styled.h2`
 const SectionText = styled.p`
   font-size: 1.125rem;
   margin-bottom: 2rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const ButtonLink = styled.a`
@@ -359,28 +354,3 @@ const ButtonLink = styled.a`
   }
 `;
 
-const GradientOverlayTop = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5rem;
-  background: linear-gradient(to top, #4fd1c5, transparent);
-`;
-
-const GradientOverlayBottom = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 5rem;
-  background: linear-gradient(to bottom, #4fd1c5, transparent);
-`;
-
-const Overlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  backdrop-filter: blur(8px);
-`;
