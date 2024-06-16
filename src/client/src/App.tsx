@@ -3,9 +3,9 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import "./global.css";
 import { toast } from "sonner";
 import { Unplug } from "lucide-react";
-import ChatWindow from "./pages/Chat";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/Notfound";
+const Chat  = lazy(() =>import("./pages/Chat"));
+const Dashboard  = lazy(() =>import("./pages/Dashboard"));
+const NotFound  = lazy(() =>import( "./pages/Notfound"))
 import MainLoader from "./components/Loaders/MainLoader";
 const PingChat = lazy(() =>import("./components/PingChatRoom"))
 const Home = lazy(() => import("./pages/Home"));
