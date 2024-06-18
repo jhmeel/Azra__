@@ -60,7 +60,7 @@ const HomeLink = styled(Link)`
   background-color: #4299e1;
   color: #ffffff;
   font-weight: 600;
-  padding: 12px 24px;
+  padding: 5px 10px;
   border-radius: 8px;
   transition: background-color 0.3s ease;
 

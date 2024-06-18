@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   HospitalIcon,
@@ -13,6 +13,7 @@ import PingForm from "./PingForm";
 import localforage from "localforage";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { bouncy } from "ldrs";
 
 const SectionWrapper = styled.section`
   width: 100%;
@@ -100,11 +101,6 @@ const StatusOption = styled.option``;
 
 const DistanceOption = styled.option``;
 
-const LoadingSpinner = styled.div`
-  font-size: 1.5rem;
-  text-align: center;
-`;
-
 const AlertMessage = styled.div`
   font-size: 1rem;
   text-align: center;
@@ -177,6 +173,9 @@ const HospitalCards = ({
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
     null
   );
+  useEffect(() => {
+    bouncy.register();
+  }, []);
 
   const navigate = useNavigate();
   const handleStatusFilter = (value: string) => {
@@ -217,15 +216,16 @@ const HospitalCards = ({
   };
 
   const openChat = async (hospital: Hospital) => {
-    const patient = await localforage.getItem(`AZRA_PATIENT_${hospital.hospitalName}`);
+    const patient = await localforage.getItem(
+      `AZRA_PATIENT_${hospital.hospitalName}`
+    );
     if (patient) {
       navigate("/ping-chat", {
         state: { fullName: patient, hospital },
       });
-    }else{
-        toast.error(`You have no chat history with ${hospital.hospitalName}!`)
+    } else {
+      toast.error(`You have no chat history with ${hospital.hospitalName}!`);
     }
-
   };
   return (
     <>
@@ -349,7 +349,10 @@ const HospitalCards = ({
         </div>
 
         {isLoading ? (
-          <LoadingSpinner>Loading...</LoadingSpinner>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            {" "}
+            <l-bouncy size={35} color={"#4a5568"}></l-bouncy>
+          </div>
         ) : filteredHospitals.length === 0 ? (
           <AlertMessage>
             No hospitals found matching your search criteria

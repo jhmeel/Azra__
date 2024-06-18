@@ -107,7 +107,7 @@ const SearchInput = styled.input`
 const ExportButton = styled.button`
   background-color: #3182ce;
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 5px 10px;
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -462,8 +462,9 @@ const Dashboard: React.FC = () => {
   return (
     <DashboardContainer>
       <ContentContainer>
+      <ArrowLeft onClick={()=> navigate('/')} style={{background:'#ededed',width:'35',padding:'4px', borderRadius:'50px', cursor:'pointer'}} />
         <Header>
-          <ArrowLeft onClick={()=> navigate('/')} style={{background:'#ededed',width:'35',padding:'4px', borderRadius:'50px', cursor:'pointer'}} />
+        
           <WelcomeText>
             <h1>Welcome Back Jhmeel</h1>
             <p>Patient reports are always updated in real time</p>

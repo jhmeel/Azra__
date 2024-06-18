@@ -103,10 +103,9 @@ const MessagesContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  height: 85%;
+  height: 80%;
   @media (max-width: 767px) {
-    height: 85%;
-    ::-webkit-scrollbar {
+    &::-webkit-scrollbar {
     display: none;
   }
   }

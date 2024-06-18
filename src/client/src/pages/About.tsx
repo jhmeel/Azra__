@@ -2,18 +2,20 @@ import React from "react";
 import styled from "styled-components";
 import Footer from "../components/Footer";
 import { RoughNotation } from "react-rough-notation";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
   background-color: #f8f9fa;
   color: #343a40;
   font-family: "Arial, sans-serif";
 `;
 
 const Title = styled.h1`
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #007bff;
 
   text-align: center;
@@ -43,7 +45,7 @@ const Highlight = styled.span`
 const StoryContainer = styled.div`
   max-width: 800px;
   margin-bottom: 2rem;
-  padding: 2rem;
+  padding: 1rem;
   border-left: 3px solid #d9d9d9;
 `;
 
@@ -56,9 +58,23 @@ const StoryContent = styled.p`
 `;
 
 const AboutPage: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <>
       <Container>
+        <div style={{ width: "100%", display: "flex", alignItems: "start" }}>
+          <ArrowLeft
+            onClick={() => navigate("/")}
+            style={{
+              background: "#ededed",
+              width: "35",
+              padding: "4px",
+              borderRadius: "50px",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
         <RoughNotation padding={0} color="#176984" type="underline" show={true}>
           <Title>Welcome to Azra</Title>
         </RoughNotation>
