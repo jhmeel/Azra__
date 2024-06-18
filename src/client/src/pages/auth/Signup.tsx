@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-import signupImage from "../../assets/OnlineDoctor-bro .svg";
-import { Countries} from "../../utils/formatter";
+import signupImage from "../../assets/OnlineDoctor-bro.svg";
+import { Countries } from "../../utils/formatter";
 import { Link, useNavigate } from "react-router-dom";
 import { SignupFormData } from "../../types";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,6 +12,7 @@ import { CLEAR_ERRORS } from "../../constants";
 import { signup } from "../../actions";
 import { LoaderIcon } from "lucide-react";
 import styled from "styled-components";
+import Footer from "../../components/Footer";
 
 // Styled components
 const Container = styled.div`
@@ -20,21 +21,20 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   background-color: #f3f4f6;
-  padding: 1rem;
 `;
 
 const FormContainer = styled.div`
   background-color: white;
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 80rem;
   display: flex;
   flex-direction: column;
 
   @media (min-width: 1024px) {
     flex-direction: row;
+    padding: 2rem;
   }
 `;
 
@@ -55,7 +55,6 @@ const ImageWrapper = styled.div`
 
 const FormWrapper = styled.div`
   width: 100%;
-  padding-left: 2rem;
 
   @media (min-width: 1024px) {
     width: 50%;
@@ -82,7 +81,7 @@ const Message = styled.p<{ success: boolean }>`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 `;
 
 const Label = styled.label`
@@ -115,11 +114,12 @@ const PhoneInputWrapper = styled.div`
 `;
 
 const CountrySelect = styled.select`
-  padding: 0.5rem 1rem;
+  padding: 0.1rem;
   border: 1px solid #d1d5db;
   border-right: none;
   border-radius: 0.375rem 0 0 0.375rem;
   outline: none;
+  font-size: 14px;
   &:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
@@ -162,7 +162,8 @@ const SubmitButton = styled.button<{ loading: boolean }>`
 const TermsWrapper = styled.div`
   display: flex;
   align-items: center;
-
+  margin-top: 10px;
+  font-size: 14px;
   input {
     margin-right: 0.5rem;
   }
@@ -236,13 +237,11 @@ const DrawerBody = styled.div`
   height: 100%;
 `;
 
-// Define the props for the SignupForm component
 interface SignupFormProps {
   onSubmit: SubmitHandler<SignupFormData>;
 }
 
-// SignupForm Component
-const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
+const SignupForm: React.FC<SignupFormProps> = () => {
   const {
     register,
     handleSubmit,
@@ -255,7 +254,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
     lat: number;
     lng: number;
   } | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<any>(Countries[0]);
+
   const { admin, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
@@ -290,208 +289,209 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
     setDrawerOpen(false);
   };
 
+  const onSubmit: SubmitHandler<SignupFormData> = (data) => {
+    dispatch<any>(signup(data));
+  };
+
   return (
-    <Container>
-      <FormContainer>
-        <ImageWrapper>
-          <img src={signupImage} alt="Signup Illustration" />
-        </ImageWrapper>
-        <FormWrapper>
-          <Title>Sign Up</Title>
-          {message && (
-            <Message success={message.includes("success")}>
-              {message}
-            </Message>
-          )}
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <div>
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              type="text"
-              id="firstName"
-              {...register("firstName", { required: "First name is required" })}
-              error={!!errors.firstName}
-            />
-            {errors.firstName && (
-              <ErrorMessage>{errors.firstName.message}</ErrorMessage>
+    <>
+      <Container>
+        <FormContainer>
+          <ImageWrapper>
+            <img src={signupImage} alt="Signup Illustration" />
+          </ImageWrapper>
+          <FormWrapper>
+            <Title>Sign Up</Title>
+            {message && (
+              <Message success={message.includes("successful")}>
+                {message}
+              </Message>
             )}
-          </div>
-          <div>
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              type="text"
-              id="lastName"
-              {...register("lastName", { required: "Last name is required" })}
-              error={!!errors.lastName}
-            />
-            {errors.lastName && (
-              <ErrorMessage>{errors.lastName.message}</ErrorMessage>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /\S+@\S+\.\S+/,
-                  message: "Invalid email address",
-                },
-              })}
-              error={!!errors.email}
-            />
-            {errors.email && (
-              <ErrorMessage>{errors.email.message}</ErrorMessage>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              type="password"
-              id="password"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters",
-                },
-              })}
-              error={!!errors.password}
-            />
-            {errors.password && (
-              <ErrorMessage>{errors.password.message}</ErrorMessage>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              type="password"
-              id="confirmPassword"
-              {...register("confirmPassword", {
-                required: "Confirm Password is required",
-              })}
-              error={!!errors.confirmPassword}
-            />
-            {errors.confirmPassword && (
-              <ErrorMessage>{errors.confirmPassword.message}</ErrorMessage>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="phone">Phone Number</Label>
-            <PhoneInputWrapper>
-              <CountrySelect
-                id="countryCode"
-                {...register("countryCode", { required: true })}
-              >
-                {Countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.name} (+{country.dialCode})
-                  </option>
-                ))}
-              </CountrySelect>
-              <PhoneInput
-                type="tel"
-                id="phone"
-                placeholder="Phone Number"
-                {...register("phone", {
-                  required: "Phone number is required",
-                  pattern: {
-                    value: /^\d{6,14}$/,
-                    message: "Invalid phone number",
-                  },
-                })}
-                error={!!errors.phone}
-              />
-            </PhoneInputWrapper>
-            {errors.phone && (
-              <ErrorMessage>{errors.phone.message}</ErrorMessage>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="address">Address</Label>
-            <Input
-              type="text"
-              id="address"
-              {...register("address", { required: "Address is required" })}
-              error={!!errors.address}
-            />
-            {errors.address && (
-              <ErrorMessage>{errors.address.message}</ErrorMessage>
-            )}
-          </div>
-          <div>
-            <LocationButton
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-            >
-              {selectedLocation
-                ? `Location Selected (${selectedLocation.lat}, ${selectedLocation.lng})`
-                : "Select Location"}
-            </LocationButton>
-            {selectedLocation && (
-                <Drawer open={drawerOpen}>
-                  <DrawerContent>
-                    <DrawerHeader>
-                      <h3>Selected Location</h3>
-                      <button onClick={() => handleRemoveLocation()}>
-                        Remove Selection
-                      </button>
-                    </DrawerHeader>
-                    <DrawerBody>
-                      <LoadScript
-                        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""}
-                      >
-                        <GoogleMap
-                          mapContainerStyle={{
-                            width: "100%",
-                            height: "100%",
-                          }}
-                          center={{
-                            lat: selectedLocation.lat,
-                            lng: selectedLocation.lng,
-                          }}
-                          zoom={15}
-                          onClick={handleMapClick}
+            <Form onSubmit={handleSubmit(onSubmit)}>
+              <div>
+                <Label htmlFor="hospitalName">Hospital Name</Label>
+                <Input
+                  type="text"
+                  autoFocus
+                  id="hospitalName"
+                  {...register("hospitalName", {
+                    required: "Hospital Name is required",
+                  })}
+                  error={!!errors.hospitalName}
+                />
+                {errors.hospitalName && (
+                  <ErrorMessage>{errors.hospitalName.message}</ErrorMessage>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="hospitalNumber">Hospital Number</Label>
+                <Input
+                  type="text"
+                  id="hospitalNumber"
+                  {...register("hospitalNumber", {
+                    required: "Hospital Number is required",
+                  })}
+                  error={!!errors.hospitalNumber}
+                />
+                {errors.hospitalNumber && (
+                  <ErrorMessage>{errors.hospitalNumber.message}</ErrorMessage>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  type="email"
+                  id="email"
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /\S+@\S+\.\S+/,
+                      message: "Invalid email address",
+                    },
+                  })}
+                  error={!!errors.email}
+                />
+                {errors.email && (
+                  <ErrorMessage>{errors.email.message}</ErrorMessage>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <PhoneInputWrapper>
+                  <CountrySelect id="countryCode" {...register("countryCode")}>
+                    {Countries.map((country) => (
+                      <option key={country.code} value={country.domain}>
+                        {country.code} ({country.domain})
+                      </option>
+                    ))}
+                  </CountrySelect>
+                  <PhoneInput
+                    type="tel"
+                    id="phone"
+                    placeholder="Phone Number"
+                    {...register("phone", {
+                      required: "Phone number is required",
+                      pattern: {
+                        value: /^\d{6,14}$/,
+                        message: "Invalid phone number",
+                      },
+                    })}
+                    error={!!errors.phone}
+                  />
+                </PhoneInputWrapper>
+                {errors.phone && (
+                  <ErrorMessage>{errors.phone.message}</ErrorMessage>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  type="password"
+                  id="password"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
+                  })}
+                  error={!!errors.password}
+                />
+                {errors.password && (
+                  <ErrorMessage>{errors.password.message}</ErrorMessage>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  type="password"
+                  id="confirmPassword"
+                  {...register("confirmPassword", {
+                    required: "Confirm Password is required",
+                  })}
+                  error={!!errors.confirmPassword}
+                />
+                {errors.confirmPassword && (
+                  <ErrorMessage>{errors.confirmPassword.message}</ErrorMessage>
+                )}
+              </div>
+              <div>
+                <LocationButton
+                  type="button"
+                  onClick={() => setDrawerOpen(true)}
+                >
+                  {selectedLocation
+                    ? `Location Selected (${selectedLocation.lat}, ${selectedLocation.lng})`
+                    : "Select Location"}
+                </LocationButton>
+                {selectedLocation && (
+                  <Drawer open={drawerOpen}>
+                    <DrawerContent>
+                      <DrawerHeader>
+                        <h3>Selected Location</h3>
+                        <button onClick={() => handleRemoveLocation()}>
+                          Remove Selection
+                        </button>
+                      </DrawerHeader>
+                      <DrawerBody>
+                        <LoadScript
+                          googleMapsApiKey={
+                            process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""
+                          }
                         >
-                          <Marker
-                            position={{
+                          <GoogleMap
+                            mapContainerStyle={{
+                              width: "100%",
+                              height: "100%",
+                            }}
+                            center={{
                               lat: selectedLocation.lat,
                               lng: selectedLocation.lng,
                             }}
-                          />
-                        </GoogleMap>
-                      </LoadScript>
-                    </DrawerBody>
-                  </DrawerContent>
-                </Drawer>
-              )}
-          </div>
-          <SubmitButton type="submit" loading={loading}>
-            {loading ? <LoaderIcon size={20} /> : "Sign Up"}
-          </SubmitButton>
-        </Form>
-        <TermsWrapper>
-          <input
-            type="checkbox"
-            id="terms"
-            {...register("terms", { required: "You must accept the terms to sign up" })}
-          />
-          <Label htmlFor="terms">
-            I accept the <Link to="/terms">Terms and Conditions</Link>
-          </Label>
-        </TermsWrapper>
-        {errors.terms && (
-          <ErrorMessage>{errors.terms.message}</ErrorMessage>
-        )}
-        <LoginText>
-          Already have an account? <Link to="/login">Log in here</Link>
-        </LoginText>
-      </FormWrapper>
-    </FormContainer>
-  </Container>
-);
+                            zoom={15}
+                            onClick={handleMapClick}
+                          >
+                            <Marker
+                              position={{
+                                lat: selectedLocation.lat,
+                                lng: selectedLocation.lng,
+                              }}
+                            />
+                          </GoogleMap>
+                        </LoadScript>
+                      </DrawerBody>
+                    </DrawerContent>
+                  </Drawer>
+                )}
+              </div>
+              <SubmitButton type="submit" loading={loading}>
+                {loading ? <LoaderIcon size={20} /> : "Sign Up"}
+              </SubmitButton>
+            </Form>
+            <TermsWrapper>
+              <input
+                type="checkbox"
+                id="terms"
+                {...register("acceptTerms", {
+                  required: "You must accept the terms to sign up",
+                })}
+              />
+              <Label htmlFor="terms">
+                I accept the <Link to="/terms">Terms and Conditions</Link>
+              </Label>
+            </TermsWrapper>
+            {errors.acceptTerms && (
+              <ErrorMessage>{errors.acceptTerms.message}</ErrorMessage>
+            )}
+            <LoginText>
+              Already have an account? <Link to="/login">Log in here</Link>
+            </LoginText>
+          </FormWrapper>
+        </FormContainer>
+      </Container>
+      <Footer />
+    </>
+  );
 };
 
 export default SignupForm;

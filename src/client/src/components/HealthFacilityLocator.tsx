@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { Link } from "react-router-dom";
 import { MessageCircleDashed } from "lucide-react";
-import PingForm from "./PingForm";
 import { Hospital } from "../types";
+import { bouncy } from "ldrs";
 
 const Section = styled.section`
   margin: 3rem auto;
@@ -82,7 +82,12 @@ const HealthFacilityLocator = ({
   hospitals,
   pinIconUrl,
 }) => {
-  return (
+
+useEffect(() => {
+  bouncy.register();
+}, []);  
+
+return (
     <div>
       <Section>
         <SectionTitle>Health Facility Locator</SectionTitle>
@@ -112,8 +117,9 @@ const HealthFacilityLocator = ({
               />
             ))}
           </GoogleMap>
-        ) : (
-          <LoadingMessage>Loading map...</LoadingMessage>
+        ) :  (
+          <div style={{display:'flex', justifyContent:'center'}}>  <l-bouncy size={35} color={'#4a5568'}></l-bouncy></div>
+        
         )}
       </Section>
 

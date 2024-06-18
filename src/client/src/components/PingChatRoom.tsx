@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, ChangeEvent, FormEvent } from "react";
 import styled from "styled-components";
 import io from "socket.io-client";
 import localforage from "localforage";
-import Typewriter from "typewriter-effect";
 import {
   UploadIcon,
   Phone,
@@ -13,6 +12,7 @@ import {
 import { Hospital, Ping } from "../types/index.js";
 import { toast } from "sonner";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import TypingEffect from "./Typing.js";
 
 const socket = io("http://localhost:8000");
 
@@ -29,7 +29,6 @@ type Message = {
 
 const Container = styled.div`
   position: fixed;
-  top: 10px;
   left: 0;
   width: 100%;
   height: 100%;
@@ -107,6 +106,9 @@ const MessagesContainer = styled.div`
   height: 85%;
   @media (max-width: 767px) {
     height: 85%;
+    ::-webkit-scrollbar {
+    display: none;
+  }
   }
 
   overflow-y: auto;
@@ -351,13 +353,7 @@ function PingChatTab() {
           </CallButton>
         </Header>
         <div className="text-center mb-4">
-          <Typewriter
-            options={{
-              strings: `Welcome to ${pSelectedHospital?.hospitalName}! How can we assist you today?`,
-              autoStart: true,
-              loop: false,
-            }}
-          />
+         <TypingEffect text={`Welcome to ${pSelectedHospital?.hospitalName}! How can we assist you today?`}/>
         </div>
         <MessagesContainer>
           {messages.map((message, index) => (

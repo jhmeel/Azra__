@@ -1,6 +1,7 @@
 import { Facebook, Twitter, Instagram } from "lucide-react";
 import styled from "styled-components";
 
+
 const FooterWrapper = styled.footer`
   background-color: #2d3748;
   padding: 1rem;
@@ -30,7 +31,9 @@ const IconLink = styled.a`
 const Footer = () => {
   return (
     <FooterWrapper>
+      
       <IconWrapper>
+  
         <IconLink
           href="https://www.facebook.com/healthhub"
           target="_blank"

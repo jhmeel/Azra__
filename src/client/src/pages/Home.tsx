@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import ScrollReveal from "scrollreveal";
-import {useLoadScript } from "@react-google-maps/api";
-import {
-
-  Menu,
-  X,
-} from "lucide-react";
+import { useLoadScript } from "@react-google-maps/api";
+import { Menu, X } from "lucide-react";
 import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 import styled from "styled-components";
 import { Hospital as THospital } from "../types";
+import azraLight from "../assets/azra_light.png";
 import HospitalCards from "../components/HospitalItem";
 import HealthFacilityLocator from "../components/HealthFacilityLocator";
+import Footer from "../components/Footer";
 const demoHospitals: THospital[] = [
   {
     $id: "1",
@@ -130,8 +128,7 @@ const Home = () => {
       <Header className="reveal-top">
         <Container>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <Logo src="" alt="Logo" />
-            <Title>Azra</Title>
+            <Logo src={azraLight} alt="Azra" />
           </div>
           <Nav>
             <NavLink href="/about">About</NavLink>
@@ -209,6 +206,7 @@ const Home = () => {
           pinIconUrl={""}
         />
       </section>
+      <Footer />
     </div>
   );
 };
@@ -216,7 +214,7 @@ const Home = () => {
 export default Home;
 const Header = styled.header`
   background: linear-gradient(to right, #4fd1c5, #38b2ac);
-  padding-bottom:2.5rem;
+  padding-bottom: 2.5rem;
   color: white;
   position: relative;
   overflow: hidden;
@@ -230,9 +228,10 @@ const Container = styled.div`
 `;
 
 const Logo = styled.img`
-  height: 3rem;
+  height: 2.5rem;
   width: auto;
   margin-right: 1rem;
+  padding-top: 10px;
 `;
 
 const Title = styled.h1`
@@ -353,4 +352,3 @@ const ButtonLink = styled.a`
     color: white;
   }
 `;
-

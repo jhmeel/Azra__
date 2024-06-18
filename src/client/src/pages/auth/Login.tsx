@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import loginImage from "../../assets/OnlineDoctor-bro .svg";
+import loginImage from "../../assets/OnlineDoctor-bro.svg";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, EyeOff, EyeIcon, Lock, LoaderIcon } from "lucide-react";
 import { RootState } from "../../store";
@@ -101,7 +101,6 @@ const Wrapper = styled.div`
   align-items: center;
   justify-content: center;
   background-color: #f3f4f6;
-  padding: 16px;
 `;
 
 const Container = styled.div`
@@ -136,7 +135,7 @@ const Image = styled.img`
 const FormWrapper = styled.div`
   width: 100%;
   @media (min-width: 1024px) {
-    width: 50%;
+    width: 70%;
     padding-left: 32px;
   }
 `;
@@ -173,7 +172,7 @@ const InputWrapper = styled.div`
 const MailIcon = styled(Mail)`
   position: absolute;
   left: 12px;
-  top: 50%;
+  top: 68%;
   transform: translateY(-50%);
   color: #6b7280;
 `;
@@ -181,7 +180,7 @@ const MailIcon = styled(Mail)`
 const LockIcon = styled(Lock)`
   position: absolute;
   left: 12px;
-  top: 50%;
+  top: 68%;
   transform: translateY(-50%);
   color: #6b7280;
 `;
@@ -193,7 +192,7 @@ const EyeOffIcon = styled(EyeOff)`
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 12px 12px 40px;
+  padding: 12px 12px 12px 50px;
   border: 1px solid #d1d5db;
   border-radius: 4px;
   &:focus {
@@ -205,7 +204,7 @@ const Input = styled.input`
 const TogglePasswordButton = styled.button`
   position: absolute;
   right: 12px;
-  top: 50%;
+  top: 68%;
   transform: translateY(-50%);
   background: none;
   border: none;
