@@ -357,7 +357,7 @@ const Chat: React.FC = () => {
       window.location.href = "tel:" + currentChat.phone;
     }
   };
-
+ 
   // Open a chat with a specific hospital
   const openChat = (hospital: Hospital) => {
     setCurrentChat(hospital);

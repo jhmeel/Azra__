@@ -237,11 +237,7 @@ const DrawerBody = styled.div`
   height: 100%;
 `;
 
-interface SignupFormProps {
-  onSubmit: SubmitHandler<SignupFormData>;
-}
-
-const SignupForm: React.FC<SignupFormProps> = () => {
+const SignupForm = () => {
   const {
     register,
     handleSubmit,
@@ -358,7 +354,7 @@ const SignupForm: React.FC<SignupFormProps> = () => {
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
                 <PhoneInputWrapper>
-                  <CountrySelect id="countryCode" {...register("countryCode")}>
+                  <CountrySelect id="countryCode">
                     {Countries.map((country) => (
                       <option key={country.code} value={country.domain}>
                         {country.code} ({country.domain})

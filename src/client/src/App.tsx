@@ -11,6 +11,8 @@ const PingChat = lazy(() => import("./components/PingChatRoom"));
 const Home = lazy(() => import("./pages/Home"));
 const Signup = lazy(() => import("./pages/auth/Signup"));
 const Login = lazy(() => import("./pages/auth/Login"));
+const AboutPage = lazy(() => import("./pages/About"));
+
 function App() {
   const { pathname } = useLocation();
 
@@ -54,6 +56,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/ping-chat" element={<PingChat />} />
           <Route path="/dashboard" element={<Dashboard />} />

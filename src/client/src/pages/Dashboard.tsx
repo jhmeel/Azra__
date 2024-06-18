@@ -1,11 +1,35 @@
-import React, { useState } from 'react';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { User, CheckCircle, Calendar, Search, Download, MoreVertical } from 'lucide-react';
-import Footer from '../components/Footer';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import {
+  User,
+  CheckCircle,
+  Calendar,
+  Search,
+  Download,
+  MoreVertical,
+  ArrowLeft,
+} from "lucide-react";
+import Footer from "../components/Footer";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface Ping {
   assignedPhysician: string;
@@ -17,6 +41,8 @@ interface Ping {
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
   background-color: #f7fafc;
 `;
 
@@ -25,7 +51,7 @@ const ContentContainer = styled.div`
   background-color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
 `;
 
 const Header = styled.div`
@@ -93,24 +119,28 @@ const ExportButton = styled.button`
 `;
 
 const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-
+  display: flex;
+  gap: 5px;
+  overflow-x: scroll;
+  padding-bottom: 5px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
   @media (min-width: 768px) {
-    grid-template-columns: repeat(3, 1fr);
+    justify-content: space-between;
   }
 `;
 
-const StatCard = styled.div<{ bgColor: string, textColor: string }>`
-  background-color: ${props => props.bgColor};
-  padding: 1rem;
+const StatCard = styled.div<{ bgColor: string; textColor: string }>`
+  background-color: ${(props) => props.bgColor};
+  padding: 0.5rem 1rem;
+  width: 100%;
+  min-width: 150px;
   border-radius: 0.5rem;
+  gap: 5px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  color: ${props => props.textColor};
+  color: ${(props) => props.textColor};
 
   h2 {
     font-size: 1.25rem;
@@ -119,6 +149,20 @@ const StatCard = styled.div<{ bgColor: string, textColor: string }>`
 
   p {
     font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    width: fit-content;
+    h2 {
+      font-size: 0.9rem;
+    }
+
+    p {
+      font-size: 0.8rem;
+    }
+    svg {
+      width: 24px;
+    }
   }
 `;
 
@@ -135,11 +179,12 @@ const ChartContainer = styled.div`
 
 const TableContainer = styled.div`
   margin-bottom: 2rem;
+  overflow-x: auto;
 
   table {
     width: 100%;
     background-color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ededed;
     border-radius: 0.5rem;
   }
 
@@ -166,10 +211,6 @@ const TableContainer = styled.div`
         padding: 1rem;
         border-bottom: 1px solid #e2e8f0;
         color: #1a202c;
-      }
-
-      .actions {
-        position: relative;
       }
     }
   }
@@ -214,7 +255,8 @@ const UpdateFormModal = styled.div`
           color: #4a5568;
         }
 
-        input, select {
+        input,
+        select {
           width: 100%;
           padding: 0.5rem;
           border: 1px solid #cbd5e0;
@@ -233,12 +275,15 @@ const UpdateFormModal = styled.div`
         display: flex;
         justify-content: flex-end;
         gap: 0.5rem;
+        .action-menu {
+          cursor: pointer;
+        }
 
         button {
           padding: 0.5rem 1rem;
           border-radius: 0.5rem;
-          font-weight: 700;
           cursor: pointer;
+          font-size:14px;
 
           &.cancel {
             background-color: #a0aec0;
@@ -265,11 +310,14 @@ const UpdateFormModal = styled.div`
 
 const RecommendationsList = styled.ul`
   margin-bottom: 2rem;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 
   li {
     padding: 1.5rem;
     border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ededed;
     background-color: rgba(255, 255, 0, 0.2);
     color: #d69e2e;
 
@@ -294,14 +342,19 @@ const RecommendationsList = styled.ul`
   }
 `;
 
+const TTitle = styled.h2`
+  font-size: 1.1rem;
+  font-weight: bold;
+`;
+
 const Dashboard: React.FC = () => {
   const data = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: [
       {
-        label: 'Patient Visits',
-        backgroundColor: 'rgba(75,192,192,0.5)',
-        borderColor: 'rgba(75,192,192,1)',
+        label: "Patient Visits",
+        backgroundColor: "rgba(75,192,192,0.5)",
+        borderColor: "rgba(75,192,192,1)",
         borderWidth: 1,
         data: [65, 59, 80, 81, 56, 55, 40],
       },
@@ -312,37 +365,38 @@ const Dashboard: React.FC = () => {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
       },
       title: {
         display: true,
-        text: 'Patient Visits Over the Week',
+        text: "Patient Visits Over the Week",
       },
     },
   };
 
   const recommendations = [
     {
-      title: 'Healthy Diet Tips',
-      patient: 'Steve Maynard',
-      details: 'Maintain a balanced diet with a variety of nutrients...',
-      color: 'bg-yellow-500',
+      title: "Healthy Diet Tips",
+      patient: "Steve Maynard",
+      details: "Maintain a balanced diet with a variety of nutrients...",
+      color: "bg-yellow-500",
     },
     {
-      title: 'Exercise Regularly',
-      patient: 'John Doe',
-      details: 'Incorporate at least 30 minutes of exercise into your daily routine...',
-      color: 'bg-red-500',
+      title: "Exercise Regularly",
+      patient: "John Doe",
+      details:
+        "Incorporate at least 30 minutes of exercise into your daily routine...",
+      color: "bg-red-500",
     },
   ];
 
   const [pings, setPings] = useState<Ping[]>([
     {
-      assignedPhysician: 'Dr. Affana Malik',
-      patientName: 'Steve Maynard',
-      date: '16/04/2023',
-      complaint: 'Fever',
-      status: 'Closed',
+      assignedPhysician: "Dr. Affana Malik",
+      patientName: "Steve Maynard",
+      date: "16/04/2023",
+      complaint: "Fever",
+      status: "Closed",
     },
   ]);
 
@@ -350,12 +404,14 @@ const Dashboard: React.FC = () => {
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [updatePingIndex, setUpdatePingIndex] = useState<number | null>(null);
   const [updateFormData, setUpdateFormData] = useState<Ping>({
-    assignedPhysician: '',
-    patientName: '',
-    date: '',
-    complaint: '',
-    status: '',
+    assignedPhysician: "",
+    patientName: "",
+    date: "",
+    complaint: "",
+    status: "",
   });
+
+  const navigate = useNavigate()
 
   const handleActionsClick = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
@@ -375,7 +431,9 @@ const Dashboard: React.FC = () => {
     setActiveIndex(null);
   };
 
-  const handleUpdateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleUpdateFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setUpdateFormData((prevData) => ({
       ...prevData,
@@ -392,11 +450,11 @@ const Dashboard: React.FC = () => {
       setShowUpdateForm(false);
       setUpdatePingIndex(null);
       setUpdateFormData({
-        assignedPhysician: '',
-        patientName: '',
-        date: '',
-        complaint: '',
-        status: '',
+        assignedPhysician: "",
+        patientName: "",
+        date: "",
+        complaint: "",
+        status: "",
       });
     }
   };
@@ -405,17 +463,24 @@ const Dashboard: React.FC = () => {
     <DashboardContainer>
       <ContentContainer>
         <Header>
+          <ArrowLeft onClick={()=> navigate('/')} style={{background:'#ededed',width:'35',padding:'4px', borderRadius:'50px', cursor:'pointer'}} />
           <WelcomeText>
             <h1>Welcome Back Jhmeel</h1>
             <p>Patient reports are always updated in real time</p>
           </WelcomeText>
           <SearchContainer>
-            <div style={{ position: 'relative' }}>
-              <SearchInput
-                type="text"
-                placeholder="Search anything here..."
+            <div style={{ position: "relative" }}>
+              <SearchInput type="text" placeholder="Search anything here..." />
+              <Search
+                style={{
+                  position: "absolute",
+                  right: "1rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#718096",
+                }}
+                size={16}
               />
-              <Search style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#718096' }} size={16} />
             </div>
             <ExportButton>
               <Download size={16} /> Export
@@ -451,7 +516,7 @@ const Dashboard: React.FC = () => {
           </div>
         </ChartContainer>
         <TableContainer>
-          <h2>All Pings</h2>
+          <TTitle>All Pings</TTitle>
           <table>
             <thead>
               <tr>
@@ -472,11 +537,49 @@ const Dashboard: React.FC = () => {
                   <td>{ping.complaint}</td>
                   <td>{ping.status}</td>
                   <td className="actions">
-                    <MoreVertical size={16} className="cursor-pointer" onClick={() => handleActionsClick(index)} />
+                    <MoreVertical
+                      size={16}
+                      className="cursor-pointer"
+                      onClick={() => handleActionsClick(index)}
+                    />
                     {activeIndex === index && (
-                      <div style={{ position: 'absolute', right: 0, marginTop: '0.5rem', width: '12rem', backgroundColor: '#2d3748', color: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', zIndex: 50 }}>
-                        <button style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', color: 'white' }} onClick={() => handleUpdate(index)}>Update</button>
-                        <button style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', color: 'white' }} onClick={() => handleDelete(index)}>Delete</button>
+                      <div
+                        className="action-menu"
+                        style={{
+                          position: "absolute",
+                          right: 0,
+                          marginTop: "0.5rem",
+                          backgroundColor: "#2d3748",
+                          color: "white",
+                          borderRadius: "0.5rem",
+                          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                          zIndex: 50,
+                        }}
+                      >
+                        <button
+                          style={{
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "10px 20px",
+                            color: "white",
+                          }}
+                          onClick={() => handleUpdate(index)}
+                        >
+                          Update
+                        </button>
+                        <button
+                          style={{
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "0.5rem 1rem",
+                            color: "white",
+                          }}
+                          onClick={() => handleDelete(index)}
+                        >
+                          Delete
+                        </button>
                       </div>
                     )}
                   </td>
@@ -485,12 +588,14 @@ const Dashboard: React.FC = () => {
             </tbody>
           </table>
         </TableContainer>
-        <h2>Your Recent Recommendations</h2>
+        <TTitle>Your Recent Recommendations</TTitle>
         <RecommendationsList>
           {recommendations.map((rec, index) => (
             <li key={index} className={rec.color}>
               <h3>{rec.title}</h3>
-              <p><span>Recommended for:</span> {rec.patient}</p>
+              <p>
+                <span>Recommended for:</span> {rec.patient}
+              </p>
               <p>{rec.details}</p>
             </li>
           ))}
@@ -561,8 +666,16 @@ const Dashboard: React.FC = () => {
                 </select>
               </div>
               <div className="actions">
-                <button type="button" className="cancel" onClick={() => setShowUpdateForm(false)}>Cancel</button>
-                <button type="submit" className="update">Update</button>
+                <button
+                  type="button"
+                  className="cancel"
+                  onClick={() => setShowUpdateForm(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="update">
+                  Update
+                </button>
               </div>
             </form>
           </div>
