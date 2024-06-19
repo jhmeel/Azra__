@@ -8,7 +8,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1rem;
+  padding: 2rem;
   background-color: #f8f9fa;
   color: #343a40;
   font-family: "Arial, sans-serif";

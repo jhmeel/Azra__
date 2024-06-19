@@ -75,7 +75,7 @@ const MainFooter = styled.footer`
     z-index: 99;
   
    .foot-logo{
-      width: 100px;
+      width: 80px;
       padding:5px;
       border:1px solid #ccc;
    }
