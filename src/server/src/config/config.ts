@@ -1,6 +1,6 @@
 const Config = {
   HOST: process.env.HOST,
-  PORT: Number(process.env.PORT) || 8000,
+  PORT: Number(process.env.PORT) || 3000,
   NAME: process.env.NAME,
   EMAIL: process.env.MAIL,
  MESSAGES_PER_PAGE : 20,

@@ -1,6 +1,6 @@
 const Config = {
     HOST: import.meta.env.HOST,
-    PORT: Number(import.meta.env.PORT) || 8000,
+    PORT: Number(import.meta.env.PORT) || 3000,
     NAME: import.meta.env.NAME,
     EMAIL: import.meta.env.MAIL,
    MESSAGES_PER_PAGE : 20,
