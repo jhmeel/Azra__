@@ -3,12 +3,14 @@ const Config = {
   PORT: Number(process.env.PORT) || 8000,
   NAME: process.env.NAME,
   EMAIL: process.env.MAIL,
+ MESSAGES_PER_PAGE : 20,
   APPWRITE: {
     DATABASE_ID: process.env.APPWRITE_DATABASE_ID||"Azra_Hospital_ID",
+    PATIENT_COLLECTION_ID: process.env.PATIENTS_COLLECTION_ID||'6677611500084a07a518',
     BUCKET_ID:process.env.APPWRITE_BUCKET_ID||"665f7a090031f1e3b1f0",
     HOSPITAL_COLLECTION_ID: process.env.APPWRITE_HOSPITAL_COLLECTION_ID||"Hospitals_Collection",
     PINGS_COLLECTION_ID:process.env.PINGS_COLLECTION_ID||"6660da5a001b1e74ab91",
-    CHAT_COLLECTION_ID: process.env.CHAT_COLLECTION_ID||'<>',
+    HOSPIAL_MESSAGES_COLLECTION_ID: process.env.HOSPIAL_MESSAGES_COLLECTION_ID||'<>',
     APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1",
     PROJECT_ID: process.env.PROJECT_ID||"665a709d0033a1c40e0b",
     MAIL_FUNCTION_ID:process.env.MAIL_FUNCTION_ID,
@@ -25,6 +27,7 @@ const Config = {
     MAX_LOG_FILE: 3,
     MAX_LOG_FILE_SIZE: 15 << 20,
   },
+
 };
 
 export default Config;

@@ -4,22 +4,24 @@ import {
   deletePing,
   findNearbyHospitals,
   getAllHospials,
+  getDashBoard,
   getHospitalByName,
   getHospitalPings,
   getHosptalById,
-  getProfile,
+
   pingHospital,
   updateHospitalById,
 } from "./handlers/hospital.js";
 import authorizer from "./middlewares/authorizer.js";
-import { Login, Signup } from "./handlers/auth.js";
+import { HospitalLogin, HospitalSignup,PatientSignup,PatientLogin, onPatientOauthSignUp, OnPatientOauthSignUpSuccess } from "./handlers/auth.js";
+import { getProfile } from "./handlers/patient.js";
 const Router = express();
 
-Router.route("/auth/signup").post(Signup);
-Router.route("/auth/login").post(Login);
+Router.route("/auth/h/signup").post(HospitalSignup);
+Router.route("/auth/h/login").post(HospitalLogin);
 
-Router.route("/profile").get(authorizer, getProfile);
-
+//Hospital
+Router.route("/dashboard").get(authorizer, getDashBoard);
 Router.route("/hospital/:id").get(getHosptalById);
 Router.route("/hospital/pings/:id").get(getHospitalPings);
 Router.route("/hospitals").get(getAllHospials);
@@ -31,6 +33,22 @@ Router.route("/hospital/:id")
 Router.route("/ping").post(pingHospital);
 Router.route("/ping/:id").put(()=>{});
 Router.route("/hospital/:hospitalId/ping/:pingId").delete(deletePing);
+
+
+
+
+Router.route("/auth/p/signup").post(PatientSignup);
+Router.route("/auth/p/login").post(PatientLogin);
+
+Router.route("/auth/p-oauth/signup").get(onPatientOauthSignUp);
+Router.route("/auth/p-oauth/success").get(OnPatientOauthSignUpSuccess);
+
+
+
+//Patient
+Router.route("/profile").get(authorizer, getProfile);
+
+
 
 Router.route("/chats/active").get(()=>{});
 Router.route("chats-history/:chatId").get(()=>{})

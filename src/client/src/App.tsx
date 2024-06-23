@@ -4,6 +4,7 @@ import "./global.css";
 import { toast } from "sonner";
 import { Unplug } from "lucide-react";
 const Chat = lazy(() => import("./pages/Chat"));
+const HospitalPingChatRoom  = lazy(() => import("./components/HospitalPingChatRoom"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NotFound = lazy(() => import("./pages/Notfound"));
 import MainLoader from "./components/Loaders/MainLoader";
@@ -51,6 +52,7 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/ping-chat" element={<PingChat />} />
+          <Route path="/h-ping-chat" element={<HospitalPingChatRoom />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

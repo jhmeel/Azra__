@@ -8,12 +8,17 @@ import {
   Expand,
 } from "lucide-react";
 import { getDistanceFromLatLonInKm } from "../utils/formatter";
-import { Hospital } from "../types";
+import { Coordinate, Hospital } from "../types";
 import PingForm from "./PingForm";
 import localforage from "localforage";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { bouncy } from "ldrs";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { useDispatch } from "react-redux";
+import { CLEAR_ERRORS } from "../constants";
+import { fetchNearByHospitals } from "../actions";
 
 const SectionWrapper = styled.section`
   width: 100%;
@@ -107,8 +112,7 @@ const AlertMessage = styled.div`
   color: #4299e1;
 `;
 
-// Example hospital data
-const demoHospitals: Hospital[] = [
+const demoHospitals: Omit<Hospital, "$createdAt" | "$updatedAt">[] = [
   {
     $id: "1",
     hospitalName: "Yusuf Dantsoho Memorial Hospital",
@@ -165,6 +169,12 @@ const HospitalCards = ({
   userLocation,
   hospitals = demoHospitals,
   isLoading,
+  currentUser,
+}: {
+  userLocation: Coordinate;
+  hospitals: Hospital[];
+  isLoading: boolean;
+  currentUser: any;
 }) => {
   const [selectedStatus, setSelectedStatus] = useState("available");
   const [selectedDistance, setSelectedDistance] = useState("0");
@@ -173,11 +183,33 @@ const HospitalCards = ({
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
     null
   );
+
+  const {
+    hospitals: nearHospitals,
+    error: hospitalFetchErr,
+    loading,
+  } = useSelector((state: RootState) => state.hospital);
   useEffect(() => {
     bouncy.register();
   }, []);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (hospitalFetchErr) {
+      toast.error(hospitalFetchErr);
+      dispatch<any>({ type: CLEAR_ERRORS });
+    }
+    dispatch<any>(
+      fetchNearByHospitals(currentUser?.session?.secret, {
+        ...userLocation,
+        range: Number(selectedDistance),
+        status: selectedStatus,
+      })
+    );
+  }, []);
+
   const handleStatusFilter = (value: string) => {
     setSelectedStatus(value);
   };
@@ -216,16 +248,9 @@ const HospitalCards = ({
   };
 
   const openChat = async (hospital: Hospital) => {
-    const patient = await localforage.getItem(
-      `AZRA_PATIENT_${hospital.hospitalName}`
-    );
-    if (patient) {
-      navigate("/ping-chat", {
-        state: { fullName: patient, hospital },
-      });
-    } else {
-      toast.error(`You have no chat history with ${hospital.hospitalName}!`);
-    }
+    navigate("/ping-chat", {
+      state: { hospital },
+    });
   };
   return (
     <>

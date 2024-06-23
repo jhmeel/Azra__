@@ -4,12 +4,16 @@ import { useLoadScript } from "@react-google-maps/api";
 import { Menu, X } from "lucide-react";
 import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 import styled from "styled-components";
-import { Hospital as THospital } from "../types";
+import { Coordinate, Hospital as THospital } from "../types";
 import azraLight from "../assets/azra_light.png";
 import HospitalCards from "../components/HospitalItem";
 import HealthFacilityLocator from "../components/HealthFacilityLocator";
 import Footer from "../components/Footer";
-const demoHospitals: THospital[] = [
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
   {
     $id: "1",
     hospitalName: "Yusuf Dantsoho Memorial Hospital",
@@ -65,7 +69,7 @@ const demoHospitals: THospital[] = [
 const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hospitals, setHospitals] = useState<THospital[]>([]);
-  const [userLocation, setUserLocation] = useState({
+  const [userLocation, setUserLocation] = useState<Coordinate>({
     lat: 0,
     lng: 0,
   });
@@ -74,6 +78,8 @@ const Home = () => {
     googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY",
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -134,7 +140,7 @@ const Home = () => {
             <NavLink href="/about">About</NavLink>
             <NavLink href="/blog">Blog</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
-            <ButtonLink href="/signup">Register Hospital</ButtonLink>
+            <ButtonLink href="/signup">Register</ButtonLink>
           </Nav>
 
           <MobileNavToggle onClick={toggleMobileMenu}>
@@ -166,7 +172,7 @@ const Home = () => {
                   Dashboard
                 </MobileNavLink>
                 <ButtonLink primary href="/signup" onClick={toggleMobileMenu}>
-                  Register Hospital
+                  Register
                 </ButtonLink>
               </MobileNavContent>
             </MobileNavContainer>
@@ -183,7 +189,7 @@ const Home = () => {
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <ButtonLink href="/about">Learn More</ButtonLink>
               <ButtonLink primary href="/signup">
-                Register Your Hospital
+                Register
               </ButtonLink>
             </div>
           </SectionContent>
@@ -195,6 +201,7 @@ const Home = () => {
           isLoading={isLoading}
           hospitals={demoHospitals}
           userLocation={userLocation}
+          currentUser={currentUser}
         />
       </section>
 

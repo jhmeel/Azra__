@@ -35,12 +35,12 @@ import {
   UPDATE_PING_RESET,
   DELETE_PING_RESET,
 } from "../constants";
-import { Action } from "../types";
+import { Action} from "../types";
 
 // Initial states
 const initialAuthState = {
   loading: false,
-  admin: null,
+  user: null,
   error: null,
 };
 
@@ -60,14 +60,14 @@ const initialPingState = {
 
 const initialHospitalState = {
   loading: false,
-  hospitals: [],
+  hospitals:[],
   message: null,
   error: null,
 };
 
 const initialChatState = {
   loading: false,
-  hospital:null,
+  hospital: null,
   activeChats: [],
   chatHistory: [],
   error: null,
@@ -88,7 +88,7 @@ const authReducer = (state = initialAuthState, action: Action) => {
       return {
         ...state,
         loading: false,
-        admin: action.payload,
+        user: action.payload,
       };
 
     case LOGIN_FAIL:
@@ -269,7 +269,7 @@ const chatReducer = (state = initialChatState, action: Action) => {
       return {
         ...state,
         loading: false,
-        hospital:action.payload?.hospital,
+        hospital: action.payload?.hospital,
         activeChats: action.payload?.activeChats,
       };
 

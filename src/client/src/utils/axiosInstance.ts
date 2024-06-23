@@ -1,11 +1,12 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { Role } from "../types";
 
 interface AxiosInstanceConfig extends AxiosRequestConfig {
   baseURL: string;
   headers: Record<string, string>;
 }
 
-const axiosInstance = (token?: string): AxiosInstance => {
+const axiosInstance = (token?: string, role?: Role): AxiosInstance => {
   const config: AxiosInstanceConfig = {
     baseURL: "http://localhost:8000",
     headers: { "Content-Type": "application/json" },
@@ -14,7 +15,7 @@ const axiosInstance = (token?: string): AxiosInstance => {
   if (token) {
     config.headers["Authorization"] = `Bearer:${token}`;
   }
-
+  config.headers["role"] = role || "<>";
   return axios.create(config);
 };
 

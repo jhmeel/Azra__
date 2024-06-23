@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import loginImage from "../../assets/OnlineDoctor-bro.svg";
@@ -14,7 +13,8 @@ const LoginForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const { admin, error, loading } = useSelector(
+  const [isHospital, setIsHospital] = useState<boolean>(false);
+  const { user, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
   const dispatch = useDispatch();
@@ -25,16 +25,18 @@ const LoginForm = () => {
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-    if (admin) {
+    if (user) {
       toast.success("Logged in successfully");
       navigate("/dashboard");
     }
-  }, [admin, dispatch, error, navigate]);
+  }, [user, dispatch, error, navigate]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatch<any>(login({ email, password }));
+    dispatch<any>(login({ email, password }, isHospital));
   };
+
+  const handleGoogleLogin = () => {};
 
   return (
     <Wrapper>
@@ -44,6 +46,31 @@ const LoginForm = () => {
         </ImageWrapper>
         <FormWrapper>
           <Title>Login</Title>
+          <LoginTypeToggle>
+            <ToggleButton
+              active={!isHospital}
+              onClick={() => setIsHospital(false)}
+            >
+              Patient
+            </ToggleButton>
+            <ToggleButton
+              active={isHospital}
+              onClick={() => setIsHospital(true)}
+            >
+              Hospital
+            </ToggleButton>
+          </LoginTypeToggle>
+          {!isHospital && (
+            <GoogleButton type="button" onClick={handleGoogleLogin}>
+              <img
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google logo"
+                width="18"
+                height="18"
+              />
+              Login with Google
+            </GoogleButton>
+          )}
           <Form onSubmit={handleSubmit}>
             <FormGroup>
               <Label htmlFor="email">Email</Label>
@@ -80,13 +107,15 @@ const LoginForm = () => {
             </FormGroup>
             <SubmitButton disabled={loading} type="submit">
               {loading && <Loader size={20} className="animate-spin" />}
-              {!loading && "Login"}
+              {!loading && `Login`}
             </SubmitButton>
-            <SignupPrompt>
-              Don't have an account?{" "}
-              <StyledLink to="/signup">Sign Up</StyledLink>
-            </SignupPrompt>
           </Form>
+          <ForgotPassword>
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </ForgotPassword>
+          <SignupPrompt>
+            Don't have an account? <StyledLink to="/signup">Sign Up</StyledLink>
+          </SignupPrompt>
         </FormWrapper>
       </Container>
     </Wrapper>
@@ -185,7 +214,6 @@ const LockIcon = styled(Lock)`
   color: #6b7280;
 `;
 
-
 const EyeOffIcon = styled(EyeOff)`
   color: #6b7280;
 `;
@@ -258,5 +286,67 @@ const StyledLink = styled(Link)`
   color: #3b82f6;
   &:hover {
     text-decoration: underline;
+  }
+`;
+
+const LoginTypeToggle = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+`;
+
+const ToggleButton = styled.button<{ active: boolean }>`
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: ${({ active }) => (active ? "#3b82f6" : "#e5e7eb")};
+  color: ${({ active }) => (active ? "white" : "#4b5563")};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:first-child {
+    border-radius: 0.375rem 0 0 0.375rem;
+  }
+
+  &:last-child {
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
+
+  &:hover {
+    background-color: ${({ active }) => (active ? "#2563eb" : "#d1d5db")};
+  }
+`;
+
+const GoogleButton = styled.button`
+  width: 100%;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+`;
+
+const ForgotPassword = styled.div`
+  text-align: right;
+  margin-top: 0.5rem;
+
+  a {
+    color: #3b82f6;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
   }
 `;

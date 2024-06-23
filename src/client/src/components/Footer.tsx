@@ -2,7 +2,7 @@ import fcabal from "../../assets/logos/fcabal_white.png"
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { Facebook,Twitter,Linkedin,Instagram } from "lucide-react";
-import Config from "../config/Config";
+import Config from "../Config";
 import azraLight from "../assets/azra_light.png";
 
 const Footer = () => {

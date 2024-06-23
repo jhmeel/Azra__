@@ -9,9 +9,8 @@ import { CLEAR_ERRORS, NEW_PING_RESET } from "../constants/index.js";
 import { useSelector } from "react-redux";
 import { newPing } from "../actions/index.js";
 import { Hospital } from "../types/index.js";
-import PingChatRoom from "./PingChatRoom.js";
 import { useNavigate } from "react-router-dom";
-import localforage from "localforage";
+
 
 function PingForm({
   selectedHospital,
@@ -20,9 +19,9 @@ function PingForm({
   selectedHospital: Hospital | null;
   onClose: () => void;
 }) {
-  const [fullName, setFullName] = useState<string>("");
-  const [complaints, setComplaints] = useState<string>("");
+  const [complaint, setComplaint] = useState<string>("");
   const [image, setImage] = useState<string | undefined>("");
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const { message, error, loading } = useSelector(
     (state: RootState) => state.ping
@@ -35,7 +34,6 @@ function PingForm({
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-
     if (message) {
       toast.success(message);
       dispatch({ type: NEW_PING_RESET });
@@ -43,12 +41,8 @@ function PingForm({
     }
   }, [dispatch, error, message, onClose]);
 
-  const handleFullNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFullName(e.target.value);
-  };
-
-  const handleComplaintsChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setComplaints(e.target.value);
+  const handleComplaintChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setComplaint(e.target.value);
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -66,18 +60,18 @@ function PingForm({
     setImage("");
   };
 
+ 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     navigate("/ping-chat", {
-      state: { image, complaints, fullName, hospital: selectedHospital },
+      state: { image, complaint, hospital: selectedHospital },
     });
-    await localforage.setItem(`AZRA_PATIENT_${selectedHospital?.hospitalName}`, fullName);
 
     dispatch<any>(
-      newPing("token", {
-        fullname: fullName,
-        complaints,
+      newPing(currentUser?.session?.secret, {
+        complaint,
+        patientId: currentUser?.$id,
         image,
         hospitalId: selectedHospital?.$id,
       })
@@ -95,25 +89,14 @@ function PingForm({
         </Title>
         <Form onSubmit={handleSubmit}>
           <FormGroup>
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              type="text"
-              id="fullName"
-              autoFocus
-              value={fullName}
-              onChange={handleFullNameChange}
-              placeholder="Enter your full name"
-              required
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label htmlFor="complaints">Complaints</Label>
+            <Label htmlFor="complaint">Complaint</Label>
             <TextArea
-              id="complaints"
-              value={complaints}
-              onChange={handleComplaintsChange}
+              autoFocus
+              id="complaint"
+              value={complaint}
+              onChange={handleComplaintChange}
               rows={4}
-              placeholder="Enter your complaints"
+              placeholder="Enter your complaint"
               required
             ></TextArea>
           </FormGroup>

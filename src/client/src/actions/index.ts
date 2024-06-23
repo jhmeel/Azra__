@@ -6,7 +6,7 @@ import {
   LOGIN_SUCCESS,
   SIGNUP_FAIL,
   SIGNUP_REQUEST,
-  SIGNUP_SUCCESS, 
+  SIGNUP_SUCCESS,
   FETCH_DASHBOARD_FAIL,
   FETCH_DASHBOARD_REQUEST,
   FETCH_DASHBOARD_SUCCESS,
@@ -32,20 +32,22 @@ import {
   NEW_PING_SUCCESS,
   NEW_PING_FAIL,
 } from "../constants";
-import { Action, Ping, PingUpdateProp, SignupFormData } from "../types";
+import { Action, Coordinate, NearbySearchProp, Ping, PingUpdateProp, Role, SignupFormData } from "../types";
 import axiosInstance from "../utils/axiosInstance";
 import { errorParser } from "../utils/formatter";
 
 // Login
 export const login =
-  (credentials: { email: string; password: string }) =>
+  (credentials: { email: string; password: string }, isHospital: boolean) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: LOGIN_REQUEST });
-      const { data } = await axiosInstance().post(
-        "/api/v1/auth/login",
-        credentials
-      );
+
+      const endpoint = isHospital
+        ? "/api/v1/auth/h/login"
+        : "/api/v1/auth/p/login";
+      const { data } = await axiosInstance().post(endpoint, credentials);
+
       dispatch({
         type: LOGIN_SUCCESS,
         payload: data,
@@ -60,14 +62,14 @@ export const login =
 
 // Signup
 export const signup =
-  (credentials: SignupFormData) =>
+  (credentials: SignupFormData, isHospital: boolean) =>
   async (dispatch: (action: Action) => void) => {
     try {
+      const endpoint = isHospital
+        ? "/api/v1/auth/h/signup"
+        : "/api/v1/auth/p/signup";
       dispatch({ type: SIGNUP_REQUEST });
-      const { data } = await axiosInstance().post(
-        "/api/v1/auth/signup",
-        credentials
-      );
+      const { data } = await axiosInstance().post(endpoint, credentials);
       dispatch({
         type: SIGNUP_SUCCESS,
         payload: data,
@@ -82,10 +84,13 @@ export const signup =
 
 // Fetch Dashboard
 export const fetchDashboard =
-  (token?: string) => async (dispatch: (action: Action) => void) => {
+  (role: Role, token?: string) =>
+  async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: FETCH_DASHBOARD_REQUEST });
-      const { data } = await axiosInstance(token).get("/api/v1/profile");
+      const { data } = await axiosInstance(token, role).get(
+        "/api/v1/dashboard"
+      );
       dispatch({
         type: FETCH_DASHBOARD_SUCCESS,
         payload: data,
@@ -104,7 +109,7 @@ export const updatePing =
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: UPDATE_PING_REQUEST });
-      const { data } = await axiosInstance(token).put(
+      const { data } = await axiosInstance(token,'HOSPITAL').put(
         `/api/v1/ping/${pingId}`,
         pingData
       );
@@ -120,13 +125,12 @@ export const updatePing =
     }
   };
 
-
-  export const newPing =
+export const newPing =
   (token?: string, pingData?: Ping) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: NEW_PING_REQUEST });
-      const { data } = await axiosInstance(token).post(
+      const { data } = await axiosInstance(token,'PATIENT').post(
         `/api/v1/ping`,
         pingData
       );
@@ -142,14 +146,13 @@ export const updatePing =
     }
   };
 
-
 // Delete Ping
 export const deletePing =
   (token?: string, hospitalId?: string, pingId?: string) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_PING_REQUEST });
-      const { data } = await axiosInstance(token).delete(
+      const { data } = await axiosInstance(token,'HOSPITAL').delete(
         `/api/v1/hospital/${hospitalId}/ping/${pingId}`
       );
       dispatch({
@@ -165,11 +168,11 @@ export const deletePing =
   };
 
 // Fetch Hospitals
-export const fetchHospitals =
-  (token?: string) => async (dispatch: (action: Action) => void) => {
+export const fetchNearByHospitals =
+  (token?: string, searchProp?:NearbySearchProp) => async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: FETCH_HOSPITALS_REQUEST });
-      const { data } = await axiosInstance(token).get("/api/v1/hospitals");
+      const { data } = await axiosInstance(token).post("/api/v1/hospitals/nearby", searchProp);
       dispatch({
         type: FETCH_HOSPITALS_SUCCESS,
         payload: data,
@@ -188,7 +191,7 @@ export const deleteHospitals =
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_HOSPITAL_REQUEST });
-      const { data } = await axiosInstance(token).delete(
+      const { data } = await axiosInstance(token,'HOSPITAL').delete(
         `/api/v1/hospital/${hospitalId}`
       );
       dispatch({

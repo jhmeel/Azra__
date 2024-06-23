@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import signupImage from "../../assets/OnlineDoctor-bro.svg";
@@ -10,11 +10,11 @@ import { RootState } from "../../store";
 import { toast } from "sonner";
 import { CLEAR_ERRORS } from "../../constants";
 import { signup } from "../../actions";
-import { LoaderIcon } from "lucide-react";
+import { LoaderIcon, X } from "lucide-react";
 import styled from "styled-components";
 import Footer from "../../components/Footer";
+import axiosInstance from "../../utils/axiosInstance";
 
-// Styled components
 const Container = styled.div`
   min-height: 100vh;
   display: flex;
@@ -237,11 +237,61 @@ const DrawerBody = styled.div`
   height: 100%;
 `;
 
+const SignupTypeToggle = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+`;
+
+const ToggleButton = styled.button<{ active: boolean }>`
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: ${({ active }) => (active ? "#3b82f6" : "#e5e7eb")};
+  color: ${({ active }) => (active ? "white" : "#4b5563")};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:first-child {
+    border-radius: 0.375rem 0 0 0.375rem;
+  }
+
+  &:last-child {
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
+
+  &:hover {
+    background-color: ${({ active }) => (active ? "#2563eb" : "#d1d5db")};
+  }
+`;
+
+const GoogleButton = styled.button`
+  width: 100%;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+`;
+
 const SignupForm = () => {
+  const [isHospital, setIsHospital] = useState(false);
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<SignupFormData>();
   const [message, setMessage] = useState<string | null>(null);
@@ -250,8 +300,9 @@ const SignupForm = () => {
     lat: number;
     lng: number;
   } | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string>("+234");
 
-  const { admin, error, loading } = useSelector(
+  const { user, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
   const dispatch = useDispatch();
@@ -262,11 +313,11 @@ const SignupForm = () => {
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-    if (admin) {
+    if (user) {
       toast.success("Signed up successfully");
       navigate("/dashboard");
     }
-  }, [admin, dispatch, error, navigate]);
+  }, [user, dispatch, error, navigate]);
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
@@ -286,7 +337,21 @@ const SignupForm = () => {
   };
 
   const onSubmit: SubmitHandler<SignupFormData> = (data) => {
-    dispatch<any>(signup(data));
+    const { acceptTerms, ...restData } = data;
+
+    const updatedData = {
+      ...restData,
+      phone: data.phone.length === 11 ? selectedDomain + data.phone.slice(1) : data.phone,
+    };
+    
+
+    dispatch<any>(
+      signup(updatedData, isHospital)
+    );
+  };
+
+  const handleGoogleSignup = async () => {
+    await axiosInstance().get('/auth/p-oauth/signup')
   };
 
   return (
@@ -298,41 +363,88 @@ const SignupForm = () => {
           </ImageWrapper>
           <FormWrapper>
             <Title>Sign Up</Title>
+            <SignupTypeToggle>
+              <ToggleButton
+                active={!isHospital}
+                onClick={() => setIsHospital(false)}
+              >
+                Patient
+              </ToggleButton>
+              <ToggleButton
+                active={isHospital}
+                onClick={() => setIsHospital(true)}
+              >
+                Hospital
+              </ToggleButton>
+            </SignupTypeToggle>
             {message && (
               <Message success={message.includes("successful")}>
                 {message}
               </Message>
             )}
             <Form onSubmit={handleSubmit(onSubmit)}>
-              <div>
-                <Label htmlFor="hospitalName">Hospital Name</Label>
-                <Input
-                  type="text"
-                  autoFocus
-                  id="hospitalName"
-                  {...register("hospitalName", {
-                    required: "Hospital Name is required",
-                  })}
-                  error={!!errors.hospitalName}
-                />
-                {errors.hospitalName && (
-                  <ErrorMessage>{errors.hospitalName.message}</ErrorMessage>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="hospitalNumber">Hospital Number</Label>
-                <Input
-                  type="text"
-                  id="hospitalNumber"
-                  {...register("hospitalNumber", {
-                    required: "Hospital Number is required",
-                  })}
-                  error={!!errors.hospitalNumber}
-                />
-                {errors.hospitalNumber && (
-                  <ErrorMessage>{errors.hospitalNumber.message}</ErrorMessage>
-                )}
-              </div>
+              {!isHospital && (
+                <GoogleButton type="button" onClick={handleGoogleSignup}>
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google logo"
+                    width="18"
+                    height="18"
+                  />
+                  Sign up with Google
+                </GoogleButton>
+              )}
+              {isHospital ? (
+                <>
+                  <div>
+                    <Label htmlFor="hospitalName">Hospital Name</Label>
+                    <Input
+                      type="text"
+                      autoFocus
+                      id="hospitalName"
+                      {...register("hospitalName", {
+                        required: "Hospital Name is required",
+                      })}
+                      error={!!errors.hospitalName}
+                    />
+                    {errors.hospitalName && (
+                      <ErrorMessage>{errors.hospitalName.message}</ErrorMessage>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="hospitalNumber">Hospital Number</Label>
+                    <Input
+                      type="text"
+                      id="hospitalNumber"
+                      {...register("hospitalNumber", {
+                        required: "Hospital Number is required",
+                      })}
+                      error={!!errors.hospitalNumber}
+                    />
+                    {errors.hospitalNumber && (
+                      <ErrorMessage>
+                        {errors.hospitalNumber.message}
+                      </ErrorMessage>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    type="text"
+                    autoFocus
+                    id="fullName"
+                    {...register("fullName", {
+                      required: "Full Name is required",
+                    })}
+                    error={!!errors.fullName}
+                  />
+                  {errors.fullName && (
+                    <ErrorMessage>{errors.fullName.message}</ErrorMessage>
+                  )}
+                </div>
+              )}
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -354,7 +466,10 @@ const SignupForm = () => {
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
                 <PhoneInputWrapper>
-                  <CountrySelect id="countryCode">
+                  <CountrySelect
+                    id="countryCode"
+                    onChange={(e) => setSelectedDomain(e.target.value)}
+                  >
                     {Countries.map((country) => (
                       <option key={country.code} value={country.domain}>
                         {country.code} ({country.domain})
@@ -404,6 +519,8 @@ const SignupForm = () => {
                   id="confirmPassword"
                   {...register("confirmPassword", {
                     required: "Confirm Password is required",
+                    validate: (value) =>
+                      value === watch("password") || "Passwords do not match",
                   })}
                   error={!!errors.confirmPassword}
                 />
@@ -411,76 +528,78 @@ const SignupForm = () => {
                   <ErrorMessage>{errors.confirmPassword.message}</ErrorMessage>
                 )}
               </div>
-              <div>
-                <LocationButton
-                  type="button"
-                  onClick={() => setDrawerOpen(true)}
-                >
-                  {selectedLocation
-                    ? `Location Selected (${selectedLocation.lat}, ${selectedLocation.lng})`
-                    : "Select Location"}
-                </LocationButton>
-                {selectedLocation && (
-                  <Drawer open={drawerOpen}>
-                    <DrawerContent>
-                      <DrawerHeader>
-                        <h3>Selected Location</h3>
-                        <button onClick={() => handleRemoveLocation()}>
-                          Remove Selection
-                        </button>
-                      </DrawerHeader>
-                      <DrawerBody>
-                        <LoadScript
-                          googleMapsApiKey={
-                            process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""
-                          }
-                        >
-                          <GoogleMap
-                            mapContainerStyle={{
-                              width: "100%",
-                              height: "100%",
-                            }}
-                            center={{
-                              lat: selectedLocation.lat,
-                              lng: selectedLocation.lng,
-                            }}
-                            zoom={15}
-                            onClick={handleMapClick}
+              {isHospital && (
+                <div>
+                  <LocationButton
+                    type="button"
+                    onClick={() =>setDrawerOpen(true)}
+                  >
+                    {selectedLocation
+                      ? `Location Selected (${selectedLocation.lat}, ${selectedLocation.lng})`
+                      : "Select Location"}
+                  </LocationButton>
+                  {drawerOpen&& (
+                    <Drawer open={drawerOpen}>
+                      <DrawerContent>
+                        <DrawerHeader>
+                          <h3>Select Your Hospital Location</h3>
+                          <button onClick={() => handleRemoveLocation()}>
+                           <X />
+                          </button>
+                        </DrawerHeader>
+                        <DrawerBody>
+                          <LoadScript
+                            googleMapsApiKey={
+                              import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""
+                            }
                           >
-                            <Marker
-                              position={{
-                                lat: selectedLocation.lat,
-                                lng: selectedLocation.lng,
+                            <GoogleMap
+                              mapContainerStyle={{
+                                width: "100%",
+                                height: "100%",
                               }}
-                            />
-                          </GoogleMap>
-                        </LoadScript>
-                      </DrawerBody>
-                    </DrawerContent>
-                  </Drawer>
-                )}
-              </div>
+                              center={{
+                                lat: selectedLocation?.lat,
+                                lng: selectedLocation?.lng,
+                              }}
+                              zoom={15}
+                              onClick={handleMapClick}
+                            >
+                              <Marker
+                                position={{
+                                  lat: selectedLocation?.lat,
+                                  lng: selectedLocation?.lng,
+                                }}
+                              />
+                            </GoogleMap>
+                          </LoadScript>
+                        </DrawerBody>
+                      </DrawerContent>
+                    </Drawer>
+                  )}
+                </div>
+              )}
+              <TermsWrapper>
+                <input
+                  type="checkbox"
+                  id="acceptTerms"
+                  {...register("acceptTerms", {
+                    required: "You must accept the terms to sign up",
+                  })}
+                />
+                <Label htmlFor="acceptTerms">
+                  I accept the <Link to="/terms">Terms and Conditions</Link>
+                </Label>
+              </TermsWrapper>
+              {errors.acceptTerms && (
+                <ErrorMessage>{errors.acceptTerms.message}</ErrorMessage>
+              )}
               <SubmitButton type="submit" loading={loading}>
-                {loading ? <LoaderIcon size={20} /> : "Sign Up"}
+                {loading ? <LoaderIcon className="animate-spin" size={20} /> : "Sign Up"}
               </SubmitButton>
             </Form>
-            <TermsWrapper>
-              <input
-                type="checkbox"
-                id="terms"
-                {...register("acceptTerms", {
-                  required: "You must accept the terms to sign up",
-                })}
-              />
-              <Label htmlFor="terms">
-                I accept the <Link to="/terms">Terms and Conditions</Link>
-              </Label>
-            </TermsWrapper>
-            {errors.acceptTerms && (
-              <ErrorMessage>{errors.acceptTerms.message}</ErrorMessage>
-            )}
             <LoginText>
-              Already have an account? <Link to="/login">Log in here</Link>
+              Already have an account? <Link to="/login">Log in</Link>
             </LoginText>
           </FormWrapper>
         </FormContainer>

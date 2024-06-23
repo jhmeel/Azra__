@@ -1,39 +1,41 @@
-import React, { useState, useEffect } from "react";
-import { Send, File, Phone, Menu, X } from "lucide-react";
-import { Hospital } from "../types";
-import io from "socket.io-client";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../store";
-import { getActiveChats } from "../actions";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import styled from "styled-components";
+import {
+  Client,
+  Account,
+  Databases,
+  ID,
+  Storage,
+  Query,
+  Role,
+  Permission,
+} from "appwrite";
+import Config from "../Config";
+import { Hospital as THospital, Message as TMessage } from "../types";
+import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { Menu, Phone, SendIcon, UploadIcon, X } from "lucide-react";
+import azraLight from "../assets/azra_light.png";
+const {
+  DATABASE_ID,
+  HOSPITAL_COLLECTION_ID,
+  BUCKET_ID,
+  HOSPIAL_MESSAGES_COLLECTION_ID,
+} = Config.APPWRITE;
+const { MESSAGES_PER_PAGE } = Config;
+const client = new Client()
+  .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
+  .setProject(Config.APPWRITE.PROJECT_ID);
 
-// Interface for the Message object
-interface Message {
-  sender: Hospital;
-  to: Hospital;
-  date: string;
-  type: string;
-  content: string;
-}
+const database = new Databases(client);
+const storage = new Storage(client);
 
-// Initialize the Socket.IO client
-const socket = io("http://localhost:8000");
-
-// Styled components
-
-// Container component for the entire chat UI
 const Container = styled.div`
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  background-color: #f7fafc;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-  }
+  height: 100vh;
 `;
 
-// Sidebar component for displaying active chats
 const Sidebar = styled.div<{ isOpen: boolean }>`
   width: 100%;
   background-color: #ffffff;
@@ -42,7 +44,8 @@ const Sidebar = styled.div<{ isOpen: boolean }>`
   position: fixed;
   z-index: 10;
   transition: transform 0.3s ease;
-  transform: ${({ isOpen }) => (isOpen ? "translateX(0)" : "translateX(-100%)")};
+  transform: ${({ isOpen }) =>
+    isOpen ? "translateX(0)" : "translateX(-100%)"};
 
   @media (min-width: 768px) {
     width: 33%;
@@ -52,7 +55,6 @@ const Sidebar = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-// Header section of the sidebar
 const SidebarHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -60,30 +62,25 @@ const SidebarHeader = styled.div`
   margin-bottom: 24px;
 `;
 
-// User avatar in the sidebar header
 const UserAvatar = styled.img`
   width: 48px;
   height: 48px;
   border-radius: 50%;
 `;
 
-// User information in the sidebar header
 const UserInfo = styled.div`
   margin-left: 16px;
 `;
 
-// User name in the sidebar header
 const UserName = styled.h2`
   font-size: 20px;
   font-weight: 600;
 `;
 
-// User status in the sidebar header
 const UserStatus = styled.p`
   color: #38a169;
 `;
 
-// Close button for the sidebar on mobile
 const CloseButton = styled.button`
   display: block;
   background: none;
@@ -94,17 +91,14 @@ const CloseButton = styled.button`
   }
 `;
 
-// Title for the active chats list
 const ChatsTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
 `;
 
-// List of active chats
 const ChatList = styled.ul``;
 
-// Individual chat item in the list
 const ChatItem = styled.li`
   display: flex;
   align-items: center;
@@ -118,38 +112,124 @@ const ChatItem = styled.li`
     background-color: #edf2f7;
   }
 `;
-
-// Avatar of the hospital in the chat item
 const ChatAvatar = styled.img`
   width: 40px;
   height: 40px;
   border-radius: 50%;
 `;
 
-// Information section of the chat item
 const ChatInfo = styled.div`
   margin-left: 16px;
 `;
 
-// Hospital name in the chat item
 const ChatName = styled.p`
   font-size: 14px;
   font-weight: 600;
 `;
 
-// Status in the chat item
 const ChatStatus = styled.p`
   font-size: 12px;
   color: #a0aec0;
 `;
 
-// Main content area for displaying messages
+const MessageList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+`;
+
+const MessageInputContainer = styled.form`
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f0f0f0;
+`;
+
+const MessageInput = styled.input`
+  flex: 1;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 21px;
+  background-color: white;
+  font-size: 15px;
+  outline: none;
+`;
+
+const SendButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(to right, #15756c, #38b2ac);
+  color: white;
+  cursor: pointer;
+`;
+
+const MediaUploadButton = styled.label`
+  cursor: pointer;
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  margin-left: 8px;
+  color: #848484;
+`;
+
+const HospitalItem = styled.div`
+  padding: 10px;
+  cursor: pointer;
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
+const MessageItem = styled.div<{ isSent: boolean }>`
+  max-width: 70%;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  background-color: ${(props) => (props.isSent ? "#dcf8c6" : "#fff")};
+  align-self: ${(props) => (props.isSent ? "flex-end" : "flex-start")};
+  position: relative;
+`;
+
+const MessageMedia = styled.div`
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+`;
+
+const MessageActions = styled.div`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: none;
+  ${MessageItem}:hover & {
+    display: block;
+  }
+`;
+
+const LoadingIndicator = styled.div`
+  text-align: center;
+  padding: 10px;
+`;
+
+const TypingIndicator = styled.div`
+  font-style: italic;
+  padding: 5px;
+  color: #888;
+`;
 const MainContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
   position: relative;
-  margin-left: auto;
   width: 100%;
 
   @media (min-width: 768px) {
@@ -157,7 +237,6 @@ const MainContent = styled.div`
   }
 `;
 
-// Header section of the main content area
 const Header = styled.div`
   display: flex;
   align-items: center;
@@ -168,10 +247,10 @@ const Header = styled.div`
 
   @media (min-width: 768px) {
     justify-content: flex-start;
+    display: none;
   }
 `;
 
-// Open sidebar button for mobile
 const OpenSidebarButton = styled.button`
   background: none;
   border: none;
@@ -180,208 +259,333 @@ const OpenSidebarButton = styled.button`
     display: none;
   }
 `;
-
-// Information section of the current chat in the header
 const CurrentChatInfo = styled.div`
   display: flex;
   align-items: center;
   margin-left: 16px;
 `;
 
-// Avatar of the current chat hospital
 const CurrentChatAvatar = styled.img`
   width: 48px;
   height: 48px;
   border-radius: 50%;
 `;
 
-// Details section of the current chat
 const CurrentChatDetails = styled.div`
   margin-left: 16px;
 `;
-
-// Name of the current chat hospital
 const CurrentChatName = styled.h2`
   font-size: 14px;
   font-weight: 600;
 `;
 
-// Status of the current chat hospital
 const CurrentChatStatus = styled.p`
   color: #38a169;
   font-size: 12px;
 `;
 
-// Container for displaying messages
-const MessagesContainer = styled.div`
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  background-color: #f7fafc;
-`;
-
-// Wrapper for individual messages
-const MessageWrapper = styled.div<{ isSender: boolean }>`
-  display: flex;
-  justify-content: ${({ isSender }) => (isSender ? "flex-end" : "flex-start")};
-  margin-bottom: 16px;
-`;
-
-// Content of the message
-const MessageContent = styled.div<{ isSender: boolean }>`
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: ${({ isSender }) => (isSender ? "#4299e1" : "#edf2f7")};
-  color: ${({ isSender }) => (isSender ? "#ffffff" : "#2d3748")};
-`;
-
-// Input section for sending messages
-const InputSection = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  background-color: #ffffff;
-  border-top: 1px solid #e2e8f0;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-
-  @media (min-width: 768px) {
-    width: 67%;
-    max-width: calc(100% - 300px);
-  }
-`;
-
-// Input for file attachments
-const FileInput = styled.input`
-  display: none;
-`;
-
-// Label for the file input
-const FileLabel = styled.label`
-  cursor: pointer;
-  margin-right: 16px;
-  color: #a0aec0;
-`;
-
-// Display for the selected file name
-const SelectedFileName = styled.span`
-  margin-right: 16px;
-  color: #a0aec0;
-`;
-
-// Input for typing messages
-const TextInput = styled.input`
-  flex: 1;
-  padding: 8px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-
-  &:focus {
-    border-color: #4299e1;
-    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
-  }
-`;
-
-// Send button for messages
-const SendButton = styled.button`
-  background-color: #4299e1;
-  color: #ffffff;
-  padding: 8px 16px;
-  border-radius: 8px;
-  margin-left: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-// Chat component
-const Chat: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentChat, setCurrentChat] = useState<Hospital | null>(null);
+const Chat = () => {
+  const [hospitals, sethospitals] = useState<THospital[]>([]);
+  const [selectedHospital, setSelectedHospital] = useState<THospital | null>(
+    null
+  );
+  const [messages, setMessages] = useState<TMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { chatHistory, activeChats } = useSelector((state: RootState) => state.chat);
-  const { hospital: currentAdmin } = useSelector((state: RootState) => state.chat);
-  const dispatch = useDispatch();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
-  // Load messages when the component mounts and listen for new messages
+  const permissions = [Permission.write(Role.user(currentUser?.$id))];
+
   useEffect(() => {
-    socket.on("loadMessages", (loadedMessages) => {
-      setMessages(loadedMessages);
-    });
+    if (currentUser) {
+      fetchhospitals();
+      subscribeToMessages();
+      subscribeTohospitalstatus();
+    }
+  }, [currentUser]);
 
-    socket.on("message", (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
+  useEffect(() => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const fetchhospitals = async () => {
+    try {
+      const response = await database.listDocuments(
+        DATABASE_ID,
+        HOSPITAL_COLLECTION_ID
+      );
+      sethospitals(response.documents as THospital[]);
+    } catch (error: any) {
+      toast.error("Fetching hospitals failed:", error.message);
+      setError("Failed to fetch hospitals. Please try again.");
+    }
+  };
+
+  const subscribeToMessages = () => {
+    const unsubscribe = client.subscribe(
+      [
+        `databases.${DATABASE_ID}.collections.${HOSPIAL_MESSAGES_COLLECTION_ID}.documents`,
+      ],
+      (response: any) => {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.create"
+          )
+        ) {
+          const newMessage = response.payload as TMessage;
+          if (
+            newMessage.senderId === currentUser?.$id ||
+            newMessage.receiverId === currentUser?.$id
+          ) {
+            setMessages((prev) => [...prev, newMessage]);
+            markMessageAsRead(newMessage.$id);
+          }
+        }
+      }
+    );
 
     return () => {
-      socket.off("loadMessages");
-      socket.off("message");
+      unsubscribe();
     };
-  }, []);
+  };
 
-  // Handle sending a new message
-  const handleSendMessage = () => {
-    if (newMessage.trim() && currentChat) {
-      const message: Message = {
-        sender: currentAdmin,
-        to: currentChat,
-        content: newMessage,
-        date: new Date().toLocaleTimeString(),
-        type: "text",
-      };
-      socket.emit("sendMessage", {
-        roomId: `${currentAdmin.$id}_${currentChat.$id}`,
-        message,
+  const subscribeTohospitalstatus = () => {
+    const unsubscribe = client.subscribe(
+      [
+        `databases.${DATABASE_ID}.collections.${HOSPITAL_COLLECTION_ID}.documents`,
+      ],
+      (response: any) => {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.update"
+          )
+        ) {
+          const updatedUser = response.payload as THospital;
+          sethospitals((prev) =>
+            prev.map((user) =>
+              user.$id === updatedUser.$id ? updatedUser : user
+            )
+          );
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  };
+
+  const setHospital = (h: THospital) => {
+    setSelectedHospital(h);
+    fetchChatHistory(h.$id);
+    setHasMoreMessages(true);
+  };
+
+  const fetchChatHistory = async (userId: string, lastId?: string) => {
+    if (!currentUser) return;
+
+    try {
+      setLoading(true);
+      const queries = [
+        Query.equal("senderId", [currentUser.$id, userId]),
+        Query.equal("receiverId", [currentUser.$id, userId]),
+        Query.orderDesc("$createdAt"),
+        Query.limit(MESSAGES_PER_PAGE),
+      ];
+
+      if (lastId) {
+        queries.push(Query.cursorAfter(lastId));
+      }
+
+      const response = await database.listDocuments(
+        DATABASE_ID,
+        HOSPIAL_MESSAGES_COLLECTION_ID,
+        queries
+      );
+
+      const newMessages = response.documents as TMessage[];
+      setMessages((prev) => [...newMessages.reverse(), ...prev]);
+      setHasMoreMessages(newMessages.length === MESSAGES_PER_PAGE);
+
+      newMessages.forEach((message) => {
+        if (message.senderId !== currentUser.$id && !message.isRead) {
+          markMessageAsRead(message.$id);
+        }
       });
-      setMessages((prevMessages) => [...prevMessages, message]);
+    } catch (error) {
+      console.error("Fetching chat history failed:", error);
+      setError("Failed to fetch chat history. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async (
+    type: TMessage["type"],
+    content: string,
+    mediaUrl?: string
+  ) => {
+    if (!currentUser || !selectedHospital) return;
+
+    try {
+      setSending(true);
+      const message: Omit<TMessage, "$id" | "$createdAt" | "$updatedAt"> = {
+        senderId: currentUser.$id,
+        receiverId: selectedHospital.$id,
+        content,
+        timestamp: new Date().toISOString(),
+        type,
+        mediaUrl,
+        isEdited: false,
+        isRead: false,
+      };
+
+      await database.createDocument(
+        DATABASE_ID,
+        HOSPIAL_MESSAGES_COLLECTION_ID,
+        ID.unique(),
+        message,
+        permissions
+      );
       setNewMessage("");
+    } catch (error: any) {
+      toast.error("Sending message failed:", error.message);
+      setError("Failed to send message. Please try again.");
+    } finally {
+      setSending(false);
     }
   };
 
-  // Handle file attachment selection
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setSelectedFile(event.target.files[0]);
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      sendMessage("text", newMessage.trim());
     }
   };
 
-  // Handle initiating a call
+  const handleMediaUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const upload = await storage.createFile(BUCKET_ID, ID.unique(), file);
+      const mediaUrl = storage.getFileView(BUCKET_ID, upload.$id);
+      const fileType = file.type.split("/")[0] as
+        | "image"
+        | "video"
+        | "document";
+      await sendMessage(fileType, file.name, mediaUrl.href);
+    } catch (error: any) {
+      toast.error("Media upload failed:", error.message);
+      setError("Failed to upload media. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await database.deleteDocument(
+        DATABASE_ID,
+        HOSPIAL_MESSAGES_COLLECTION_ID,
+        messageId
+      );
+      setMessages((prev) =>
+        prev.filter((message) => message.$id !== messageId)
+      );
+    } catch (error: any) {
+      toast.error("Deleting message failed:", error.message);
+      setError("Failed to delete message. Please try again.");
+    }
+  };
+
+  const editMessage = async (messageId: string, newContent: string) => {
+    try {
+      await database.updateDocument(
+        DATABASE_ID,
+        HOSPIAL_MESSAGES_COLLECTION_ID,
+        messageId,
+        {
+          content: newContent,
+          isEdited: true,
+        }
+      );
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.$id === messageId
+            ? { ...message, content: newContent, isEdited: true }
+            : message
+        )
+      );
+    } catch (error) {
+      console.error("Editing message failed:", error);
+      setError("Failed to edit message. Please try again.");
+    }
+  };
+
+  const markMessageAsRead = async (messageId: string) => {
+    try {
+      await database.updateDocument(
+        DATABASE_ID,
+        HOSPIAL_MESSAGES_COLLECTION_ID,
+        messageId,
+        {
+          isRead: true,
+        }
+      );
+    } catch (error: any) {
+      toast.error("Marking message as read failed:", error.message);
+    }
+  };
+
+  const handleTyping = useCallback(() => {
+    if (!isTyping) {
+      setIsTyping(true);
+    }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 1000);
+  }, [isTyping]);
+
+  const loadMoreMessages = () => {
+    if (selectedHospital && messages.length > 0) {
+      fetchChatHistory(selectedHospital.$id, messages[0].$id);
+    }
+  };
+
+  if (loading) {
+    return <LoadingIndicator>Loading...</LoadingIndicator>;
+  }
   const handleCall = () => {
-    if (currentChat) {
-      window.location.href = "tel:" + currentChat.phone;
+    if (currentUser) {
+      window.location.href = "tel:" + currentUser?.phone;
     }
   };
- 
-  // Open a chat with a specific hospital
-  const openChat = (hospital: Hospital) => {
-    setCurrentChat(hospital);
-    socket.emit("join", {
-      roomId: `${currentAdmin.$id}_${hospital.$id}`,
-    });
-    if (window.innerWidth < 768) {
-      setIsSidebarOpen(false);
-    }
-  };
-
-  // Fetch active chats when the component mounts
-  useEffect(() => {
-    dispatch<any>(getActiveChats('tok'));
-  }, [dispatch]);
 
   return (
     <Container>
       <Sidebar isOpen={isSidebarOpen}>
         <SidebarHeader>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <UserAvatar src="url/to/profile/image" alt="User" />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <UserAvatar src={currentUser?.avatar} alt="User" />
             <UserInfo>
-              <UserName>Pedrik Ronner</UserName>
+              <UserName>{currentUser?.hospitalName}</UserName>
               <UserStatus>Active now</UserStatus>
             </UserInfo>
           </div>
@@ -389,13 +593,19 @@ const Chat: React.FC = () => {
             <X />
           </CloseButton>
         </SidebarHeader>
-        {activeChats?.length > 0 ? (
+        {hospitals?.length > 0 ? (
           <>
-            <ChatsTitle>Recent Chats</ChatsTitle>
+            <ChatsTitle>Active Chats</ChatsTitle>
             <ChatList>
-              {activeChats?.map((hospital: Hospital) => (
-                <ChatItem key={hospital.$id} onClick={() => openChat(hospital)}>
-                  <ChatAvatar src={hospital.avatar} alt={hospital.hospitalName} />
+              {hospitals?.map((hospital: THospital) => (
+                <ChatItem
+                  key={hospital.$id}
+                  onClick={() => setHospital(hospital)}
+                >
+                  <ChatAvatar
+                    src={hospital.avatar}
+                    alt={hospital.hospitalName}
+                  />
                   <ChatInfo>
                     <ChatName>{hospital.hospitalName}</ChatName>
                     <ChatStatus>{hospital.status}</ChatStatus>
@@ -405,58 +615,147 @@ const Chat: React.FC = () => {
             </ChatList>
           </>
         ) : (
-          <p style={{ textAlign: 'center', color: 'grey' }}>No active chats</p>
+          <p style={{ textAlign: "center", color: "grey" }}>No active chats</p>
         )}
       </Sidebar>
+
       <MainContent>
         <Header>
           <OpenSidebarButton onClick={() => setIsSidebarOpen(true)}>
             <Menu />
           </OpenSidebarButton>
-          {currentChat && (
+          {currentUser && (
             <CurrentChatInfo>
-              <CurrentChatAvatar src={currentChat.avatar} />
+              <CurrentChatAvatar src={currentUser.avatar} />
               <CurrentChatDetails>
-                <CurrentChatName>{currentChat.hospitalName}</CurrentChatName>
+                <CurrentChatName>{currentUser.hospitalName}</CurrentChatName>
                 <CurrentChatStatus>Active now</CurrentChatStatus>
               </CurrentChatDetails>
               <Phone size={18} className="icon" onClick={handleCall} />
             </CurrentChatInfo>
           )}
         </Header>
-        <MessagesContainer>
-          {messages.length > 0 ? (
-            messages.map((msg: Message, index) => (
-              <MessageWrapper key={index} isSender={msg.sender.$id === currentAdmin.$id}>
-                <MessageContent isSender={msg.sender.$id === currentAdmin.$id}>
-                  {msg.type === "text" ? (
-                    <p>{msg.content}</p>
-                  ) : (
-                    <img src={msg.content} alt="Attachment" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '10px' }} />
+        {selectedHospital ? (
+          <>
+            <h2>Chat with {selectedHospital?.hospitalName}</h2>
+            <MessageList ref={messageListRef}>
+              {hasMoreMessages && (
+                <button onClick={loadMoreMessages}>Load more messages</button>
+              )}
+              {messages.map((message) => (
+                <MessageItem
+                  key={message.$id}
+                  isSent={message.senderId === currentUser.$id}
+                >
+                  {message.type === "text" && message.content}
+                  {message.type === "image" && (
+                    <MessageMedia>
+                      <img
+                        src={message.mediaUrl}
+                        alt={message.content}
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </MessageMedia>
                   )}
-                </MessageContent>
-              </MessageWrapper>
-            ))
-          ) : (
-            <div style={{ textAlign: 'center', color: 'grey' }}>No messages yet.</div>
-          )}
-        </MessagesContainer>
-        <InputSection>
-          <FileInput type="file" id="fileInput" onChange={handleFileChange} />
-          <FileLabel htmlFor="fileInput">
-            <File />
-          </FileLabel>
-          {selectedFile && <SelectedFileName>{selectedFile.name}</SelectedFileName>}
-          <TextInput
-            type="text"
-            placeholder="Type something..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-          />
-          <SendButton onClick={handleSendMessage}>
-            <Send />
-          </SendButton>
-        </InputSection>
+                  {message.type === "video" && (
+                    <MessageMedia>
+                      <video
+                        src={message.mediaUrl}
+                        controls
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </MessageMedia>
+                  )}
+                  {message.type === "document" && (
+                    <a
+                      href={message.mediaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {message.content}
+                    </a>
+                  )}
+                  {message.isEdited && (
+                    <span style={{ fontSize: "0.8em", color: "#888" }}>
+                      {" "}
+                      (edited)
+                    </span>
+                  )}
+                  {message.isRead && message.senderId === currentUser.$id && (
+                    <span style={{ fontSize: "0.8em", color: "#888" }}>
+                      {" "}
+                      ✓✓
+                    </span>
+                  )}
+                  <MessageActions>
+                    <button onClick={() => deleteMessage(message.$id)}>
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newContent = prompt(
+                          "Edit message:",
+                          message.content
+                        );
+                        if (newContent && newContent !== message.content) {
+                          editMessage(message.$id, newContent);
+                        }
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </MessageActions>
+                </MessageItem>
+              ))}
+            </MessageList>
+            {isTyping && (
+              <TypingIndicator>
+                {selectedHospital?.hospitalName} is typing...
+              </TypingIndicator>
+            )}
+            <MessageInputContainer>
+              <MessageInput
+                value={newMessage}
+                onChange={(e) => {
+                  setNewMessage(e.target.value);
+                  handleTyping();
+                }}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                placeholder="Type a message..."
+                disabled={sending || uploading}
+              />
+              <MediaUploadButton>
+                <UploadIcon size={16} />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleMediaUpload}
+                  accept="image/*,video/*,application/pdf"
+                  style={{ display: "none" }}
+                  disabled={sending || uploading}
+                />
+              </MediaUploadButton>
+              <SendButton
+                onClick={handleSendMessage}
+                disabled={sending || uploading}
+              >
+                <SendIcon size={20} />
+              </SendButton>
+            </MessageInputContainer>
+          </>
+        ) : (
+          <div
+            style={{
+              height: "100vh",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <img width={168.9999} src={azraLight} />
+          </div>
+        )}
       </MainContent>
     </Container>
   );

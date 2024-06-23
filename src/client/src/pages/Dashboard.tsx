@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -21,6 +21,13 @@ import {
 import Footer from "../components/Footer";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { CLEAR_ERRORS } from "../constants";
+import { getDashBoard } from "../../../server/src/handlers/hospital";
+import { fetchDashboard } from "../actions";
 
 ChartJS.register(
   CategoryScale,
@@ -58,8 +65,8 @@ const Header = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  margin-top: 2rem;
   margin-bottom: 2rem;
-
   @media (min-width: 768px) {
     flex-direction: row;
   }
@@ -283,7 +290,7 @@ const UpdateFormModal = styled.div`
           padding: 0.5rem 1rem;
           border-radius: 0.5rem;
           cursor: pointer;
-          font-size:14px;
+          font-size: 14px;
 
           &.cancel {
             background-color: #a0aec0;
@@ -346,6 +353,18 @@ const TTitle = styled.h2`
   font-size: 1.1rem;
   font-weight: bold;
 `;
+
+const Avatar = styled.img`
+  width:75px;
+  height:75px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid #456;
+  @media(max-width:768px){
+    width:65px;
+    height:65px;
+  }
+`
 
 const Dashboard: React.FC = () => {
   const data = {
@@ -411,7 +430,22 @@ const Dashboard: React.FC = () => {
     status: "",
   });
 
-  const navigate = useNavigate()
+  const {
+    user: admin,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      dispatch({ type: CLEAR_ERRORS });
+    }
+
+    dispatch<any>(fetchDashboard(admin?.session?.secret, "HOSPITAL"));
+  }, [error]);
 
   const handleActionsClick = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
@@ -462,11 +496,22 @@ const Dashboard: React.FC = () => {
   return (
     <DashboardContainer>
       <ContentContainer>
-      <ArrowLeft onClick={()=> navigate('/')} style={{background:'#ededed',width:'35',padding:'4px', borderRadius:'50px', cursor:'pointer'}} />
+        <ArrowLeft
+          onClick={() => navigate("/")}
+          style={{
+            background: "#ededed",
+            width: "40",
+            padding: "4px",
+            borderRadius: "50px",
+            cursor: "pointer",
+          }}
+        />
         <Header>
-        
           <WelcomeText>
-            <h1>Welcome Back Jhmeel</h1>
+            <Avatar src=''>
+              
+            </Avatar>
+            <h1>Hospital Name{}</h1>
             <p>Patient reports are always updated in real time</p>
           </WelcomeText>
           <SearchContainer>
