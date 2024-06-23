@@ -17,7 +17,7 @@ const database = new Databases(client);
 const storage = new Storage(client);
 
 const Container = styled.div`
-  height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
 `;
