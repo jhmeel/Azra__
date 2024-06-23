@@ -17,9 +17,10 @@ const database = new Databases(client);
 const storage = new Storage(client);
 
 const Container = styled.div`
-  max-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow:hidden;
 `;
 
 const ChatContainer = styled.div`
