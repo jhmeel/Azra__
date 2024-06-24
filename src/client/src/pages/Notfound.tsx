@@ -57,12 +57,12 @@ const Description = styled.p`
 
 const HomeLink = styled(Link)`
   display: inline-block;
-  background-color: #4299e1;
-  color: #ffffff;
   font-weight: 600;
-  padding: 5px 10px;
+  padding: 10px 20px;
   border-radius: 8px;
   transition: background-color 0.3s ease;
+  background-color:#ffd700;
+  color:#38b2ac;
 
   &:hover {
     background-color: #3182ce;

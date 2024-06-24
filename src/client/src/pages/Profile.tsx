@@ -96,7 +96,7 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  padding: 12px 24px;
+  padding: 10px 20px;
   background: linear-gradient(45deg, #007bff, #00bcd4);
   color: white;
   border: none;
@@ -104,6 +104,7 @@ const Button = styled.button`
   cursor: pointer;
   display: flex;
   align-items: center;
+  width:fit-content;
   gap: 8px;
   transition: all 0.3s ease;
 
