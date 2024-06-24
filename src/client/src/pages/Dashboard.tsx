@@ -162,10 +162,8 @@ const StatCard = styled.div`
 `;
 
 const ChartContainer = styled.div`
-  background-color: white;
   border-radius: 0.5rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   margin-bottom: 2rem;
 `;
 
@@ -523,7 +521,9 @@ const Dashboard = () => {
       });
     }
   };
+  const handleMessage = (patientId?: string) => {
 
+  };
   return (
     <>
       <GlobalStyle />
@@ -597,6 +597,11 @@ const Dashboard = () => {
                       </ActionsButton>
                       {activeIndex === index && (
                         <ActionsDropdown>
+                          <ActionItem
+                            onClick={() => handleMessage(ping.patientId)}
+                          >
+                            Message
+                          </ActionItem>
                           <ActionItem onClick={() => handleUpdate(index)}>
                             Update
                           </ActionItem>
