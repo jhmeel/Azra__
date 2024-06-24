@@ -89,8 +89,19 @@ const Home = () => {
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY",
   });
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const [currentUser, setCurrentUser] = useState(null);
+  const { authRes } = useSelector((state: RootState) => state.auth);
+  const { hospital, patient } = authRes;
+
+  useEffect(() => {
+    if (hospital && hospital?.hospitalName) {
+      setCurrentUser(hospital);
+    } else {
+      setCurrentUser(patient);
+    }
+  }, [hospital, patient]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -153,15 +164,15 @@ const Home = () => {
             <Nav>
               <NavLink href="/about">About</NavLink>
               <NavLink href="/blog">Blog</NavLink>
-              {currentUser?.role === Role.HOSPITAL ? (
+              {authRes?.role === Role.HOSPITAL ? (
                 <NavLink href="/dashboard">Dashboard</NavLink>
               ) : (
-                currentUser?.role === Role.PATIENT && (
+                authRes?.role === Role.PATIENT && (
                   <NavLink href="/profile">Profile</NavLink>
                 )
               )}
 
-              {!currentUser?.session && (
+              {!authRes?.session && (
                 <>
                   <ButtonLink href="/login">Login</ButtonLink>
                   <ButtonLink href="/signup" primary>
@@ -186,19 +197,19 @@ const Home = () => {
                 <MobileNavLink href="/blog" onClick={toggleMobileMenu}>
                   Blog
                 </MobileNavLink>
-                {currentUser?.role === Role.HOSPITAL ? (
+                {authRes?.role === Role.HOSPITAL ? (
                   <MobileNavLink href="/dashboard" onClick={toggleMobileMenu}>
                     Dashboard
                   </MobileNavLink>
                 ) : (
-                  currentUser?.role === Role.PATIENT && (
+                  authRes?.role === Role.PATIENT && (
                     <MobileNavLink href="/profile" onClick={toggleMobileMenu}>
                       Profile
                     </MobileNavLink>
                   )
                 )}
 
-                {!currentUser?.session && (
+                {!authRes?.session && (
                   <ButtonGroup>
                     {" "}
                     <ButtonLink href="/login" onClick={toggleMobileMenu}>
@@ -243,7 +254,7 @@ const Home = () => {
               </AnimatedSectionText>
               <ButtonGroup>
                 <ButtonLink href="/about">Learn More</ButtonLink>
-                {!currentUser?.session && (
+                {!authRes?.session && (
                   <ButtonLink primary href="/signup">
                     Register
                   </ButtonLink>

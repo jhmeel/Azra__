@@ -242,7 +242,8 @@ export const Profile: React.FC = () => {
   const [country, setCountry] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const {user:patient} = useSelector((state:RootState)=> state.auth)
+  const {authRes } = useSelector((state:RootState)=> state.auth)
+  const {patient} = authRes
 
   useEffect(() => {
     const fetchPatientData = async () => {
@@ -358,7 +359,7 @@ export const Profile: React.FC = () => {
             <h2>{patient?.fullName}</h2>
             <p>{patient?.email}</p>
             <Button onClick={() => setShowEditModal(true)}>
-              <FaEdit /> Edit Profile
+              <FaEdit /> Edit
             </Button>
           </Section>
         </Sidebar>
@@ -417,7 +418,7 @@ export const Profile: React.FC = () => {
                   required
                 />
                 <Button type="submit">
-                  <FaUser /> Update Profile
+                  <FaUser /> Update
                 </Button>
               </Form>
             </ModalContent>

@@ -16,13 +16,14 @@ import {
   patientSignUpSchema,
 } from "../schemas/index.js";
 import { Request, Response, NextFunction } from "express";
+import { Role } from "./types/index.js";
 const client = new Client()
   .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
   .setProject(Config.APPWRITE.PROJECT_ID)
   .setKey(Config.APPWRITE.APPWRITE_SECRET);
 
 const users = new Users(client);
-const databases = new Databases(client);
+const database = new Databases(client);
 const account = new Account(client);
 
 const { DATABASE_ID, HOSPITAL_COLLECTION_ID, PATIENT_COLLECTION_ID } =
@@ -91,7 +92,7 @@ export const HospitalSignup = catchAsync(
         hospitalName
       );
 
-      await databases.createDocument(
+      await database.createDocument(
         DATABASE_ID,
         HOSPITAL_COLLECTION_ID,
         ID.unique(),
@@ -111,6 +112,7 @@ export const HospitalSignup = catchAsync(
         success: true,
         message:
           "Sign up successful! Please check your email for confirmation.",
+        role: Role.HOSPITAL,
         session,
       });
     } catch (error: any) {
@@ -128,9 +130,19 @@ export const HospitalLogin = catchAsync(
 
     try {
       const session = await account.createEmailPasswordSession(email, password);
-      res
-        .status(200)
-        .json({ success: true, message: "Login successful!", session });
+      const hospital = await database.listDocuments(
+        DATABASE_ID,
+        HOSPITAL_COLLECTION_ID,
+        [Query.equal("email", [email])]
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Login successful!",
+        role: Role.HOSPITAL,
+        hospital: hospital.documents[0],
+        session,
+      });
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }
@@ -140,7 +152,7 @@ export const HospitalLogin = catchAsync(
 export const PatientSignup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, fullName, phone } = req.body;
-    console.log(email, password, fullName, phone);
+
     const { error } = patientSignUpSchema.validate(req.body);
     if (error) return next(new ErrorHandler(400, error.details[0].message));
 
@@ -159,7 +171,7 @@ export const PatientSignup = catchAsync(
         fullName
       );
 
-      await databases.createDocument(
+      await database.createDocument(
         DATABASE_ID,
         PATIENT_COLLECTION_ID,
         ID.unique(),
@@ -176,6 +188,7 @@ export const PatientSignup = catchAsync(
       res.status(201).json({
         success: true,
         message: "Sign up successful!.",
+        role: Role.PATIENT,
         patient,
         session,
       });
@@ -194,9 +207,18 @@ export const PatientLogin = catchAsync(
 
     try {
       const session = await account.createEmailPasswordSession(email, password);
-      res
-        .status(200)
-        .json({ success: true, message: "Login successful!", session });
+      const patient = await database.listDocuments(
+        DATABASE_ID,
+        PATIENT_COLLECTION_ID,
+        [Query.equal("email", [email])]
+      );
+      res.status(200).json({
+        success: true,
+        message: "Login successful!",
+        role: Role.PATIENT,
+        patient,
+        session,
+      });
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }

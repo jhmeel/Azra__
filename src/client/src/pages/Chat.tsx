@@ -300,9 +300,12 @@ const Chat = () => {
   const messageListRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { authRes } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const { hospital: currentUser }:{hospital:THospital} = authRes;
 
-  const permissions = [Permission.write(Role.user(currentUser?.$id))];
+  const permissions = [Permission.write(Role.user(authRes?.session?.$id))];
 
   useEffect(() => {
     if (currentUser) {

@@ -40,7 +40,7 @@ import { Action} from "../types";
 // Initial states
 const initialAuthState = {
   loading: false,
-  user: null,
+  authRes: null,
   error: null,
 };
 
@@ -88,7 +88,7 @@ const authReducer = (state = initialAuthState, action: Action) => {
       return {
         ...state,
         loading: false,
-        user: action.payload,
+        authRes: action.payload,
       };
 
     case LOGIN_FAIL:

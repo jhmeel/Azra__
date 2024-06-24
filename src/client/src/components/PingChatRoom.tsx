@@ -27,7 +27,7 @@ const storage = new Storage(client);
 
 const Container = styled.div`
   height: 100vh;
-  width:100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -46,7 +46,7 @@ const Header = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  height:60px;
+  height: 60px;
   background: linear-gradient(to right, #4fd1c5, #38b2ac);
   color: white;
 `;
@@ -212,7 +212,8 @@ function PatientChatInterface() {
   const [isHospitalActive, setIsHospitalActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { authRes } = useSelector((state: RootState) => state.auth);
+  const { patient: currentUser } = authRes;
   const location = useLocation();
   const {
     image: pImage,

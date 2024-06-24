@@ -28,7 +28,7 @@ import { RootState } from "../store";
 import { toast } from "sonner";
 import { CLEAR_ERRORS } from "../constants";
 import { fetchDashboard } from "../actions";
-import { Ping, Role } from "../types";
+import { Hospital, Ping, Role } from "../types";
 
 ChartJS.register(
   CategoryScale,
@@ -51,7 +51,7 @@ const DashboardContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  overflow-x:hidden;
+  overflow-x: hidden;
 
   @media (max-width: 768px) {
     padding: 1rem;
@@ -132,22 +132,22 @@ const Button = styled.button`
 `;
 
 const StatsGrid = styled.div`
-display:flex;
-flex-direction:row;
-overflow-x:scroll;
+  display: flex;
+  flex-direction: row;
+  overflow-x: scroll;
   gap: 1rem;
   margin-bottom: 2rem;
-  padding-bottom:3px;
+  padding-bottom: 3px;
 
-  &::-webkit-scrollbar{
-    display:none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 `;
 
 const StatCard = styled.div`
   background-color: white;
   border-radius: 0.5rem;
-  min-width:200px;
+  min-width: 200px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   display: flex;
@@ -399,11 +399,10 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    user: admin,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.auth);
+  const { authRes, loading, error } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const { hospital: admin }:{hospital:Hospital} = authRes;
 
   useEffect(() => {
     if (error) {
@@ -538,7 +537,7 @@ const Dashboard = () => {
           <WelcomeSection>
             <Avatar src="/path-to-avatar.jpg" alt="Hospital Avatar" />
             <WelcomeText>
-              <h1>Welcome back, Central Hospital</h1>
+              <h1>{admin.hospitalName}</h1>
               <p>Here's what's happening today</p>
             </WelcomeText>
           </WelcomeSection>

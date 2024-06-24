@@ -15,7 +15,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isHospital, setIsHospital] = useState<boolean>(false);
-  const { user, error, loading } = useSelector(
+  const { authRes, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
   const dispatch = useDispatch();
@@ -26,14 +26,14 @@ const LoginForm = () => {
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-    if (user && user.role == Role.HOSPITAL) {
+    if (authRes && authRes.role == Role.HOSPITAL) {
       toast.success("Logged in successfully");
       navigate("/dashboard");
-    } else if (user && user.role == Role.PATIENT) {
+    } else if (authRes && authRes.role == Role.PATIENT) {
       toast.success("Logged in successfully");
       navigate("/dashboard");
     }
-  }, [user, dispatch, error, navigate]);
+  }, [authRes, dispatch, error, navigate]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
