@@ -51,7 +51,7 @@ export type NearbySearchProp = {
   status: string;
 };
 export interface Hospital extends Models.Document {
-  $id: string;
+  userId: string;
   hospitalName: string;
   hospitalNumber: string;
   avatar: string;
@@ -68,7 +68,7 @@ export enum Role {
 }
 
 export interface Patient extends Models.Document {
-  $id: string;
+  userId: string;
   fullName: string;
   avatar: string;
   email: string;

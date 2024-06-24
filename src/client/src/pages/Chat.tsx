@@ -305,7 +305,7 @@ const Chat = () => {
   );
   const { hospital: currentUser }:{hospital:THospital} = authRes;
 
-  const permissions = [Permission.write(Role.user(authRes?.session?.$id))];
+  const permissions = [Permission.write(Role.user(authRes?.session?.userId))];
 
   useEffect(() => {
     if (currentUser) {
@@ -347,8 +347,8 @@ const Chat = () => {
         ) {
           const newMessage = response.payload as TMessage;
           if (
-            newMessage.senderId === currentUser?.$id ||
-            newMessage.receiverId === currentUser?.$id
+            newMessage.senderId === currentUser?.userId ||
+            newMessage.receiverId === currentUser?.userId
           ) {
             setMessages((prev) => [...prev, newMessage]);
             markMessageAsRead(newMessage.$id);
@@ -376,7 +376,7 @@ const Chat = () => {
           const updatedUser = response.payload as THospital;
           sethospitals((prev) =>
             prev.map((user) =>
-              user.$id === updatedUser.$id ? updatedUser : user
+              user.userId === updatedUser.userId ? updatedUser : user
             )
           );
         }
@@ -390,7 +390,7 @@ const Chat = () => {
 
   const setHospital = (h: THospital) => {
     setSelectedHospital(h);
-    fetchChatHistory(h.$id);
+    fetchChatHistory(h.userId);
     setHasMoreMessages(true);
   };
 
@@ -400,8 +400,8 @@ const Chat = () => {
     try {
       setLoading(true);
       const queries = [
-        Query.equal("senderId", [currentUser.$id, userId]),
-        Query.equal("receiverId", [currentUser.$id, userId]),
+        Query.equal("senderId", [currentUser.userId, userId]),
+        Query.equal("receiverId", [currentUser.userId, userId]),
         Query.orderDesc("$createdAt"),
         Query.limit(MESSAGES_PER_PAGE),
       ];
@@ -421,7 +421,7 @@ const Chat = () => {
       setHasMoreMessages(newMessages.length === MESSAGES_PER_PAGE);
 
       newMessages.forEach((message) => {
-        if (message.senderId !== currentUser.$id && !message.isRead) {
+        if (message.senderId !== currentUser.userId && !message.isRead) {
           markMessageAsRead(message.$id);
         }
       });
@@ -442,9 +442,9 @@ const Chat = () => {
 
     try {
       setSending(true);
-      const message: Omit<TMessage, "$id" | "$createdAt" | "$updatedAt"> = {
-        senderId: currentUser.$id,
-        receiverId: selectedHospital.$id,
+      const message: Omit<TMessage, "userId" | "$createdAt" | "$updatedAt"> = {
+        senderId: currentUser.userId,
+        receiverId: selectedHospital.userId,
         content,
         timestamp: new Date().toISOString(),
         type,
@@ -567,7 +567,7 @@ const Chat = () => {
 
   const loadMoreMessages = () => {
     if (selectedHospital && messages.length > 0) {
-      fetchChatHistory(selectedHospital.$id, messages[0].$id);
+      fetchChatHistory(selectedHospital.userId, messages[0].userId);
     }
   };
 
@@ -601,7 +601,7 @@ const Chat = () => {
             <ChatList>
               {hospitals?.map((hospital: THospital) => (
                 <ChatItem
-                  key={hospital.$id}
+                  key={hospital.userId}
                   onClick={() => setHospital(hospital)}
                 >
                   <ChatAvatar
@@ -647,7 +647,7 @@ const Chat = () => {
               {messages.map((message) => (
                 <MessageItem
                   key={message.$id}
-                  isSent={message.senderId === currentUser.$id}
+                  isSent={message.senderId === currentUser.userId}
                 >
                   {message.type === "text" && message.content}
                   {message.type === "image" && (
@@ -683,7 +683,7 @@ const Chat = () => {
                       (edited)
                     </span>
                   )}
-                  {message.isRead && message.senderId === currentUser.$id && (
+                  {message.isRead && message.senderId === currentUser.userId && (
                     <span style={{ fontSize: "0.8em", color: "#888" }}>
                       {" "}
                       ✓✓

@@ -21,7 +21,8 @@ function PingForm({
 }) {
   const [complaint, setComplaint] = useState<string>("");
   const [image, setImage] = useState<string | undefined>("");
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { authRes } = useSelector((state: RootState) => state.auth);
+  const {patient: currentUser} = authRes
 
   const { message, error, loading } = useSelector(
     (state: RootState) => state.ping
@@ -69,11 +70,11 @@ function PingForm({
     });
 
     dispatch<any>(
-      newPing(currentUser?.session?.secret, {
+      newPing(authRes?.session?.secret, {
         complaint,
-        patientId: currentUser?.$id,
+        patientId: currentUser?.userId,
         image,
-        hospitalId: selectedHospital?.$id,
+        hospitalId: selectedHospital?.userId,
       })
     );
   };
