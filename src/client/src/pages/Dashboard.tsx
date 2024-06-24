@@ -28,7 +28,7 @@ import { RootState } from "../store";
 import { toast } from "sonner";
 import { CLEAR_ERRORS } from "../constants";
 import { fetchDashboard } from "../actions";
-import { Ping } from "../types";
+import { Ping, Role } from "../types";
 
 ChartJS.register(
   CategoryScale,
@@ -411,7 +411,7 @@ const Dashboard = () => {
       dispatch({ type: CLEAR_ERRORS });
     }
 
-    dispatch<any>(fetchDashboard(admin?.session?.secret, "HOSPITAL"));
+    dispatch<any>(fetchDashboard(admin?.session?.secret, Role.HOSPITAL));
   }, [error, dispatch, admin]);
 
   const statsData = [

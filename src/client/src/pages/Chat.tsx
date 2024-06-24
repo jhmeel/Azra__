@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import styled from "styled-components";
 import {
   Client,
-  Account,
   Databases,
   ID,
   Storage,

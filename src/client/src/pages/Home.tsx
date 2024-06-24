@@ -4,7 +4,7 @@ import { useLoadScript } from "@react-google-maps/api";
 import { Menu, X } from "lucide-react";
 import { FaTwitter, FaInstagram, FaLinkedin, FaFacebook } from "react-icons/fa";
 import styled, { keyframes, createGlobalStyle } from "styled-components";
-import { Coordinate, Hospital as THospital } from "../types";
+import { Coordinate, Role, Hospital as THospital } from "../types";
 import azraLight from "../assets/azra_light.png";
 import HospitalCards from "../components/HospitalItem";
 import HealthFacilityLocator from "../components/HealthFacilityLocator";
@@ -12,6 +12,9 @@ import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 
+interface ButtonLink {
+  primary?: boolean;
+}
 
 const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
   {
@@ -150,9 +153,22 @@ const Home = () => {
             <Nav>
               <NavLink href="/about">About</NavLink>
               <NavLink href="/blog">Blog</NavLink>
-              <NavLink href="/dashboard">Dashboard</NavLink>
-              <ButtonLink href="/login">Login</ButtonLink>
-              <ButtonLink href="/signup" primary>Register</ButtonLink>
+              {currentUser?.role === Role.HOSPITAL ? (
+                <NavLink href="/dashboard">Dashboard</NavLink>
+              ) : (
+                currentUser?.role === Role.PATIENT && (
+                  <NavLink href="/profile">Profile</NavLink>
+                )
+              )}
+
+              {!currentUser?.session && (
+                <>
+                  <ButtonLink href="/login">Login</ButtonLink>
+                  <ButtonLink href="/signup" primary>
+                    Register
+                  </ButtonLink>
+                </>
+              )}
             </Nav>
 
             <MobileNavToggle onClick={toggleMobileMenu}>
@@ -170,22 +186,47 @@ const Home = () => {
                 <MobileNavLink href="/blog" onClick={toggleMobileMenu}>
                   Blog
                 </MobileNavLink>
-               
-                <MobileNavLink href="/dashboard" onClick={toggleMobileMenu}>
-                  Dashboard
-                </MobileNavLink>
-                <ButtonGroup> <ButtonLink href="/login" onClick={toggleMobileMenu}>
-                  Login
-                </ButtonLink>
-                <ButtonLink primary href="/signup" onClick={toggleMobileMenu}>
-                  Register
-                </ButtonLink></ButtonGroup>
+                {currentUser?.role === Role.HOSPITAL ? (
+                  <MobileNavLink href="/dashboard" onClick={toggleMobileMenu}>
+                    Dashboard
+                  </MobileNavLink>
+                ) : (
+                  currentUser?.role === Role.PATIENT && (
+                    <MobileNavLink href="/profile" onClick={toggleMobileMenu}>
+                      Profile
+                    </MobileNavLink>
+                  )
+                )}
+
+                {!currentUser?.session && (
+                  <ButtonGroup>
+                    {" "}
+                    <ButtonLink href="/login" onClick={toggleMobileMenu}>
+                      Login
+                    </ButtonLink>
+                    <ButtonLink
+                      primary
+                      href="/signup"
+                      onClick={toggleMobileMenu}
+                    >
+                      Register
+                    </ButtonLink>
+                  </ButtonGroup>
+                )}
               </MobileNavContent>
               <SocialIcons>
-                <SocialIcon href="#"><FaTwitter /></SocialIcon>
-                <SocialIcon href="#"><FaInstagram /></SocialIcon>
-                <SocialIcon href="#"><FaLinkedin /></SocialIcon>
-                <SocialIcon href="#"><FaFacebook /></SocialIcon>
+                <SocialIcon href="#">
+                  <FaTwitter />
+                </SocialIcon>
+                <SocialIcon href="#">
+                  <FaInstagram />
+                </SocialIcon>
+                <SocialIcon href="#">
+                  <FaLinkedin />
+                </SocialIcon>
+                <SocialIcon href="#">
+                  <FaFacebook />
+                </SocialIcon>
               </SocialIcons>
             </MobileNavContainer>
           </Container>
@@ -193,17 +234,20 @@ const Home = () => {
           <Section>
             <SectionContent>
               <AnimatedSectionTitle>
-                Your Gateway to <HighlightText>Exceptional Healthcare</HighlightText>
+                Your Gateway to{" "}
+                <HighlightText>Exceptional Healthcare</HighlightText>
               </AnimatedSectionTitle>
               <AnimatedSectionText>
-                Discover top-rated hospitals, book appointments, and connect with
-                healthcare providers seamlessly.
+                Discover top-rated hospitals, book appointments, and connect
+                with healthcare providers seamlessly.
               </AnimatedSectionText>
               <ButtonGroup>
                 <ButtonLink href="/about">Learn More</ButtonLink>
-                <ButtonLink primary href="/signup">
-                  Register
-                </ButtonLink>
+                {!currentUser?.session && (
+                  <ButtonLink primary href="/signup">
+                    Register
+                  </ButtonLink>
+                )}
               </ButtonGroup>
             </SectionContent>
           </Section>
@@ -258,7 +302,7 @@ const Logo = styled.img`
 
 const Nav = styled.nav`
   display: flex;
-  gap:5px;
+  gap: 5px;
   align-items: center;
 
   @media (max-width: 768px) {
@@ -310,12 +354,13 @@ const MobileNavContainer = styled.div<{ isOpen: boolean }>`
   background-color: rgba(56, 178, 172, 0.3);
   backdrop-filter: blur(10px);
   z-index: 1000;
-  transform: translateX(${({ isOpen }) => (isOpen ? '0' : '-100%')});
+  transform: translateX(${({ isOpen }) => (isOpen ? "0" : "-100%")});
   transition: transform 0.3s ease-in-out;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-bottom-right-radius: 10px;
 `;
 
 const MobileNavContent = styled.div`
@@ -350,7 +395,8 @@ const SocialIcons = styled.div`
   display: flex;
   justify-content: center;
   padding: 1rem;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(176, 120, 0, 0.1);
+  border-bottom-right-radius: 10px;
 `;
 
 const SocialIcon = styled.a`
@@ -403,7 +449,7 @@ const SectionText = styled.p`
   }
 `;
 
-const ButtonLink = styled.a`
+const ButtonLink = styled.a<ButtonLink>`
   display: inline-block;
   background-color: ${(props) => (props.primary ? "#ffd700" : "transparent")};
   color: ${(props) => (props.primary ? "#38b2ac" : "white")};
@@ -411,13 +457,14 @@ const ButtonLink = styled.a`
   border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
-  width:fit-content;
+  width: fit-content;
   text-decoration: none;
   transition: all 0.3s ease;
   border: 2px solid ${(props) => (props.primary ? "#ffd700" : "white")};
 
   &:hover {
-    background-color: ${(props) => (props.primary ? "#fff" : "rgba(255, 255, 255, 0.1)")};
+    background-color: ${(props) =>
+      props.primary ? "#fff" : "rgba(255, 255, 255, 0.1)"};
     color: ${(props) => (props.primary ? "#38b2ac" : "white")};
   }
 

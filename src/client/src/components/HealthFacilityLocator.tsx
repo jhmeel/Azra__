@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import styled from "styled-components";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { Link } from "react-router-dom";
-import { MessageCircleDashed, MapPin } from "lucide-react";
+import { MessageCircleDashed} from "lucide-react";
 import { Hospital } from "../types";
 import { bouncy } from "ldrs";
 

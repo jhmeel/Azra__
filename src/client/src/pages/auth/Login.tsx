@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { CLEAR_ERRORS } from "../../constants";
 import { toast } from "sonner";
 import { login } from "../../actions";
+import { Role } from "../../types";
 
 const LoginForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -25,7 +26,10 @@ const LoginForm = () => {
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-    if (user) {
+    if (user && user.role == Role.HOSPITAL) {
+      toast.success("Logged in successfully");
+      navigate("/dashboard");
+    } else if (user && user.role == Role.PATIENT) {
       toast.success("Logged in successfully");
       navigate("/dashboard");
     }
@@ -77,6 +81,7 @@ const LoginForm = () => {
               <InputWrapper>
                 <MailIcon />
                 <Input
+                autoFocus
                   id="email"
                   type="email"
                   value={email}

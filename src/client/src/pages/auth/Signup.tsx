@@ -4,7 +4,7 @@ import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import signupImage from "../../assets/OnlineDoctor-bro.svg";
 import { Countries } from "../../utils/formatter";
 import { Link, useNavigate } from "react-router-dom";
-import { SignupFormData } from "../../types";
+import { Role, SignupFormData } from "../../types";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
 import { toast } from "sonner";
@@ -81,7 +81,7 @@ const Message = styled.p<{ success: boolean }>`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 `;
 
 const Label = styled.label`
@@ -162,7 +162,6 @@ const SubmitButton = styled.button<{ loading: boolean }>`
 const TermsWrapper = styled.div`
   display: flex;
   align-items: center;
-  margin-top: 10px;
   font-size: 14px;
   input {
     margin-right: 0.5rem;
@@ -313,8 +312,12 @@ const SignupForm = () => {
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-    if (user) {
-      toast.success("Signed up successfully");
+
+    if (user && user.role == Role.HOSPITAL) {
+      toast.success("Signup successfully");
+      navigate("/dashboard");
+    } else if (user && user.role == Role.PATIENT) {
+      toast.success("Signup successfully");
       navigate("/dashboard");
     }
   }, [user, dispatch, error, navigate]);
@@ -341,17 +344,17 @@ const SignupForm = () => {
 
     const updatedData = {
       ...restData,
-      phone: data.phone.length === 11 ? selectedDomain + data.phone.slice(1) : data.phone,
+      phone:
+        data.phone.length === 11
+          ? selectedDomain + data.phone.slice(1)
+          : data.phone,
     };
-    
 
-    dispatch<any>(
-      signup(updatedData, isHospital)
-    );
+    dispatch<any>(signup(updatedData, isHospital));
   };
 
   const handleGoogleSignup = async () => {
-    await axiosInstance().get('/auth/p-oauth/signup')
+    await axiosInstance().get("/auth/p-oauth/signup");
   };
 
   return (
@@ -532,25 +535,26 @@ const SignupForm = () => {
                 <div>
                   <LocationButton
                     type="button"
-                    onClick={() =>setDrawerOpen(true)}
+                    onClick={() => setDrawerOpen(true)}
                   >
                     {selectedLocation
                       ? `Location Selected (${selectedLocation.lat}, ${selectedLocation.lng})`
                       : "Select Location"}
                   </LocationButton>
-                  {drawerOpen&& (
+                  {drawerOpen && (
                     <Drawer open={drawerOpen}>
                       <DrawerContent>
                         <DrawerHeader>
                           <h3>Select Your Hospital Location</h3>
                           <button onClick={() => handleRemoveLocation()}>
-                           <X />
+                            <X />
                           </button>
                         </DrawerHeader>
                         <DrawerBody>
                           <LoadScript
                             googleMapsApiKey={
-                              import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""
+                              import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY ||
+                              ""
                             }
                           >
                             <GoogleMap
@@ -595,7 +599,11 @@ const SignupForm = () => {
                 <ErrorMessage>{errors.acceptTerms.message}</ErrorMessage>
               )}
               <SubmitButton type="submit" loading={loading}>
-                {loading ? <LoaderIcon className="animate-spin" size={20} /> : "Sign Up"}
+                {loading ? (
+                  <LoaderIcon className="animate-spin" size={20} />
+                ) : (
+                  "Sign Up"
+                )}
               </SubmitButton>
             </Form>
             <LoginText>

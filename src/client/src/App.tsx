@@ -4,7 +4,9 @@ import "./global.css";
 import { toast } from "sonner";
 import { Unplug } from "lucide-react";
 const Chat = lazy(() => import("./pages/Chat"));
-const HospitalPingChatRoom  = lazy(() => import("./components/HospitalPingChatRoom"));
+const HospitalPingChatRoom = lazy(
+  () => import("./components/HospitalPingChatRoom")
+);
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NotFound = lazy(() => import("./pages/Notfound"));
 import MainLoader from "./components/Loaders/MainLoader";
@@ -13,6 +15,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Signup = lazy(() => import("./pages/auth/Signup"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const AboutPage = lazy(() => import("./pages/About"));
+const Profile = lazy(() => import("./pages/Profile"));
 
 function App() {
   const { pathname } = useLocation();
@@ -37,19 +40,18 @@ function App() {
     });
   }, [pathname]);
 
-  
-
   return (
     <>
       <Suspense fallback={<MainLoader />}>
         {!["/login", "/#/login", "/signup", "/#/signup"].includes(pathname) && (
-          <>{/* header*/}</>
+          <></>
         )}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/ping-chat" element={<PingChat />} />
           <Route path="/h-ping-chat" element={<HospitalPingChatRoom />} />

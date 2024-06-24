@@ -27,6 +27,7 @@ const storage = new Storage(client);
 
 const Container = styled.div`
   height: 100vh;
+  width:100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -44,7 +45,8 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 10px 20px;
+  height:60px;
   background: linear-gradient(to right, #4fd1c5, #38b2ac);
   color: white;
 `;
@@ -139,7 +141,7 @@ const InputContainer = styled.form`
 `;
 
 const TextInput = styled.input`
-  flex: 1;
+  flex: 2;
   padding: 9px 12px;
   border: none;
   border-radius: 21px;
@@ -168,8 +170,10 @@ const ImagePreview = styled.div`
   display: flex;
   justify-content: center;
 `;
-
-const PreviewImage = styled.img`
+interface Prev {
+  src: string | null;
+}
+const PreviewImage = styled.img<Prev>`
   max-width: 45px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
