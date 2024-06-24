@@ -1,13 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
-import { UploadIcon, Phone, XIcon, Hospital as HospitalIcon, SendIcon, Trash2, Check, CheckCheck } from 'lucide-react';
-import { Hospital, Message } from '../types';
-import { toast } from 'sonner';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { Client, Databases, Storage, Query, ID } from 'appwrite';
-import Config from '../Config';
+import React, { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import {
+  UploadIcon,
+  Phone,
+  XIcon,
+  Hospital as HospitalIcon,
+  SendIcon,
+  Trash2,
+  Check,
+  CheckCheck,
+} from "lucide-react";
+import { Hospital, Message } from "../types";
+import { toast } from "sonner";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { Client, Databases, Storage, Query, ID } from "appwrite";
+import Config from "../Config";
 
 const client = new Client()
   .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
@@ -20,14 +29,14 @@ const Container = styled.div`
   height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow:hidden;
+  overflow: hidden;
 `;
 
 const ChatContainer = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-image: url('https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png');
+  background-image: url("https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png");
   background-repeat: repeat;
 `;
 
@@ -54,7 +63,7 @@ const StatusIndicator = styled.div<{ isActive: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: ${props => props.isActive ? '#4caf50' : '#bdbdbd'};
+  background-color: ${(props) => (props.isActive ? "#4caf50" : "#bdbdbd")};
   margin-left: 8px;
 `;
 
@@ -73,13 +82,13 @@ const MessagesContainer = styled.div`
 
 const MessageItem = styled.div<{ isPatient: boolean }>`
   display: flex;
-  flex-direction: ${props => props.isPatient ? 'row-reverse' : 'row'};
+  flex-direction: ${(props) => (props.isPatient ? "row-reverse" : "row")};
   margin-bottom: 8px;
 `;
 
 const MessageContent = styled.div<{ isPatient: boolean }>`
   max-width: 65%;
-  background-color: ${props => props.isPatient ? '#dcf8c6' : 'white'};
+  background-color: ${(props) => (props.isPatient ? "#dcf8c6" : "white")};
   border-radius: 7.5px;
   padding: 6px 7px 8px 9px;
   box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
@@ -136,7 +145,7 @@ const TextInput = styled.input`
   border-radius: 21px;
   background-color: white;
   font-size: 15px;
-  outline:none;
+  outline: none;
 `;
 
 const FileInput = styled.input`
@@ -193,7 +202,7 @@ const SendButton = styled.button`
 
 function PatientChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isHospitalActive, setIsHospitalActive] = useState(false);
@@ -213,10 +222,8 @@ function PatientChatInterface() {
 
   const handleRemoveImage = () => {
     setImage(null);
-    setImagePreview(null)
+    setImagePreview(null);
   };
-
-
 
   useEffect(() => {
     if (currentUser) {
@@ -236,16 +243,23 @@ function PatientChatInterface() {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const subscribeToMessages = () => {
     return client.subscribe(
       `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.PINGS_COLLECTION_ID}.documents`,
       (response) => {
-        if (response.events.includes('databases.*.collections.*.documents.*.create')) {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.create"
+          )
+        ) {
           const newMessage = response.payload as Message;
-          if (newMessage.senderId === currentUser.$id && newMessage.receiverId === pSelectedHospital.$id) {
+          if (
+            newMessage.senderId === currentUser.$id &&
+            newMessage.receiverId === pSelectedHospital.$id
+          ) {
             setMessages((prevMessages) => [...prevMessages, newMessage]);
           }
         }
@@ -257,7 +271,11 @@ function PatientChatInterface() {
     return client.subscribe(
       `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.HOSPITAL_COLLECTION_ID}.documents.${pSelectedHospital.$id}`,
       (response) => {
-        if (response.events.includes('databases.*.collections.*.documents.*.update')) {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.update"
+          )
+        ) {
           const updatedHospital = response.payload as Hospital;
           setIsHospitalActive(updatedHospital.isActive);
         }
@@ -271,15 +289,15 @@ function PatientChatInterface() {
         Config.APPWRITE.DATABASE_ID,
         Config.APPWRITE.PINGS_COLLECTION_ID,
         [
-          Query.equal('patientId', currentUser.$id),
-          Query.equal('hospitalId',pSelectedHospital.$id),
-          Query.orderAsc('$createdAt'),
+          Query.equal("patientId", currentUser.$id),
+          Query.equal("hospitalId", pSelectedHospital.$id),
+          Query.orderAsc("$createdAt"),
         ]
       );
       setMessages(response.documents as Message[]);
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      toast.error('Failed to fetch messages. Please try again.');
+      console.error("Error fetching messages:", error);
+      toast.error("Failed to fetch messages. Please try again.");
     }
   };
 
@@ -287,19 +305,22 @@ function PatientChatInterface() {
     e.preventDefault();
     if (inputMessage.trim() || image) {
       try {
-        let mediaUrl = '';
+        let mediaUrl = "";
         if (image) {
           const uploadedFile = await storage.createFile(
             Config.APPWRITE.BUCKET_ID,
             ID.unique(),
             image
           );
-          mediaUrl = storage.getFileView(Config.APPWRITE.BUCKET_ID, uploadedFile.$id).href;
+          mediaUrl = storage.getFileView(
+            Config.APPWRITE.BUCKET_ID,
+            uploadedFile.$id
+          ).href;
         }
 
-        const newMessage: Omit<Message, '$id' | '$createdAt' | '$updatedAt'> = {
+        const newMessage: Omit<Message, "$id" | "$createdAt" | "$updatedAt"> = {
           patientId: currentUser.$id,
-          hospitalId:pSelectedHospital.$id,
+          hospitalId: pSelectedHospital.$id,
           content: inputMessage.trim(),
           mediaUrl,
           isRead: false,
@@ -312,14 +333,14 @@ function PatientChatInterface() {
           newMessage
         );
 
-        setInputMessage('');
+        setInputMessage("");
         setImage(null);
         if (fileInputRef.current) {
-          fileInputRef.current.value = '';
+          fileInputRef.current.value = "";
         }
       } catch (error) {
-        console.error('Error sending message:', error);
-        toast.error('Failed to send message. Please try again.');
+        console.error("Error sending message:", error);
+        toast.error("Failed to send message. Please try again.");
       }
     }
   };
@@ -346,11 +367,13 @@ function PatientChatInterface() {
         Config.APPWRITE.PINGS_COLLECTION_ID,
         messageId
       );
-      setMessages((prevMessages) => prevMessages.filter((msg) => msg.$id !== messageId));
-      toast.success('Message deleted successfully.');
+      setMessages((prevMessages) =>
+        prevMessages.filter((msg) => msg.$id !== messageId)
+      );
+      toast.success("Message deleted successfully.");
     } catch (error) {
-      console.error('Error deleting message:', error);
-      toast.error('Failed to delete message. Please try again.');
+      console.error("Error deleting message:", error);
+      toast.error("Failed to delete message. Please try again.");
     }
   };
 
@@ -373,16 +396,30 @@ function PatientChatInterface() {
         </Header>
         <MessagesContainer>
           {messages.map((message) => (
-            <MessageItem key={message.$id} isPatient={message.patientId === currentUser.$id}>
+            <MessageItem
+              key={message.$id}
+              isPatient={message.patientId === currentUser.$id}
+            >
               <MessageContent isPatient={message.patientId === currentUser.$id}>
                 <MessageText>{message.content}</MessageText>
-                {message.mediaUrl && <MessageImage src={message.mediaUrl} alt="Attached media" />}
+                {message.mediaUrl && (
+                  <MessageImage src={message.mediaUrl} alt="Attached media" />
+                )}
                 <MessageMeta>
-                  {new Date(message.$createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(message.$createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                   {message.patientId === currentUser.$id && (
                     <>
-                      {message.isRead ? <CheckCheck size={16} /> : <Check size={16} />}
-                      <DeleteButton onClick={() => handleDeleteMessage(message.$id)}>
+                      {message.isRead ? (
+                        <CheckCheck size={16} />
+                      ) : (
+                        <Check size={16} />
+                      )}
+                      <DeleteButton
+                        onClick={() => handleDeleteMessage(message.$id)}
+                      >
                         <Trash2 size={14} />
                       </DeleteButton>
                     </>
@@ -408,7 +445,8 @@ function PatientChatInterface() {
           onChange={handleImageChange}
           accept="image/*"
           ref={fileInputRef}
-        />{!image ? (
+        />
+        {!image ? (
           <FileLabel htmlFor="image">
             <UploadIcon size={16} />
           </FileLabel>

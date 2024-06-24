@@ -39,7 +39,6 @@ ChartJS.register(
   Legend
 );
 
-// Global styles for better consistency
 const GlobalStyle = createGlobalStyle`
   body {
     font-family: 'Inter', sans-serif;
@@ -48,11 +47,11 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// Styled components with improved responsiveness
 const DashboardContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  overflow-x:hidden;
 
   @media (max-width: 768px) {
     padding: 1rem;
@@ -133,15 +132,22 @@ const Button = styled.button`
 `;
 
 const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+display:flex;
+flex-direction:row;
+overflow-x:scroll;
   gap: 1rem;
   margin-bottom: 2rem;
+  padding-bottom:3px;
+
+  &::-webkit-scrollbar{
+    display:none;
+  }
 `;
 
 const StatCard = styled.div`
   background-color: white;
   border-radius: 0.5rem;
+  min-width:200px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   display: flex;
@@ -522,7 +528,7 @@ const Dashboard = () => {
     }
   };
   const handleMessage = (patientId?: string) => {
-
+    setActiveIndex(null);
   };
   return (
     <>
