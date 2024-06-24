@@ -8,7 +8,7 @@ interface AxiosInstanceConfig extends AxiosRequestConfig {
 
 const axiosInstance = (token?: string, role?: Role): AxiosInstance => {
   const config: AxiosInstanceConfig = {
-    baseURL: "http://localhost:8000",
+    baseURL: "http://localhost:3000",
     headers: { "Content-Type": "application/json" },
   };
 

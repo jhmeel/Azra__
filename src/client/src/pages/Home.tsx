@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import ScrollReveal from "scrollreveal";
 import { useLoadScript } from "@react-google-maps/api";
 import { Menu, X } from "lucide-react";
-import { Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
-import styled from "styled-components";
+import { FaTwitter, FaInstagram, FaLinkedin, FaFacebook } from "react-icons/fa";
+import styled, { keyframes, createGlobalStyle } from "styled-components";
 import { Coordinate, Hospital as THospital } from "../types";
 import azraLight from "../assets/azra_light.png";
 import HospitalCards from "../components/HospitalItem";
@@ -11,14 +11,14 @@ import HealthFacilityLocator from "../components/HealthFacilityLocator";
 import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { toast } from "sonner";
-import { useDispatch } from "react-redux";
+
+
 const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
   {
     $id: "1",
     hospitalName: "Yusuf Dantsoho Memorial Hospital",
     hospitalNumber: "1234",
-    avatar: "https://example.com/hospital1.jpg",
+    avatar: "https://images.app.goo.gl/2Csy1sBr372CiKUH7",
     status: "available",
     email: "",
     phone: "",
@@ -28,7 +28,7 @@ const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
     $id: "2",
     hospitalName: "Ahmadu Bello University Teaching Hospital",
     hospitalNumber: "5678",
-    avatar: "https://example.com/hospital2.jpg",
+    avatar: "https://images.app.goo.gl/4DfRj5c9CVQ313yN7",
     status: "unavailable",
     email: "",
     phone: "",
@@ -38,7 +38,7 @@ const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
     $id: "3",
     hospitalName: "Garki Hospital",
     hospitalNumber: "91011",
-    avatar: "https://example.com/hospital3.jpg",
+    avatar: "https://images.app.goo.gl/uovXmwaGaiAGFgf7A",
     status: "available",
     email: "",
     phone: "",
@@ -48,7 +48,7 @@ const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
     $id: "4",
     hospitalName: "Lagos University Teaching Hospital",
     hospitalNumber: "121314",
-    avatar: "https://example.com/hospital4.jpg",
+    avatar: "https://images.app.goo.gl/cahna6dyT2Ny7ceW6",
     status: "unavailable",
     email: "",
     phone: "",
@@ -58,13 +58,22 @@ const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
     $id: "5",
     hospitalName: "Aminu Kano Teaching Hospital",
     hospitalNumber: "151617",
-    avatar: "https://example.com/hospital5.jpg",
+    avatar: "https://images.app.goo.gl/8e3gb4K2oxC2xBEV7",
     status: "available",
     email: "",
     phone: "",
     coordinates: "12.0022,8.5167",
   },
 ];
+
+const GlobalStyle = createGlobalStyle`
+  body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+`;
 
 const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -78,12 +87,12 @@ const Home = () => {
     googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY",
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
   useEffect(() => {
     setTimeout(() => {
       setHospitals(demoHospitals);
@@ -130,98 +139,104 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="landing-page">
-      <Header className="reveal-top">
-        <Container>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <Logo src={azraLight} alt="Azra" />
-          </div>
-          <Nav>
-            <NavLink href="/about">About</NavLink>
-            <NavLink href="/blog">Blog</NavLink>
-            <NavLink href="/dashboard">Dashboard</NavLink>
-            <ButtonLink href="/signup">Register</ButtonLink>
-          </Nav>
+    <>
+      <GlobalStyle />
+      <div className="landing-page">
+        <Header className="reveal-top">
+          <Container>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <Logo src={azraLight} alt="Azra" />
+            </div>
+            <Nav>
+              <NavLink href="/about">About</NavLink>
+              <NavLink href="/blog">Blog</NavLink>
+              <NavLink href="/dashboard">Dashboard</NavLink>
+              <ButtonLink href="/login">Login</ButtonLink>
+              <ButtonLink href="/signup" primary>Register</ButtonLink>
+            </Nav>
 
-          <MobileNavToggle onClick={toggleMobileMenu}>
-            <Menu />
-          </MobileNavToggle>
+            <MobileNavToggle onClick={toggleMobileMenu}>
+              <Menu />
+            </MobileNavToggle>
 
-          {isMobileMenuOpen && (
             <MobileNavContainer isOpen={isMobileMenuOpen}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: "100%",
-                  cursor: "pointer",
-                }}
-              >
-                <X onClick={() => setIsMobileMenuOpen(false)} />
-              </div>
               <MobileNavContent>
+                <CloseButton onClick={() => setIsMobileMenuOpen(false)}>
+                  <X />
+                </CloseButton>
                 <MobileNavLink href="/about" onClick={toggleMobileMenu}>
                   About
-                </MobileNavLink>
-                <MobileNavLink href="/contact" onClick={toggleMobileMenu}>
-                  Contact
                 </MobileNavLink>
                 <MobileNavLink href="/blog" onClick={toggleMobileMenu}>
                   Blog
                 </MobileNavLink>
+               
                 <MobileNavLink href="/dashboard" onClick={toggleMobileMenu}>
                   Dashboard
                 </MobileNavLink>
+                <ButtonGroup> <ButtonLink href="/login" onClick={toggleMobileMenu}>
+                  Login
+                </ButtonLink>
                 <ButtonLink primary href="/signup" onClick={toggleMobileMenu}>
                   Register
-                </ButtonLink>
+                </ButtonLink></ButtonGroup>
               </MobileNavContent>
+              <SocialIcons>
+                <SocialIcon href="#"><FaTwitter /></SocialIcon>
+                <SocialIcon href="#"><FaInstagram /></SocialIcon>
+                <SocialIcon href="#"><FaLinkedin /></SocialIcon>
+                <SocialIcon href="#"><FaFacebook /></SocialIcon>
+              </SocialIcons>
             </MobileNavContainer>
-          )}
-        </Container>
+          </Container>
 
-        <Section>
-          <SectionContent>
-            <SectionTitle>Your Gateway to Exceptional Healthcare</SectionTitle>
-            <SectionText>
-              Discover top-rated hospitals, book appointments, and connect with
-              healthcare providers seamlessly.
-            </SectionText>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <ButtonLink href="/about">Learn More</ButtonLink>
-              <ButtonLink primary href="/signup">
-                Register
-              </ButtonLink>
-            </div>
-          </SectionContent>
-        </Section>
-      </Header>
+          <Section>
+            <SectionContent>
+              <AnimatedSectionTitle>
+                Your Gateway to <HighlightText>Exceptional Healthcare</HighlightText>
+              </AnimatedSectionTitle>
+              <AnimatedSectionText>
+                Discover top-rated hospitals, book appointments, and connect with
+                healthcare providers seamlessly.
+              </AnimatedSectionText>
+              <ButtonGroup>
+                <ButtonLink href="/about">Learn More</ButtonLink>
+                <ButtonLink primary href="/signup">
+                  Register
+                </ButtonLink>
+              </ButtonGroup>
+            </SectionContent>
+          </Section>
+        </Header>
 
-      <section className="reveal-bottom">
-        <HospitalCards
-          isLoading={isLoading}
-          hospitals={demoHospitals}
-          userLocation={userLocation}
-          currentUser={currentUser}
-        />
-      </section>
+        <section className="reveal-bottom">
+          <HospitalCards
+            isLoading={isLoading}
+            hospitals={demoHospitals}
+            userLocation={userLocation}
+            currentUser={currentUser}
+          />
+        </section>
 
-      <section className="reveal-bottom">
-        <HealthFacilityLocator
-          isLoaded={isLoaded}
-          hospitals={demoHospitals}
-          userLocation={userLocation}
-          pinIconUrl={""}
-        />
-      </section>
-      <Footer />
-    </div>
+        <section className="reveal-bottom">
+          <HealthFacilityLocator
+            isLoaded={isLoaded}
+            hospitals={demoHospitals}
+            userLocation={userLocation}
+            pinIconUrl={""}
+          />
+        </section>
+        <Footer />
+      </div>
+    </>
   );
 };
 
 export default Home;
+
 const Header = styled.header`
-  background: linear-gradient(to right, #4fd1c5, #38b2ac);
-  padding-bottom: 2.5rem;
+  background: linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
+  padding: 1rem 0 4rem;
   color: white;
   position: relative;
   overflow: hidden;
@@ -230,27 +245,21 @@ const Header = styled.header`
 const Container = styled.div`
   display: flex;
   justify-content: space-between;
-  max-width: 100%;
-  padding: 5px 10px;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
 `;
 
 const Logo = styled.img`
-  height: 2.5rem;
+  height: 2.2rem;
   width: auto;
-  margin-right: 1rem;
-  padding-top: 10px;
-`;
-
-const Title = styled.h1`
-  font-size: 1.75rem;
-  font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const Nav = styled.nav`
   display: flex;
+  gap:5px;
   align-items: center;
-  justify-content: space-between;
 
   @media (max-width: 768px) {
     display: none;
@@ -260,102 +269,183 @@ const Nav = styled.nav`
 const NavLink = styled.a`
   color: white;
   margin-right: 1.5rem;
-  transition: color 0.3s ease;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.3s ease;
 
   &:hover {
-    color: #d2dd7f60;
+    opacity: 0.8;
   }
 `;
 
 const MobileNavToggle = styled.button`
   color: white;
-  font-size: 1.5rem;
   background: none;
   border: none;
   cursor: pointer;
-  outline: none;
+  font-size: 1.5rem;
+  display: none;
 
-  @media (min-width: 769px) {
-    display: none;
+  @media (max-width: 768px) {
+    display: block;
   }
 `;
 
-const MobileNavContainer = styled.div<{ isOpen: boolean }>`
-  width: 90%;
-  box-shadow: 0 2px 4px rgba(41, 138, 150, 0.1);
-  padding: 16px;
-  position: fixed;
-  border-radius: 16px;
-  z-index: 100;
-  transition: transform 0.3s ease;
-  transform: ${({ isOpen }) =>
-    isOpen ? "translateX(0)" : "translateX(-110%)"};
-
-  @media (min-width: 768px) {
-    width: 33%;
-    max-width: 300px;
-    position: relative;
+const slideIn = keyframes`
+  from {
+    transform: translateX(-100%);
+  }
+  to {
     transform: translateX(0);
   }
 `;
 
-const MobileNavContent = styled.div`
+const MobileNavContainer = styled.div<{ isOpen: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80%;
+  max-width: 300px;
+  height: 60vh;
+  background-color: rgba(56, 178, 172, 0.3);
   backdrop-filter: blur(10px);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  z-index: 1000;
+  transform: translateX(${({ isOpen }) => (isOpen ? '0' : '-100%')});
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
+const MobileNavContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+`;
+
+const CloseButton = styled.button`
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-bottom: 2rem;
 `;
 
 const MobileNavLink = styled.a`
-  display: block;
   color: white;
-  margin-bottom: 1rem;
-  transition: color 0.3s ease;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
 
   &:hover {
-    color: #38b2ac;
+    opacity: 0.8;
+  }
+`;
+
+const SocialIcons = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+`;
+
+const SocialIcon = styled.a`
+  color: white;
+  margin: 0 0.5rem;
+  transition: opacity 0.3s ease;
+  font-size: 1.5rem;
+
+  &:hover {
+    opacity: 0.8;
   }
 `;
 
 const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 4rem;
-  position: relative;
-  padding: 0 15px;
-  z-index: 10;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-  }
+  max-width: 1200px;
+  margin: 4rem auto 0;
+  padding: 0 1rem;
 `;
 
 const SectionContent = styled.div`
-  flex: 1;
+  max-width: 600px;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+  }
 `;
 
-const SectionTitle = styled.h2`
-  font-size: 2.5rem;
-  font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+const SectionTitle = styled.h1`
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+`;
+
+const HighlightText = styled.span`
+  color: #ffd700;
 `;
 
 const SectionText = styled.p`
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   margin-bottom: 2rem;
+  opacity: 0.9;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
 `;
 
 const ButtonLink = styled.a`
-  background-color: ${(props) => (props.primary ? "#ffc107" : "white")};
-  color: ${(props) => (props.primary ? "white" : "#38b2ac")};
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 14px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  display: inline-block;
+  background-color: ${(props) => (props.primary ? "#ffd700" : "transparent")};
+  color: ${(props) => (props.primary ? "#38b2ac" : "white")};
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  width:fit-content;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid ${(props) => (props.primary ? "#ffd700" : "white")};
 
   &:hover {
-    background-color: ${(props) => (props.primary ? "#ffca28" : "#38b2ac")};
-    color: white;
+    background-color: ${(props) => (props.primary ? "#fff" : "rgba(255, 255, 255, 0.1)")};
+    color: ${(props) => (props.primary ? "#38b2ac" : "white")};
   }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+  }
+`;
+
+const textAnimation = keyframes`
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+`;
+
+const AnimatedSectionTitle = styled(SectionTitle)`
+  animation: ${textAnimation} 1s ease-out;
+`;
+
+const AnimatedSectionText = styled(SectionText)`
+  animation: ${textAnimation} 1s ease-out 0.3s;
+  animation-fill-mode: both;
 `;

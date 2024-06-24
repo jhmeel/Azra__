@@ -83,7 +83,10 @@ export type Ping = {
   patientId?: string;
   patientName?: string;
   image?: string;
+  date?: string;
   complaint: string;
+  assignedPhysician?: string;
+  status?: string;
 };
 export type Recommendation = {
   type: string;

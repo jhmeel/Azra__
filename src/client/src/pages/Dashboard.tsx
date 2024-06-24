@@ -17,17 +17,18 @@ import {
   Download,
   MoreVertical,
   ArrowLeft,
+  Activity,
+  Users,
 } from "lucide-react";
 import Footer from "../components/Footer";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
 import { toast } from "sonner";
-import { useDispatch } from "react-redux";
 import { CLEAR_ERRORS } from "../constants";
-import { getDashBoard } from "../../../server/src/handlers/hospital";
 import { fetchDashboard } from "../actions";
+import { Ping } from "../types";
 
 ChartJS.register(
   CategoryScale,
@@ -38,71 +39,75 @@ ChartJS.register(
   Legend
 );
 
-interface Ping {
-  assignedPhysician: string;
-  patientName: string;
-  date: string;
-  complaint: string;
-  status: string;
-}
-
-const DashboardContainer = styled.div`
-  min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
-  background-color: #f7fafc;
-`;
-
-const ContentContainer = styled.div`
-  width: 100%;
-  background-color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 0.5rem;
-  padding: 1rem;
-`;
-
-const Header = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  @media (min-width: 768px) {
-    flex-direction: row;
+// Global styles for better consistency
+const GlobalStyle = createGlobalStyle`
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f7fafc;
+    color: #2d3748;
   }
+`;
+
+// Styled components with improved responsiveness
+const DashboardContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+`;
+
+const Header = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+`;
+
+const WelcomeSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const Avatar = styled.img`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #4299e1;
 `;
 
 const WelcomeText = styled.div`
   h1 {
-    font-size: 1.875rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
   p {
     color: #718096;
+    font-size: 0.875rem;
   }
 `;
 
 const SearchContainer = styled.div`
   display: flex;
-  align-items: center;
   gap: 1rem;
-  margin-top: 1rem;
-
-  @media (min-width: 768px) {
-    margin-top: 0;
-  }
+  flex-grow: 1;
+  justify-content: flex-end;
 `;
 
 const SearchInput = styled.input`
   padding: 0.5rem 1rem;
-  border: 1px solid #cbd5e0;
-  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
   width: 100%;
-  max-width: 16rem;
-  padding-right: 2.5rem;
+  max-width: 300px;
 
   &:focus {
     outline: none;
@@ -111,118 +116,155 @@ const SearchInput = styled.input`
   }
 `;
 
-const ExportButton = styled.button`
-  background-color: #3182ce;
+const Button = styled.button`
+  background-color: #4299e1;
   color: white;
-  padding: 5px 10px;
-  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: background-color 0.2s;
 
   &:hover {
-    background-color: #2b6cb0;
+    background-color: #3182ce;
   }
 `;
 
 const StatsGrid = styled.div`
-  display: flex;
-  gap: 5px;
-  overflow-x: scroll;
-  padding-bottom: 5px;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  @media (min-width: 768px) {
-    justify-content: space-between;
-  }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
 `;
 
-const StatCard = styled.div<{ bgColor: string; textColor: string }>`
-  background-color: ${(props) => props.bgColor};
-  padding: 0.5rem 1rem;
-  width: 100%;
-  min-width: 150px;
+const StatCard = styled.div`
+  background-color: white;
   border-radius: 0.5rem;
-  gap: 5px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  color: ${(props) => props.textColor};
 
   h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
   }
 
   p {
-    font-size: 1rem;
-  }
-
-  @media (max-width: 768px) {
-    width: fit-content;
-    h2 {
-      font-size: 0.9rem;
-    }
-
-    p {
-      font-size: 0.8rem;
-    }
-    svg {
-      width: 24px;
-    }
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4299e1;
   }
 `;
 
 const ChartContainer = styled.div`
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   margin-bottom: 2rem;
-  display: flex;
-  justify-content: center;
-
-  div {
-    width: 100%;
-    max-width: 40rem;
-  }
 `;
 
 const TableContainer = styled.div`
-  margin-bottom: 2rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   overflow-x: auto;
+`;
 
-  table {
-    width: 100%;
-    background-color: white;
-    border: 1px solid #ededed;
-    border-radius: 0.5rem;
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
   }
 
-  thead {
-    background-color: #edf2f7;
+  th {
+    font-weight: 600;
     color: #4a5568;
-
-    th {
-      padding: 0.75rem;
-      text-align: left;
-      font-size: 0.875rem;
-      font-weight: 600;
-      border-bottom: 1px solid #e2e8f0;
-    }
   }
 
-  tbody {
-    tr {
-      &:hover {
-        background-color: #f7fafc;
-      }
-
-      td {
-        padding: 1rem;
-        border-bottom: 1px solid #e2e8f0;
-        color: #1a202c;
-      }
-    }
+  tr:last-child td {
+    border-bottom: none;
   }
 `;
 
+const ActionsMenu = styled.div`
+  position: relative;
+`;
+
+const ActionsButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #edf2f7;
+  }
+`;
+
+const ActionsDropdown = styled.div`
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+`;
+
+const ActionItem = styled.button`
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #edf2f7;
+  }
+`;
+
+const RecommendationsList = styled.ul`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+`;
+
+const RecommendationCard = styled.li`
+  background-color: #fffbeb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border-left: 4px solid #d69e2e;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #d69e2e;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: #744210;
+  }
+`;
 const UpdateFormModal = styled.div`
   position: fixed;
   inset: 0;
@@ -315,110 +357,7 @@ const UpdateFormModal = styled.div`
   }
 `;
 
-const RecommendationsList = styled.ul`
-  margin-bottom: 2rem;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-
-  li {
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid #ededed;
-    background-color: rgba(255, 255, 0, 0.2);
-    color: #d69e2e;
-
-    &.bg-red-500 {
-      background-color: rgba(239, 68, 68, 0.2);
-      color: #e53e3e;
-    }
-
-    h3 {
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      font-size: 1rem;
-
-      span {
-        font-weight: 700;
-      }
-    }
-  }
-`;
-
-const TTitle = styled.h2`
-  font-size: 1.1rem;
-  font-weight: bold;
-`;
-
-const Avatar = styled.img`
-  width:75px;
-  height:75px;
-  border-radius:50%;
-  object-fit:cover;
-  border:3px solid #456;
-  @media(max-width:768px){
-    width:65px;
-    height:65px;
-  }
-`
-
-const Dashboard: React.FC = () => {
-  const data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        label: "Patient Visits",
-        backgroundColor: "rgba(75,192,192,0.5)",
-        borderColor: "rgba(75,192,192,1)",
-        borderWidth: 1,
-        data: [65, 59, 80, 81, 56, 55, 40],
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Patient Visits Over the Week",
-      },
-    },
-  };
-
-  const recommendations = [
-    {
-      title: "Healthy Diet Tips",
-      patient: "Steve Maynard",
-      details: "Maintain a balanced diet with a variety of nutrients...",
-      color: "bg-yellow-500",
-    },
-    {
-      title: "Exercise Regularly",
-      patient: "John Doe",
-      details:
-        "Incorporate at least 30 minutes of exercise into your daily routine...",
-      color: "bg-red-500",
-    },
-  ];
-
-  const [pings, setPings] = useState<Ping[]>([
-    {
-      assignedPhysician: "Dr. Affana Malik",
-      patientName: "Steve Maynard",
-      date: "16/04/2023",
-      complaint: "Fever",
-      status: "Closed",
-    },
-  ]);
-
+const Dashboard = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [updatePingIndex, setUpdatePingIndex] = useState<number | null>(null);
@@ -430,13 +369,37 @@ const Dashboard: React.FC = () => {
     status: "",
   });
 
+  const [pings, setPings] = useState<Ping[]>([
+    {
+      assignedPhysician: "Dr. Smith",
+      patientName: "John Doe",
+      date: "2023-06-24",
+      complaint: "Fever",
+      status: "Open",
+    },
+    {
+      assignedPhysician: "Dr. Johnson",
+      patientName: "Jane Smith",
+      date: "2023-06-23",
+      complaint: "Headache",
+      status: "Closed",
+    },
+    {
+      assignedPhysician: "Dr. Williams",
+      patientName: "Bob Brown",
+      date: "2023-06-22",
+      complaint: "Back pain",
+      status: "Open",
+    },
+  ]);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     user: admin,
     loading,
     error,
   } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
@@ -445,9 +408,77 @@ const Dashboard: React.FC = () => {
     }
 
     dispatch<any>(fetchDashboard(admin?.session?.secret, "HOSPITAL"));
-  }, [error]);
+  }, [error, dispatch, admin]);
 
-  const handleActionsClick = (index: number) => {
+  const statsData = [
+    {
+      title: "Total Patients",
+      value: 1234,
+      icon: <Users size={24} color="#4299e1" />,
+    },
+    {
+      title: "Consultations Today",
+      value: 42,
+      icon: <CheckCircle size={24} color="#48bb78" />,
+    },
+    {
+      title: "Upcoming Appointments",
+      value: 15,
+      icon: <Calendar size={24} color="#ed8936" />,
+    },
+    {
+      title: "Active Treatments",
+      value: 89,
+      icon: <Activity size={24} color="#ed64a6" />,
+    },
+  ];
+
+  const chartData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+      {
+        label: "Patient Visits",
+        data: [65, 59, 80, 81, 56, 55, 40],
+        backgroundColor: "rgba(66, 153, 225, 0.5)",
+        borderColor: "rgba(66, 153, 225, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: "Patient Visits Over the Week",
+      },
+    },
+  };
+
+  const recommendations = [
+    {
+      title: "Healthy Diet Tips",
+      patient: "John Doe",
+      details:
+        "Increase intake of fruits and vegetables. Reduce processed foods.",
+    },
+    {
+      title: "Exercise Routine",
+      patient: "Jane Smith",
+      details: "30 minutes of moderate exercise 5 times a week.",
+    },
+    {
+      title: "Stress Management",
+      patient: "Bob Brown",
+      details: "Practice daily meditation and deep breathing exercises.",
+    },
+  ];
+
+  const handleActionClick = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
   };
 
@@ -494,76 +525,48 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <DashboardContainer>
-      <ContentContainer>
-        <ArrowLeft
-          onClick={() => navigate("/")}
-          style={{
-            background: "#ededed",
-            width: "40",
-            padding: "4px",
-            borderRadius: "50px",
-            cursor: "pointer",
-          }}
-        />
+    <>
+      <GlobalStyle />
+      <DashboardContainer>
         <Header>
-          <WelcomeText>
-            <Avatar src=''>
-              
-            </Avatar>
-            <h1>Hospital Name{}</h1>
-            <p>Patient reports are always updated in real time</p>
-          </WelcomeText>
+          <WelcomeSection>
+            <Avatar src="/path-to-avatar.jpg" alt="Hospital Avatar" />
+            <WelcomeText>
+              <h1>Welcome back, Central Hospital</h1>
+              <p>Here's what's happening today</p>
+            </WelcomeText>
+          </WelcomeSection>
           <SearchContainer>
-            <div style={{ position: "relative" }}>
-              <SearchInput type="text" placeholder="Search anything here..." />
-              <Search
-                style={{
-                  position: "absolute",
-                  right: "1rem",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#718096",
-                }}
-                size={16}
-              />
-            </div>
-            <ExportButton>
-              <Download size={16} /> Export
-            </ExportButton>
+            <SearchInput
+              type="text"
+              placeholder="Search patients, doctors, or records"
+              aria-label="Search"
+            />
+            <Button onClick={() => {}}>
+              <Download size={16} /> Export Data
+            </Button>
           </SearchContainer>
         </Header>
+
         <StatsGrid>
-          <StatCard bgColor="rgba(56, 178, 172, 0.2)" textColor="#2c7a7b">
-            <div>
-              <h2>Total Pings</h2>
-              <p>0</p>
-            </div>
-            <User size={32} />
-          </StatCard>
-          <StatCard bgColor="rgba(66, 153, 225, 0.2)" textColor="#2b6cb0">
-            <div>
-              <h2>Consultancy</h2>
-              <p>0</p>
-            </div>
-            <CheckCircle size={32} />
-          </StatCard>
-          <StatCard bgColor="rgba(90, 103, 216, 0.2)" textColor="#4c51bf">
-            <div>
-              <h2>Patient Statistics</h2>
-              <p>0</p>
-            </div>
-            <Calendar size={32} />
-          </StatCard>
+          {statsData.map((stat, index) => (
+            <StatCard key={index}>
+              <div>
+                <h2>{stat.title}</h2>
+                <p>{stat.value}</p>
+              </div>
+              {stat.icon}
+            </StatCard>
+          ))}
         </StatsGrid>
+
         <ChartContainer>
-          <div>
-            <Bar data={data} options={options} />
-          </div>
+          <Bar data={chartData} options={chartOptions} />
         </ChartContainer>
+
         <TableContainer>
-          <TTitle>All Pings</TTitle>
-          <table>
+          <h2>Recent Pings</h2>
+          <Table>
             <thead>
               <tr>
                 <th>Assigned Physician</th>
@@ -571,7 +574,9 @@ const Dashboard: React.FC = () => {
                 <th>Date</th>
                 <th>Complaint</th>
                 <th>Status</th>
-                <th></th>
+                <th>
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -582,153 +587,127 @@ const Dashboard: React.FC = () => {
                   <td>{ping.date}</td>
                   <td>{ping.complaint}</td>
                   <td>{ping.status}</td>
-                  <td className="actions">
-                    <MoreVertical
-                      size={16}
-                      className="cursor-pointer"
-                      onClick={() => handleActionsClick(index)}
-                    />
-                    {activeIndex === index && (
-                      <div
-                        className="action-menu"
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          marginTop: "0.5rem",
-                          backgroundColor: "#2d3748",
-                          color: "white",
-                          borderRadius: "0.5rem",
-                          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                          zIndex: 50,
-                        }}
+                  <td>
+                    <ActionsMenu>
+                      <ActionsButton
+                        onClick={() => handleActionClick(index)}
+                        aria-label="Actions"
                       >
-                        <button
-                          style={{
-                            display: "block",
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "10px 20px",
-                            color: "white",
-                          }}
-                          onClick={() => handleUpdate(index)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          style={{
-                            display: "block",
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "0.5rem 1rem",
-                            color: "white",
-                          }}
-                          onClick={() => handleDelete(index)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                        <MoreVertical size={16} />
+                      </ActionsButton>
+                      {activeIndex === index && (
+                        <ActionsDropdown>
+                          <ActionItem onClick={() => handleUpdate(index)}>
+                            Update
+                          </ActionItem>
+                          <ActionItem onClick={() => handleDelete(index)}>
+                            Delete
+                          </ActionItem>
+                        </ActionsDropdown>
+                      )}
+                    </ActionsMenu>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </TableContainer>
-        <TTitle>Your Recent Recommendations</TTitle>
+
+        <h2>Recent Recommendations</h2>
         <RecommendationsList>
           {recommendations.map((rec, index) => (
-            <li key={index} className={rec.color}>
+            <RecommendationCard key={index}>
               <h3>{rec.title}</h3>
               <p>
-                <span>Recommended for:</span> {rec.patient}
+                <strong>Patient:</strong> {rec.patient}
               </p>
               <p>{rec.details}</p>
-            </li>
+            </RecommendationCard>
           ))}
         </RecommendationsList>
-      </ContentContainer>
-      {showUpdateForm && (
-        <UpdateFormModal>
-          <div className="overlay"></div>
-          <div className="form-container">
-            <h2>Update Ping Details</h2>
-            <form onSubmit={handleUpdateFormSubmit}>
-              <div className="form-group">
-                <label htmlFor="assignedPhysician">Assigned Physician</label>
-                <input
-                  type="text"
-                  id="assignedPhysician"
-                  name="assignedPhysician"
-                  value={updateFormData.assignedPhysician}
-                  onChange={handleUpdateFormChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="patientName">Patient Name</label>
-                <input
-                  type="text"
-                  id="patientName"
-                  name="patientName"
-                  value={updateFormData.patientName}
-                  onChange={handleUpdateFormChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="date">Date</label>
-                <input
-                  type="datetime-local"
-                  id="date"
-                  name="date"
-                  value={updateFormData.date}
-                  onChange={handleUpdateFormChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="complaint">Complaint</label>
-                <input
-                  type="text"
-                  id="complaint"
-                  name="complaint"
-                  value={updateFormData.complaint}
-                  onChange={handleUpdateFormChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={updateFormData.status}
-                  onChange={handleUpdateFormChange}
-                  required
-                >
-                  <option value="">Select status</option>
-                  <option value="Open">Open</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </div>
-              <div className="actions">
-                <button
-                  type="button"
-                  className="cancel"
-                  onClick={() => setShowUpdateForm(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="update">
-                  Update
-                </button>
-              </div>
-            </form>
-          </div>
-        </UpdateFormModal>
-      )}
+        {showUpdateForm && (
+          <UpdateFormModal>
+            <div className="overlay"></div>
+            <div className="form-container">
+              <h2>Update Ping Details</h2>
+              <form onSubmit={handleUpdateFormSubmit}>
+                <div className="form-group">
+                  <label htmlFor="assignedPhysician">Assigned Physician</label>
+                  <input
+                    type="text"
+                    id="assignedPhysician"
+                    name="assignedPhysician"
+                    value={updateFormData.assignedPhysician}
+                    onChange={handleUpdateFormChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="patientName">Patient Name</label>
+                  <input
+                    type="text"
+                    id="patientName"
+                    name="patientName"
+                    value={updateFormData.patientName}
+                    onChange={handleUpdateFormChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="date">Date</label>
+                  <input
+                    type="datetime-local"
+                    id="date"
+                    name="date"
+                    value={updateFormData.date}
+                    onChange={handleUpdateFormChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="complaint">Complaint</label>
+                  <input
+                    type="text"
+                    id="complaint"
+                    name="complaint"
+                    value={updateFormData.complaint}
+                    onChange={handleUpdateFormChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="status">Status</label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={updateFormData.status}
+                    onChange={handleUpdateFormChange}
+                    required
+                  >
+                    <option value="">Select status</option>
+                    <option value="Open">Open</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="cancel"
+                    onClick={() => setShowUpdateForm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="update">
+                    Update
+                  </button>
+                </div>
+              </form>
+            </div>
+          </UpdateFormModal>
+        )}
+      </DashboardContainer>
       <Footer />
-    </DashboardContainer>
+    </>
   );
 };
 

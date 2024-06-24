@@ -112,67 +112,15 @@ const AlertMessage = styled.div`
   color: #4299e1;
 `;
 
-const demoHospitals: Omit<Hospital, "$createdAt" | "$updatedAt">[] = [
-  {
-    $id: "1",
-    hospitalName: "Yusuf Dantsoho Memorial Hospital",
-    hospitalNumber: "1234",
-    avatar: "https://example.com/hospital1.jpg",
-    status: "available",
-    email: "",
-    phone: "",
-    coordinates: "10.5272,7.4396",
-  },
-  {
-    $id: "2",
-    hospitalName: "Ahmadu Bello University Teaching Hospital",
-    hospitalNumber: "5678",
-    avatar: "https://example.com/hospital2.jpg",
-    status: "unavailable",
-    email: "",
-    phone: "",
-    coordinates: "11.0801,7.7069",
-  },
-  {
-    $id: "3",
-    hospitalName: "Garki Hospital",
-    hospitalNumber: "91011",
-    avatar: "https://example.com/hospital3.jpg",
-    status: "available",
-    email: "",
-    phone: "",
-    coordinates: "9.0765,7.4983",
-  },
-  {
-    $id: "4",
-    hospitalName: "Lagos University Teaching Hospital",
-    hospitalNumber: "121314",
-    avatar: "https://example.com/hospital4.jpg",
-    status: "unavailable",
-    email: "",
-    phone: "",
-    coordinates: "6.5244,3.3792",
-  },
-  {
-    $id: "5",
-    hospitalName: "Aminu Kano Teaching Hospital",
-    hospitalNumber: "151617",
-    avatar: "https://example.com/hospital5.jpg",
-    status: "available",
-    email: "",
-    phone: "",
-    coordinates: "12.0022,8.5167",
-  },
-];
 
 const HospitalCards = ({
   userLocation,
-  hospitals = demoHospitals,
+  hospitals,
   isLoading,
   currentUser,
 }: {
   userLocation: Coordinate;
-  hospitals: Hospital[];
+  hospitals: Omit<Hospital, "$createdAt" | "$updatedAt">[];
   isLoading: boolean;
   currentUser: any;
 }) => {
@@ -218,7 +166,7 @@ const HospitalCards = ({
     setSelectedDistance(distance);
   };
 
-  const filteredHospitals = hospitals.filter((hospital: Hospital) => {
+  const filteredHospitals = hospitals.filter((hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => {
     const matchesSearch = hospital.hospitalName
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -384,7 +332,7 @@ const HospitalCards = ({
           </AlertMessage>
         ) : (
           <CardGrid>
-            {filteredHospitals.map((hospital: Hospital) => (
+            {filteredHospitals.map((hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => (
               <Card key={hospital.$id}>
                 <div
                   style={{
@@ -397,9 +345,9 @@ const HospitalCards = ({
                     src={hospital.avatar}
                     alt={hospital.hospitalName}
                     style={{
-                      borderRadius: "50%",
-                      width: "3rem",
-                      height: "3rem",
+                      borderRadius: "20px",
+                      width: "5rem",
+                      height: "5rem",
                       marginRight: "0.75rem",
                     }}
                   />
