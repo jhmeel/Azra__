@@ -162,7 +162,8 @@ const Home = () => {
               <Logo src={azraLight} alt="Azra" />
             </div>
             <Nav>
-            <NavLink className="active-nav" href="/">Home</NavLink>
+              <NavMain>
+              <NavLink className="active-nav" href="/">Home</NavLink>
               <NavLink href="/about">About</NavLink>
               <NavLink href="/blog">Blog</NavLink>
               {authRes?.role === Role.HOSPITAL ? (
@@ -173,6 +174,10 @@ const Home = () => {
                 )
               )}
 
+              </NavMain>
+            
+              <div className="auth-btns">
+                
               {!authRes?.session && (
                 <>
                   <ButtonLink href="/login">Login</ButtonLink>
@@ -181,7 +186,10 @@ const Home = () => {
                   </ButtonLink>
                 </>
               )}
+              </div>
+
             </Nav>
+            
 
             <MobileNavToggle onClick={toggleMobileMenu}>
               <Menu />
@@ -315,8 +323,22 @@ const Logo = styled.img`
   width: auto;
 `;
 
-const Nav = styled.nav`
+const Nav = styled.div`
   display: flex;
+  gap: 5px;
+  align-items: center;
+  @media (max-width: 768px) {
+    display: none;
+  }
+  .auth-btns{
+    display:flex;
+    gap:8px;
+
+  }
+`;
+const NavMain = styled.nav`
+display: flex;
+height:fit-content;
   gap: 5px;
   align-items: center;
   background-color:rgba(1, 1, 2, 0.3);
@@ -324,16 +346,14 @@ const Nav = styled.nav`
   border-radius:20px;
   box-shadow: 0px 0 8px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
-  .active-nav{
+.active-nav{
     background-color: rgba(204, 179, 35,0.9);
     padding:2px 8px;
     border-radius:20px;
   }
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
 
+
+`
 const NavLink = styled.a`
 position: relative;
   color: white;
@@ -492,7 +512,7 @@ const ButtonLink = styled.a<ButtonLink>`
   display: inline-block;
   background-color: ${(props) => (props.primary ? "#ffd700" : "transparent")};
   color: ${(props) => (props.primary ? "#38b2ac" : "white")};
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
