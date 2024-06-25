@@ -235,6 +235,7 @@ export const Profile: React.FC = () => {
   const [pings, setPings] = useState<Ping[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -269,9 +270,10 @@ export const Profile: React.FC = () => {
             const { latitude, longitude } = position.coords;
             setLocation(`${latitude}, ${longitude}`);
 
-            const result = reverseGeocode.lookup(latitude, longitude, "US");
-            if (result && result?.countryCode) {
-              setCountry(result?.countryName);
+            const result = reverseGeocode.lookup(latitude, longitude, "ng");
+            console.log(result)
+            if (result && result?.city) {
+              setCountry(result?.state);
             }
           },
           (error) => {
@@ -346,6 +348,7 @@ export const Profile: React.FC = () => {
                 accept="image/*"
                 onChange={handleAvatarChange}
               />
+              
               <UploadButton htmlFor="avatar-upload">
                 <FaUser /> Change Avatar
               </UploadButton>
@@ -356,8 +359,9 @@ export const Profile: React.FC = () => {
             </LocationInfo>
           </Section>
           <Section>
-            <h2>{patient?.fullName}</h2>
+            <h2>{patient?.name}</h2>
             <p>{patient?.email}</p>
+            <p>{patient?.phone}</p>
             <Button onClick={() => setShowEditModal(true)}>
               <FaEdit /> Edit
             </Button>
@@ -405,16 +409,23 @@ export const Profile: React.FC = () => {
               <Form onSubmit={handleProfileUpdate}>
                 <Input
                   type="text"
-                  value={name}
+                  value={patient?.name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Name"
                   required
                 />
                 <Input
                   type="email"
-                  value={email}
+                  value={patient?.email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
+                  required
+                />
+                <Input
+                  type="phone"
+                  value={patient?.phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Phone"
                   required
                 />
                 <Button type="submit">

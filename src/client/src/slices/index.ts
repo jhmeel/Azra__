@@ -35,13 +35,31 @@ import {
   UPDATE_PING_RESET,
   DELETE_PING_RESET,
 } from "../constants";
-import { Action} from "../types";
+import { Action, Hospital, Patient } from "../types";
 
 // Initial states
-const initialAuthState = {
+
+interface AuthState {
+  loading: boolean;
+  authRes:{
+      patient?: Patient;
+      hospital?: Hospital;
+      session?:  any;
+      role?: string;
+    
+  }
+  error?: string;
+}
+
+const initialAuthState: AuthState = {
   loading: false,
-  authRes: null,
-  error: null,
+  authRes: {
+    patient:undefined,
+    hospital: undefined,
+    session: null,
+    role: undefined,
+  },
+  error: undefined,
 };
 
 const initialDashboardState = {
@@ -60,7 +78,7 @@ const initialPingState = {
 
 const initialHospitalState = {
   loading: false,
-  hospitals:[],
+  hospitals: [],
   message: null,
   error: null,
 };

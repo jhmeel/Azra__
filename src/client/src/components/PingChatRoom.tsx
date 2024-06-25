@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { Client, Databases, Storage, Query, ID } from "appwrite";
 import Config from "../Config";
+import azraLight from "../assets/azra_light.png";
 
 const client = new Client()
   .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
@@ -137,7 +138,7 @@ const InputContainer = styled.form`
   display: flex;
   align-items: center;
   padding: 10px;
-  background-color: #f0f0f0;
+  background-color: #e0e0e0;
 `;
 
 const TextInput = styled.input`
@@ -163,10 +164,13 @@ const FileLabel = styled.label`
   border-radius: 50%;
   color: #919191;
   cursor: pointer;
+  @media (max-width: 768px) {
+    width: 30px;
+    height: 30px;
+  }
 `;
 const ImagePreview = styled.div`
   position: relative;
-  margin-top: 8px;
   display: flex;
   justify-content: center;
 `;
@@ -177,12 +181,15 @@ const PreviewImage = styled.img<Prev>`
   max-width: 45px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  @media (max-width: 768px) {
+    max-width: 35px;
+  }
 `;
 
 const RemoveImageButton = styled.button`
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -8px;
+  right: 0px;
   background-color: #ef4444;
   color: white;
   border-radius: 50%;
@@ -202,6 +209,14 @@ const SendButton = styled.button`
   background: linear-gradient(to right, #15756c, #38b2ac);
   color: white;
   cursor: pointer;
+  @media (max-width: 768px) {
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+    width: 35px;
+    height: 35px;
+  }
 `;
 
 function PatientChatInterface() {
@@ -400,39 +415,58 @@ function PatientChatInterface() {
           </CallButton>
         </Header>
         <MessagesContainer>
-          {messages.map((message) => (
-            <MessageItem
-              key={message.$id}
-              isPatient={message.patientId === currentUser.userId}
-            >
-              <MessageContent isPatient={message.patientId === currentUser.userId}>
-                <MessageText>{message.content}</MessageText>
-                {message.mediaUrl && (
-                  <MessageImage src={message.mediaUrl} alt="Attached media" />
-                )}
-                <MessageMeta>
-                  {new Date(message.$createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {message.patientId === currentUser.userId && (
-                    <>
-                      {message.isRead ? (
-                        <CheckCheck size={16} />
-                      ) : (
-                        <Check size={16} />
-                      )}
-                      <DeleteButton
-                        onClick={() => handleDeleteMessage(message.$id)}
-                      >
-                        <Trash2 size={14} />
-                      </DeleteButton>
-                    </>
+          {messages.length > 0 ? (
+            messages.map((message) => (
+              <MessageItem
+                key={message.$id}
+                isPatient={message.patientId === currentUser.userId}
+              >
+                <MessageContent
+                  isPatient={message.patientId === currentUser.userId}
+                >
+                  <MessageText>{message.content}</MessageText>
+                  {message.mediaUrl && (
+                    <MessageImage src={message.mediaUrl} alt="Attached media" />
                   )}
-                </MessageMeta>
-              </MessageContent>
-            </MessageItem>
-          ))}
+                  <MessageMeta>
+                    {new Date(message.$createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {message.patientId === currentUser.userId && (
+                      <>
+                        {message.isRead ? (
+                          <CheckCheck size={16} />
+                        ) : (
+                          <Check size={16} />
+                        )}
+                        <DeleteButton
+                          onClick={() => handleDeleteMessage(message.$id)}
+                        >
+                          <Trash2 size={14} />
+                        </DeleteButton>
+                      </>
+                    )}
+                  </MessageMeta>
+                </MessageContent>
+              </MessageItem>
+            ))
+          ) : (
+            <div
+              style={{
+                position:'absolute',
+               top:'50%',
+               left:'50%',
+               transform:'translate(-50%,-50%)',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img width={168.9999} src={azraLight} />
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </MessagesContainer>
       </ChatContainer>

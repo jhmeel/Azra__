@@ -8,7 +8,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: 1.2rem;
   background-color: #f8f9fa;
   color: #343a40;
   font-family: "Arial, sans-serif";
@@ -17,8 +17,10 @@ const Container = styled.div`
 const Title = styled.h1`
   font-size: 2rem;
   color: #007bff;
-
   text-align: center;
+  @media(max-width:768px){
+    font-size:1.5rem;
+  }
 `;
 
 const Subtitle = styled.h2`
@@ -45,8 +47,6 @@ const Highlight = styled.span`
 const StoryContainer = styled.div`
   max-width: 800px;
   margin-bottom: 2rem;
-  padding: 1rem;
-  border-left: 3px solid #d9d9d9;
 `;
 
 const StoryContent = styled.p`
@@ -108,7 +108,9 @@ const AboutPage: React.FC = () => {
           </p>
         </Content>
         <StoryContainer>
-          <Title>How Azra Could Have Made a Difference</Title>
+        <RoughNotation padding={0} color="#176984" type="underline" show={true}>
+        <Title>How Azra Could Have Made a Difference</Title>
+        </RoughNotation>
           <StoryContent>
             "A real-life scenario: a patient diagnosed with a severe illness
             urgently needs specialized care. They are taken to the nearest

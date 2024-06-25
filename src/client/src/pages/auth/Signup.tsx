@@ -318,7 +318,7 @@ const SignupForm = () => {
       navigate("/dashboard");
     } else if (authRes && authRes.role == Role.PATIENT) {
       toast.success("Signup successfully");
-      navigate("/dashboard");
+      navigate("/profile");
     }
   }, [authRes, dispatch, error, navigate]);
 

@@ -300,13 +300,10 @@ const Chat = () => {
   const messageListRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { authRes } = useSelector(
-    (state: RootState) => state.auth
-  );
-  const { hospital: currentUser }:{hospital:THospital} = authRes;
-
+  const { authRes } = useSelector((state: RootState) => state.auth);
+  const { hospital: currentUser } = authRes as { hospital: THospital };
+  
   const permissions = [Permission.write(Role.user(authRes?.session?.userId))];
-
   useEffect(() => {
     if (currentUser) {
       fetchhospitals();

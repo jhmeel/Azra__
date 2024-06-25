@@ -162,6 +162,7 @@ const Home = () => {
               <Logo src={azraLight} alt="Azra" />
             </div>
             <Nav>
+            <NavLink className="active-nav" href="/">Home</NavLink>
               <NavLink href="/about">About</NavLink>
               <NavLink href="/blog">Blog</NavLink>
               {authRes?.role === Role.HOSPITAL ? (
@@ -191,6 +192,9 @@ const Home = () => {
                 <CloseButton onClick={() => setIsMobileMenuOpen(false)}>
                   <X />
                 </CloseButton>
+                <MobileNavLink href="/" onClick={toggleMobileMenu}>
+                  Home
+                </MobileNavLink>
                 <MobileNavLink href="/about" onClick={toggleMobileMenu}>
                   About
                 </MobileNavLink>
@@ -315,18 +319,38 @@ const Nav = styled.nav`
   display: flex;
   gap: 5px;
   align-items: center;
-
+  background-color:rgba(1, 1, 2, 0.3);
+  padding:5px;
+  border-radius:20px;
+  box-shadow: 0px 0 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  .active-nav{
+    background-color: rgba(204, 179, 35,0.9);
+    padding:2px 8px;
+    border-radius:20px;
+  }
   @media (max-width: 768px) {
     display: none;
   }
 `;
 
 const NavLink = styled.a`
+position: relative;
   color: white;
   margin-right: 1.5rem;
   text-decoration: none;
   font-weight: 500;
   transition: opacity 0.3s ease;
+  font-size:14px;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+  &::after{
+    content:'▫';
+    font-size:10px;
+    position:absolute;
+    bottom:0;
+    margin-left:10px;
+  }
 
   &:hover {
     opacity: 0.8;
@@ -396,6 +420,8 @@ const MobileNavLink = styled.a`
   margin-bottom: 1.5rem;
   text-decoration: none;
   transition: opacity 0.3s ease;
+  font-size:14px;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 
   &:hover {
     opacity: 0.8;
@@ -440,6 +466,7 @@ const SectionTitle = styled.h1`
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
+  font-family:Zeitung;
 
   @media (max-width: 768px) {
     font-size: 2.5rem;
@@ -454,6 +481,7 @@ const SectionText = styled.p`
   font-size: 1.25rem;
   margin-bottom: 2rem;
   opacity: 0.9;
+  font-family:Zeitung;
 
   @media (max-width: 768px) {
     font-size: 1.1rem;
