@@ -228,7 +228,13 @@ function PatientChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const { patient: currentUser } = authRes;
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    if (authRes?.patient) {
+      setCurrentUser(authRes?.patient);
+    } 
+  }, [authRes]);
   const location = useLocation();
   const {
     image: pImage,

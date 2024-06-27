@@ -206,7 +206,13 @@ export const Profile: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const { patient } = authRes;
+  const [patient, setPatient] = useState(null);
+
+  useEffect(() => {
+    if (authRes?.patient) {
+      setPatient(authRes?.patient);
+    } 
+  }, [authRes]);
 
   useEffect(() => {
     const getLocation = () => {

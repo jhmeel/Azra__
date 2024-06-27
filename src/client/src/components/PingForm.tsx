@@ -27,7 +27,13 @@ function PingForm({
   const [image, setImage] = useState<string | undefined>("");
   const [severity, setSeverity] = useState<Severity>(Severity.Moderate); // Default to Moderate severity
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const { patient: currentUser } = authRes;
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    if (authRes?.patient) {
+      setCurrentUser(authRes?.patient);
+    } 
+  }, [authRes]);
 
   const { message, error, loading } = useSelector((state: RootState) => state.ping);
   const dispatch = useDispatch();
