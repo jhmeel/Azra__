@@ -90,6 +90,7 @@ export type Ping = {
   image?: string;
   date?: string;
   complaint: string;
+  severity?: string;
   assignedPhysician?: string;
   status?: string;
 };

@@ -327,7 +327,7 @@ const HospitalCards = ({
                 color: "#cbd5e0",
               }}
             />
-            {searchSuggestions.length > 0 && searchQuery && (
+            {searchSuggestions?.length > 0 && searchQuery && (
               <SuggestionsList>
                 {searchSuggestions.map((suggestion, index) => (
                   <SuggestionItem
@@ -365,7 +365,7 @@ const HospitalCards = ({
             {" "}
             <l-bouncy size={35} color={"#4a5568"}></l-bouncy>
           </div>
-        ) : nearHospitals?.hospitals.length === 0 ? (
+        ) : nearHospitals?.hospitals?.length === 0 ? (
           <AlertMessage>
             No hospitals found matching your search criteria
           </AlertMessage>
