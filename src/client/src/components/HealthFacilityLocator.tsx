@@ -112,7 +112,7 @@ const HealthFacilityLocator = ({
                 position={userLocation}
                 icon={{ url: "https://example.com/location-marker.png" }}
               />
-              {hospitals.map((hospital: Hospital) => (
+              {hospitals?.map((hospital: Hospital) => (
                 <Marker
                   key={hospital.$id}
                   position={{

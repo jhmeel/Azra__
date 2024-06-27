@@ -24,7 +24,5 @@ COPY --from=client-builder /app/package.json ./package.json
 
 EXPOSE 3000
 
-# Use a health check to ensure the container is running correctly
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD ["curl", "-f", "http://localhost:3000/health"] || exit 1
 
 CMD ["npm", "run", "start"]

@@ -1,5 +1,7 @@
+import axios from 'axios';
+
 export const errorParser = (error: any): string => {
-  console.log(error)
+
   const errMsg =
     error?.response?.data?.message ||
     error?.response?.statusText ||
@@ -101,14 +103,10 @@ export function getDistanceFromLatLonInKm(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const d = R * c; // Distance in km
-  return Math.round(d); 
+  return Math.round(d);
 }
 
 
-
-
-
-import axios from 'axios';
 
 const GEOCODE_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 
