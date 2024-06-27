@@ -17,7 +17,7 @@ export interface PingChatTabProps {
 }
 
 export type HospitalSignupData = {
-  hospitalName: string;
+  name: string;
   hospitalNumber: string;
   email: string;
   phone: string;
@@ -55,7 +55,7 @@ export interface Hospital extends Models.Document {
   hospitalName: string;
   hospitalNumber: string;
   avatar: string;
-  status: string;
+  availabilityStatus: string;
   email: string;
   phone: string;
   coordinates: string;
@@ -69,11 +69,17 @@ export enum Role {
 
 export interface Patient extends Models.Document {
   userId: string;
-  fullName: string;
+  name: string;
   avatar: string;
   email: string;
   phone: string;
   lastActive?: string;
+}
+
+export enum Severity {
+  Critical = "Critical",
+  Moderate = "Moderate",
+  Minor = "Minor",
 }
 
 export type Ping = {

@@ -169,7 +169,12 @@ export const findNearbyHospitals = catchAsync(
         DATABASE_ID,
         HOSPITAL_COLLECTION_ID
       );
-
+      if (range == 0) {
+        let hospitals = response.documents.filter(
+          (h) => h?.availabilityStatus?.toLowerCase() == status?.toLowerCase()
+        );
+       return res.status(200).json({ success: true, hospitals });
+      }
       // Filter hospitals based on distance
       let hospitals = response.documents.filter((hospital) => {
         const [hospitalLat, hospitalLng] = hospital.coordinates
@@ -181,11 +186,12 @@ export const findNearbyHospitals = catchAsync(
           parseFloat(lat),
           parseFloat(lng)
         );
+
         return distance <= range;
       });
 
       hospitals = hospitals.filter(
-        (h) => h?.status?.toLowerCase() == status?.toLowerCase()
+        (h) => h?.availabilityStatus?.toLowerCase() == status?.toLowerCase()
       );
 
       res.status(200).json({ success: true, hospitals });
@@ -198,9 +204,6 @@ export const findNearbyHospitals = catchAsync(
 export const pingHospital = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { patientId, complaint, hospitalId, image } = req.body;
-
-    const { error } = patientPingSchema.validate(req.body);
-    if (error) return next(new ErrorHandler(400, error.details[0].message));
 
     const patient = await databases.getDocument(
       DATABASE_ID,
@@ -230,7 +233,7 @@ export const pingHospital = catchAsync(
 
     const ping = await databases.createDocument(
       DATABASE_ID,
-      PINGS_COLLECTION_ID,
+      PINGS_COLLECTION_ID, 
       ID.unique(),
       {
         patientId,

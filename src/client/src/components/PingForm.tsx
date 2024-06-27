@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import styled from "styled-components";
 import { AlertOctagonIcon, Camera, LoaderIcon, X } from "lucide-react";
@@ -11,22 +10,26 @@ import { newPing } from "../actions/index.js";
 import { Hospital } from "../types/index.js";
 import { useNavigate } from "react-router-dom";
 
+enum Severity {
+  Critical = "Critical",
+  Moderate = "Moderate",
+  Minor = "Minor",
+}
 
 function PingForm({
   selectedHospital,
   onClose,
 }: {
-  selectedHospital: Hospital | null;
+  selectedHospital: Omit<Hospital, "$createdAt" | "$updatedAt"> | null;
   onClose: () => void;
 }) {
   const [complaint, setComplaint] = useState<string>("");
   const [image, setImage] = useState<string | undefined>("");
+  const [severity, setSeverity] = useState<Severity>(Severity.Moderate); // Default to Moderate severity
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const {patient: currentUser} = authRes
+  const { patient: currentUser } = authRes;
 
-  const { message, error, loading } = useSelector(
-    (state: RootState) => state.ping
-  );
+  const { message, error, loading } = useSelector((state: RootState) => state.ping);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -39,6 +42,10 @@ function PingForm({
       toast.success(message);
       dispatch({ type: NEW_PING_RESET });
       onClose();
+
+      navigate("/ping-chat", {
+        state: { image, complaint, hospital: selectedHospital, severity },
+      });
     }
   }, [dispatch, error, message, onClose]);
 
@@ -61,22 +68,22 @@ function PingForm({
     setImage("");
   };
 
- 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    navigate("/ping-chat", {
-      state: { image, complaint, hospital: selectedHospital },
-    });
 
     dispatch<any>(
       newPing(authRes?.session?.secret, {
         complaint,
-        patientId: currentUser?.userId,
+        patientId: currentUser?.$id,
         image,
-        hospitalId: selectedHospital?.userId,
+        hospitalId: selectedHospital?.$id,
+        severity,
       })
     );
+  };
+
+  const handleSeverityChange = (value: Severity) => {
+    setSeverity(value);
   };
 
   return (
@@ -125,6 +132,21 @@ function PingForm({
                 Upload Image
               </FileLabel>
             )}
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="severity">Severity</Label>
+            <SeveritySelector>
+              {Object.values(Severity).map((severityLevel) => (
+                <SeverityButton
+                  key={severityLevel}
+                  onClick={() => handleSeverityChange(severityLevel)}
+                  active={severity === severityLevel}
+                  severity={severityLevel}
+                >
+                  {severityLevel}
+                </SeverityButton>
+              ))}
+            </SeveritySelector>
           </FormGroup>
           <SubmitButton disabled={loading} type="submit">
             {loading && <LoaderIcon size={20} className="animate-spin" />}
@@ -192,17 +214,6 @@ const Label = styled.label`
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  &:focus {
-    outline: none;
-    border-color: #6366f1;
-  }
 `;
 
 const TextArea = styled.textarea`
@@ -275,5 +286,37 @@ const SubmitButton = styled.button`
   &:disabled {
     background-color: #93c5fd;
     cursor: not-allowed;
+  }
+`;
+
+const SeveritySelector = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const SeverityButton = styled.button<{ active: boolean; severity: Severity }>`
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: ${(props) =>
+    props.active
+      ? props.severity === Severity.Critical
+        ? "#ef4444"
+        : props.severity === Severity.Moderate
+        ? "#f59e0b"
+        : "#10b981"
+      : "#e5e7eb"};
+  color: ${(props) => (props.active ? "white" : "inherit")};
+  border: none;
+  cursor: pointer;
+  &:hover {
+    background-color: ${(props) =>
+      props.severity === Severity.Critical
+        ? "#dc2626"
+        : props.severity === Severity.Moderate
+        ? "#f97316"
+        : "#059669"};
+  }
+  &:focus {
+    outline: none;
   }
 `;

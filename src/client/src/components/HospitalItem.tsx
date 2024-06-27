@@ -19,6 +19,7 @@ import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { CLEAR_ERRORS } from "../constants";
 import { fetchNearByHospitals } from "../actions";
+import Rating from "./Rating";
 
 const SectionWrapper = styled.section`
   width: 100%;
@@ -112,6 +113,27 @@ const AlertMessage = styled.div`
   color: #4299e1;
 `;
 
+const SuggestionsList = styled.ul`
+  position: absolute;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 0.5rem;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+`;
+
+const SuggestionItem = styled.li`
+  padding: 0.5rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
+`;
 
 const HospitalCards = ({
   userLocation,
@@ -127,10 +149,12 @@ const HospitalCards = ({
   const [selectedStatus, setSelectedStatus] = useState("available");
   const [selectedDistance, setSelectedDistance] = useState("0");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [pingFormActive, setPingFormActive] = useState<boolean>(false);
-  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
-    null
-  );
+  const [selectedHospital, setSelectedHospital] = useState<Omit<
+    Hospital,
+    "$createdAt" | "$updatedAt"
+  > | null>(null);
 
   const {
     hospitals: nearHospitals,
@@ -156,7 +180,7 @@ const HospitalCards = ({
         status: selectedStatus,
       })
     );
-  }, []);
+  }, [selectedDistance, selectedStatus]);
 
   const handleStatusFilter = (value: string) => {
     setSelectedStatus(value);
@@ -166,40 +190,38 @@ const HospitalCards = ({
     setSelectedDistance(distance);
   };
 
-  const filteredHospitals = hospitals.filter((hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => {
-    const matchesSearch = hospital.hospitalName
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      selectedStatus === "" || hospital.status === selectedStatus;
-
-    // Calculate distance only if selected distance is provided
-    const withinDistance =
-      selectedDistance === "0" ||
-      getDistanceFromLatLonInKm(
-        userLocation.lat,
-        userLocation.lng,
-        parseFloat(hospital.coordinates.split(",")[0]),
-        parseFloat(hospital.coordinates.split(",")[1])
-      ) <= parseFloat(selectedDistance);
-
-    return matchesSearch && matchesStatus && withinDistance;
-  });
-
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    const suggestions = hospitals
+      .filter((hospital) =>
+        hospital.hospitalName
+          .toLowerCase()
+          .includes(e.target.value.toLowerCase())
+      )
+      .map((hospital) => hospital.hospitalName);
+    setSearchSuggestions(suggestions);
   };
 
-  const handlePing = (hospital: Hospital) => {
+  const selectSuggestion = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    setSearchSuggestions([]);
+  };
+
+  const handlePing = (
+    hospital: Omit<Hospital, "$createdAt" | "$updatedAt">
+  ) => {
     setPingFormActive(!pingFormActive);
     setSelectedHospital(hospital);
   };
 
-  const openChat = async (hospital: Hospital) => {
+  const openChat = async (
+    hospital: Omit<Hospital, "$createdAt" | "$updatedAt">
+  ) => {
     navigate("/ping-chat", {
       state: { hospital },
     });
   };
+
   return (
     <>
       <SectionWrapper>
@@ -289,7 +311,12 @@ const HospitalCards = ({
           }}
         >
           <div style={{ position: "relative" }}>
-            <Input type="text" placeholder="Search" onChange={handleSearch} />
+            <Input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={handleSearch}
+            />
             <Search
               style={{
                 position: "absolute",
@@ -300,6 +327,18 @@ const HospitalCards = ({
                 color: "#cbd5e0",
               }}
             />
+            {searchSuggestions.length > 0 && searchQuery && (
+              <SuggestionsList>
+                {searchSuggestions.map((suggestion, index) => (
+                  <SuggestionItem
+                    key={index}
+                    onClick={() => selectSuggestion(suggestion)}
+                  >
+                    {suggestion}
+                  </SuggestionItem>
+                ))}
+              </SuggestionsList>
+            )}
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
             <StatusFilter
@@ -326,127 +365,132 @@ const HospitalCards = ({
             {" "}
             <l-bouncy size={35} color={"#4a5568"}></l-bouncy>
           </div>
-        ) : filteredHospitals.length === 0 ? (
+        ) : nearHospitals?.hospitals.length === 0 ? (
           <AlertMessage>
             No hospitals found matching your search criteria
           </AlertMessage>
         ) : (
           <CardGrid>
-            {filteredHospitals.map((hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => (
-              <Card key={hospital.$id}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <img
-                    src={hospital.avatar}
-                    alt={hospital.hospitalName}
+            {nearHospitals?.hospitals.map(
+              (hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => (
+                <Card key={hospital.$id}>
+                  <div
                     style={{
-                      borderRadius: "20px",
-                      width: "5rem",
-                      height: "5rem",
-                      marginRight: "0.75rem",
-                    }}
-                  />
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "1.125rem",
-                        color: "#4a5568",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      {hospital.hospitalName}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: "#718096",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      {hospital.coordinates}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color:
-                          hospital.status === "available"
-                            ? "#48bb78"
-                            : "#f56565",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      {hospital.status === "available"
-                        ? "Available"
-                        : "Not Available"}
-                      <span
-                        className={
-                          hospital.status === "available"
-                            ? "ripple-animation"
-                            : ""
-                        }
-                      ></span>
-                    </div>
-                    <div style={{ fontSize: "0.875rem", color: "#718096" }}>
-                      Distance:{" "}
-                      {getDistanceFromLatLonInKm(
-                        userLocation.lat,
-                        userLocation.lng,
-                        parseFloat(hospital.coordinates.split(",")[0]),
-                        parseFloat(hospital.coordinates.split(",")[1])
-                      )}{" "}
-                      km
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    height: "1px",
-                    backgroundColor: "#cbd5e0",
-                    marginBottom: "1rem",
-                  }}
-                ></div>
-                <div
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <button
-                    onClick={() => handlePing(hospital)}
-                    style={{
-                      backgroundColor: "#4299e1",
-                      color: "white",
-                      padding: "0.4rem .8rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "14px",
                       display: "flex",
                       alignItems: "center",
-                      cursor: "pointer",
-                      transition: "background-color 0.3s ease",
+                      marginBottom: "1rem",
                     }}
                   >
-                    <HospitalIcon
+                    {hospital.avatar && (
+                      <img
+                        src={hospital.avatar}
+                        alt={hospital.hospitalName}
+                        style={{
+                          borderRadius: "20px",
+                          width: "5rem",
+                          height: "5rem",
+                          marginRight: "0.75rem",
+                        }}
+                      />
+                    )}
+                    <div>
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: "1.125rem",
+                          color: "#4a5568",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        {hospital.hospitalName}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "#718096",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        {hospital.coordinates}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color:
+                            hospital.availabilityStatus === "Available"
+                              ? "#48bb78"
+                              : "#f56565",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        {hospital.availabilityStatus === "Available"
+                          ? "Available"
+                          : "Not Available"}
+                        <span
+                          className={
+                            hospital.availabilityStatus !== "UnAvailable"
+                              ? "ripple-animation"
+                              : ""
+                          }
+                        ></span>
+                      </div>
+                      <div style={{ fontSize: "0.875rem", color: "#718096" }}>
+                        Distance:{" "}
+                        {getDistanceFromLatLonInKm(
+                          userLocation.lat,
+                          userLocation.lng,
+                          parseFloat(hospital.coordinates.split(",")[0]),
+                          parseFloat(hospital.coordinates.split(",")[1])
+                        )}{" "}
+                        km
+                      </div>
+                      <Rating rating={hospital.rating} />
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      height: "1px",
+                      backgroundColor: "#cbd5e0",
+                      marginBottom: "1rem",
+                    }}
+                  ></div>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <button
+                      onClick={() => handlePing(hospital)}
                       style={{
-                        marginRight: "2",
+                        backgroundColor: "#4299e1",
                         color: "white",
-                        width: "16px",
+                        padding: "0.4rem .8rem",
+                        borderRadius: "0.5rem",
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        transition: "background-color 0.3s ease",
                       }}
-                    />{" "}
-                    Ping
-                  </button>
+                    >
+                      <HospitalIcon
+                        style={{
+                          marginRight: "2",
+                          color: "white",
+                          width: "16px",
+                        }}
+                      />{" "}
+                      Ping
+                    </button>
 
-                  <Expand
-                    size={14}
-                    color="grey"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => openChat(hospital)}
-                  />
-                </div>
-              </Card>
-            ))}
+                    <Expand
+                      size={14}
+                      color="grey"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => openChat(hospital)}
+                    />
+                  </div>
+                </Card>
+              )
+            )}
           </CardGrid>
         )}
       </SectionWrapper>

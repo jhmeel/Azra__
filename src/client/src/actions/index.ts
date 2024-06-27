@@ -109,7 +109,7 @@ export const updatePing =
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: UPDATE_PING_REQUEST });
-      const { data } = await axiosInstance(token,'HOSPITAL').put(
+      const { data } = await axiosInstance(token,Role.HOSPITAL).put(
         `/api/v1/ping/${pingId}`,
         pingData
       );
@@ -130,7 +130,7 @@ export const newPing =
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: NEW_PING_REQUEST });
-      const { data } = await axiosInstance(token,'PATIENT').post(
+      const { data } = await axiosInstance(token,Role.PATIENT).post(
         `/api/v1/ping`,
         pingData
       );
@@ -152,7 +152,7 @@ export const deletePing =
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_PING_REQUEST });
-      const { data } = await axiosInstance(token,'HOSPITAL').delete(
+      const { data } = await axiosInstance(token,Role.HOSPITAL).delete(
         `/api/v1/hospital/${hospitalId}/ping/${pingId}`
       );
       dispatch({
@@ -191,7 +191,7 @@ export const deleteHospitals =
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_HOSPITAL_REQUEST });
-      const { data } = await axiosInstance(token,'HOSPITAL').delete(
+      const { data } = await axiosInstance(token,Role.HOSPITAL).delete(
         `/api/v1/hospital/${hospitalId}`
       );
       dispatch({

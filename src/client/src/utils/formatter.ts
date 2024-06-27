@@ -101,5 +101,35 @@ export function getDistanceFromLatLonInKm(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const d = R * c; // Distance in km
-  return d;
+  return Math.round(d); 
 }
+
+
+
+
+
+import axios from 'axios';
+
+const GEOCODE_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
+
+export const getAddressFromCoordinates = async (lat: number, lng: number, apiKey: string): Promise<string> => {
+  try {
+    const response = await axios.get(GEOCODE_API_URL, {
+      params: {
+        latlng: `${lat},${lng}`,
+        key: apiKey
+      }
+    });
+
+    if (response.data.status === 'OK') {
+      const results = response.data.results;
+      if (results.length > 0) {
+        return results[0].formatted_address;
+      }
+    }
+    throw new Error('No address found');
+  } catch (error) {
+    console.error('Error fetching address:', error);
+    throw error;
+  }
+};

@@ -1,8 +1,3 @@
-export function deg2rad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
-
-// Helper function to calculate the distance between two coordinates
 export function getDistanceFromLatLonInKm(
   lat1: number,
   lon1: number,
@@ -10,7 +5,7 @@ export function getDistanceFromLatLonInKm(
   lon2: number
 ): number {
   const R = 6371; // Radius of the earth in km
-  const dLat = deg2rad(lat2 - lat1); // deg2rad below
+  const dLat = deg2rad(lat2 - lat1); 
   const dLon = deg2rad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -19,8 +14,12 @@ export function getDistanceFromLatLonInKm(
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; // Distance in km
+  const d = R * c; 
   return d;
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
 }
 
 export const base64ToFile = (base64: string, filename = "image.jpg"): File => {

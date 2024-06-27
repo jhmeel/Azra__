@@ -8,6 +8,7 @@ export const hospitalSignUpSchema = Joi.object({
   hospitalName: Joi.string().required(),
   hospitalNumber: Joi.string().required(), 
   coordinates: Joi.string().required(),  //"lat,lng"
+  rating:Joi.number().optional(),
 });
 
 export const patientSignUpSchema = Joi.object({

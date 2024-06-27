@@ -91,20 +91,24 @@ export const HospitalSignup = catchAsync(
         password,
         hospitalName
       );
-
-      await database.createDocument(
-        DATABASE_ID,
-        HOSPITAL_COLLECTION_ID,
-        ID.unique(),
-        {
-          userId: hospital.$id,
-          email,
-          phone,
-          hospitalName: hospitalName.toString(),
-          hospitalNumber,
-          coordinates,
-        }
-      );
+      try {
+        await database.createDocument(
+          DATABASE_ID,
+          HOSPITAL_COLLECTION_ID,
+          ID.unique(),
+          {
+            userId: hospital.$id,
+            email,
+            phone,
+            hospitalName: hospitalName.toString(),
+            hospitalNumber,
+            coordinates,
+          }
+        );
+      } catch (documentError) {
+        await users.delete(hospital.$id);
+        throw documentError;
+      }
 
       const session = await account.createEmailPasswordSession(email, password);
 
@@ -114,6 +118,7 @@ export const HospitalSignup = catchAsync(
           "Sign up successful! Please check your email for confirmation.",
         role: Role.HOSPITAL,
         session,
+        hospital,
       });
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
@@ -170,18 +175,22 @@ export const PatientSignup = catchAsync(
         password,
         fullName
       );
-
-      await database.createDocument(
-        DATABASE_ID,
-        PATIENT_COLLECTION_ID,
-        ID.unique(),
-        {
-          userId: patient.$id,
-          email,
-          phone,
-          fullName,
-        }
-      );
+      try {
+        await database.createDocument(
+          DATABASE_ID,
+          PATIENT_COLLECTION_ID,
+          ID.unique(),
+          {
+            userId: patient.$id,
+            email,
+            phone,
+            fullName,
+          }
+        );
+      } catch (documentError) {
+        await users.delete(patient.$id);
+        throw documentError;
+      }
 
       const session = await account.createEmailPasswordSession(email, password);
 
@@ -222,5 +231,90 @@ export const PatientLogin = catchAsync(
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }
+  }
+);
+
+
+
+
+export const BulkHospitalSignup = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const hospitals  = req.body;
+
+    if (!Array.isArray(hospitals)) {
+      return next(new ErrorHandler(400, 'Invalid input format. Expected an array of hospitals.'));
+    }
+
+    const results = [];
+    for (const hospitalData of hospitals) {
+      const {
+        email,
+        password,
+        hospitalName,
+        phone,
+        hospitalNumber,
+        coordinates,
+      } = hospitalData;
+
+      const { error } = hospitalSignUpSchema.validate(hospitalData);
+      if (error) {
+        results.push({ email, success: false, message: error.details[0].message });
+        continue;
+      }
+
+      try {
+        const hospitalList = await users.list([Query.equal("email", email)]);
+
+        if (hospitalList.total > 0) {
+          results.push({ email, success: false, message: "Email is already registered." });
+          continue;
+        }
+
+        const hospital = await users.create(
+          ID.unique(),
+          email,
+          phone,
+          password,
+          hospitalName
+        );
+
+        try {
+          await database.createDocument(
+            DATABASE_ID,
+            HOSPITAL_COLLECTION_ID,
+            ID.unique(),
+            {
+              userId: hospital.$id,
+              email,
+              phone,
+              hospitalName: hospitalName.toString(),
+              hospitalNumber,
+              coordinates,
+            }
+          );
+
+          const session = await account.createEmailPasswordSession(email, password);
+
+          results.push({
+            email,
+            success: true,
+            message: "Sign up successful! Please check your email for confirmation.",
+            role: Role.HOSPITAL,
+            session,
+            hospital,
+          });
+        } catch (documentError) {
+          await users.delete(hospital.$id);
+          results.push({ email, success: false, message: documentError });
+        }
+      } catch (error: any) {
+        results.push({ email, success: false, message: error.message });
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      results,
+    });
   }
 );

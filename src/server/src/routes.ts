@@ -13,9 +13,11 @@ import {
   updateHospitalById,
 } from "./handlers/hospital.js";
 import authorizer from "./middlewares/authorizer.js";
-import { HospitalLogin, HospitalSignup,PatientSignup,PatientLogin, onPatientOauthSignUp, OnPatientOauthSignUpSuccess } from "./handlers/auth.js";
+import { HospitalLogin, HospitalSignup,PatientSignup,PatientLogin, onPatientOauthSignUp, OnPatientOauthSignUpSuccess, BulkHospitalSignup } from "./handlers/auth.js";
 import { getProfile } from "./handlers/patient.js";
 const Router = express();
+
+Router.route('/dev/h-seed').post(BulkHospitalSignup)
 
 Router.route("/auth/h/signup").post(HospitalSignup);
 Router.route("/auth/h/login").post(HospitalLogin);

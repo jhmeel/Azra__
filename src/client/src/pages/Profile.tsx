@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import {
-  FaUser,
-  FaHospital,
-  FaKey,
-  FaMapMarkerAlt,
-  FaFileAlt,
-  FaCalendarAlt,
-  FaEnvelope,
-  FaEdit,
-  FaTimes,
-} from "react-icons/fa";
+import { FaUser, FaKey, FaMapMarkerAlt, FaEnvelope, FaEdit, FaFileAlt, FaCalendarAlt, FaHospital } from "react-icons/fa";
 import { toast } from "sonner";
 import Config from "../Config";
 import { Client, Databases } from "appwrite";
@@ -27,23 +17,19 @@ const client = new Client()
 const database = new Databases(client);
 
 const { PATIENT_COLLECTION_ID, DATABASE_ID } = Config.APPWRITE;
+
 interface Patient {
   $id: string;
   name: string;
   email: string;
   avatar: string;
   country: string;
-}
-
-interface Ping {
-  $id: string;
-  hospitalName: string;
-  message: string;
-  timestamp: string;
+  phone: string;
 }
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
+
   margin: 0 auto;
   padding: 20px;
   display: grid;
@@ -51,48 +37,48 @@ const ProfileContainer = styled.div`
   gap: 20px;
 
   @media (min-width: 768px) {
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 1fr;
   }
 `;
 
-const Sidebar = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background: rgba(255, 255, 255, 0.1);
+const Card = styled.div`
+  background-color:#fff;
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 20px;
   border: 1px solid #ededed;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
 `;
 
-const MainContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+const AvatarContainer = styled.div`
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  text-align: center;
 `;
 
-const Section = styled.section`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 20px;
-  border: 1px solid #444444;
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.3);
 `;
 
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const Input = styled.input`
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #333;
-  outline:1px solid #3e7dbc;
+const AvatarUpload = styled.label`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #007bff;
+  color: white;
+  border-radius: 50%;
+  padding: 8px;
+  cursor: pointer;
 `;
 
 const Button = styled.button`
@@ -104,7 +90,6 @@ const Button = styled.button`
   cursor: pointer;
   display: flex;
   align-items: center;
-  width:fit-content;
   gap: 8px;
   transition: all 0.3s ease;
 
@@ -112,81 +97,53 @@ const Button = styled.button`
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   }
+
+  &.red {
+    background-color: #ef4444;
+    &:hover {
+      background-color: #dc2626;
+    }
+  }
+
+  &.green {
+    background-color: #10b981;
+    &:hover {
+      background-color: #047857;
+    }
+  }
+
+  &.purple {
+    background-color: #8b5cf6;
+    &:hover {
+      background-color: #7c3aed;
+    }
+  }
+
+  &.blue {
+    background-color: #3b82f6;
+    &:hover {
+      background-color: #2563eb;
+    }
+  }
 `;
 
-const AvatarContainer = styled.div`
+const StatCard = styled(Card)`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-`;
-
-const AvatarImage = styled.img`
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-`;
-
-const FileInput = styled.input`
-  display: none;
-`;
-
-const UploadButton = styled.label`
-  padding: 12px 24px;
-  background: linear-gradient(45deg, #17a2b8, #20c997);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const PingsList = styled.ul`
-  list-style-type: none;
-  padding: 0;
-`;
-
-const PingItem = styled.li`
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 15px;
-`;
-
-const ActionsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-`;
-
-const ActionButton = styled.button`
-  padding: 20px;
-  background-color:#639bcd;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 12px;
-  transition: all 0.3s ease;
+  text-align: center;
+`;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
+const StatValue = styled.div`
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+`;
+
+const StatLabel = styled.div`
+  font-size: 0.9rem;
+  color: #888;
 `;
 
 const Modal = styled.div`
@@ -222,17 +179,22 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
-const LocationInfo = styled.div`
+const Form = styled.form`
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 10px;
-  font-size: 16px;
+`;
+
+const Input = styled.input`
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #333;
+  outline: 1px solid #3e7dbc;
 `;
 
 export const Profile: React.FC = () => {
-  
-  const [pings, setPings] = useState<Ping[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -243,26 +205,10 @@ export const Profile: React.FC = () => {
   const [country, setCountry] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const {authRes } = useSelector((state:RootState)=> state.auth)
-  const {patient} = authRes
+  const { authRes } = useSelector((state: RootState) => state.auth);
+  const { patient } = authRes;
 
   useEffect(() => {
-    const fetchPatientData = async () => {
-      try {
-      } catch (error) {
-        console.error("Error fetching patient data:", error);
-        toast.error("Failed to fetch patient data");
-      }
-    };
-
-    const fetchPings = async () => {
-      try {
-      } catch (error) {
-        console.error("Error fetching pings:", error);
-        toast.error("Failed to fetch recent pings");
-      }
-    };
-
     const getLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -271,7 +217,6 @@ export const Profile: React.FC = () => {
             setLocation(`${latitude}, ${longitude}`);
 
             const result = reverseGeocode.lookup(latitude, longitude, "ng");
-            console.log(result)
             if (result && result?.city) {
               setCountry(result?.state);
             }
@@ -286,14 +231,13 @@ export const Profile: React.FC = () => {
       }
     };
 
-    fetchPatientData();
-    fetchPings();
     getLocation();
   }, []);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Profile update logic here
       toast.success("Profile updated successfully");
       setShowEditModal(false);
     } catch (error) {
@@ -309,6 +253,7 @@ export const Profile: React.FC = () => {
       return;
     }
     try {
+      // Password reset logic here
       toast.success("Password reset successfully");
       setCurrentPassword("");
       setNewPassword("");
@@ -328,6 +273,7 @@ export const Profile: React.FC = () => {
     formData.append("file", file);
 
     try {
+      // Avatar upload logic here
       toast.success("Avatar uploaded successfully");
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -338,141 +284,132 @@ export const Profile: React.FC = () => {
   return (
     <>
       <ProfileContainer>
-        <Sidebar>
-          <Section>
-            <AvatarContainer>
-              <AvatarImage src={patient?.avatar} alt="Patient Avatar" />
-              <FileInput
-                type="file"
-                id="avatar-upload"
-                accept="image/*"
-                onChange={handleAvatarChange}
-              />
-              
-              <UploadButton htmlFor="avatar-upload">
-                <FaUser /> Change Avatar
-              </UploadButton>
-            </AvatarContainer>
-            <LocationInfo>
-              <FaMapMarkerAlt />
-              {country ||'Nigeria'}, {location || "Fetching location..."}
-            </LocationInfo>
-          </Section>
-          <Section>
-            <h2>{patient?.name}</h2>
-            <p>{patient?.email}</p>
-            <p>{patient?.phone}</p>
-            <Button onClick={() => setShowEditModal(true)}>
-              <FaEdit /> Edit
-            </Button>
-          </Section>
-        </Sidebar>
-        <MainContent>
-          <Section>
-            <h2>Recent Pings</h2>
-            <PingsList>
-              {pings.map((ping) => (
-                <PingItem key={ping?.$id}>
-                  <FaHospital /> <strong>{ping?.hospitalName}</strong>
-                  <p>{ping.message}</p>
-                  <small>{new Date(ping?.timestamp).toLocaleString()}</small>
-                </PingItem>
-              ))}
-            </PingsList>
-          </Section>
-          <Section>
-            <h2>Actions</h2>
-            <ActionsContainer>
-              <ActionButton>
-                <FaFileAlt /> View Medical Records
-              </ActionButton>
-              <ActionButton>
-                <FaCalendarAlt /> Schedule Appointment
-              </ActionButton>
-              <ActionButton>
-                <FaEnvelope /> Message Doctor
-              </ActionButton>
-              <ActionButton onClick={() => setShowPasswordModal(true)}>
-                <FaKey /> Reset Password
-              </ActionButton>
-            </ActionsContainer>
-          </Section>
-        </MainContent>
-
-        {showEditModal && (
-          <Modal>
-            <ModalContent>
-              <CloseButton onClick={() => setShowEditModal(false)}>
-                <X/>
-              </CloseButton>
-              <h2>Edit Profile</h2>
-              <Form onSubmit={handleProfileUpdate}>
-                <Input
-                  type="text"
-                  value={patient?.name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Name"
-                  required
-                />
-                <Input
-                  type="email"
-                  value={patient?.email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  required
-                />
-                <Input
-                  type="phone"
-                  value={patient?.phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Phone"
-                  required
-                />
-                <Button type="submit">
-                  <FaUser /> Update
-                </Button>
-              </Form>
-            </ModalContent>
-          </Modal>
-        )}
-
-        {showPasswordModal && (
-          <Modal>
-            <ModalContent>
-              <CloseButton onClick={() => setShowPasswordModal(false)}>
-                <X/>
-              </CloseButton>
-              <h2>Reset Password</h2>
-              <Form onSubmit={handlePasswordReset}>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Current Password"
-                  required
-                />
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="New Password"
-                  required
-                />
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm New Password"
-                  required
-                />
-                <Button type="submit">
-                  <FaKey /> Reset Password
-                </Button>
-              </Form>
-            </ModalContent>
-          </Modal>
-        )}
+        <Card>
+          <AvatarContainer>
+            <AvatarImage src={patient?.avatar} alt="Patient Avatar" />
+            <AvatarUpload htmlFor="avatar-upload">
+              <FaEdit />
+            </AvatarUpload>
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              style={{ display: 'none' }}
+            />
+          </AvatarContainer>
+          <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>{patient?.name}</h2>
+          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>{patient?.email}</p>
+          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>{patient?.phone}</p>
+          <Button className="blue" onClick={() => setShowEditModal(true)}>
+            <FaEdit /> Edit Profile
+          </Button>
+        </Card>
+        <Card>
+        <h3 style={{ textAlign: 'center' }}>Location</h3>
+          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>
+            {country ? `Country: ${country}` : "Country: Not Available"}
+          </p>
+          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>
+            {location ? `Location: ${location}` : "Location: Not Available"}
+          </p>
+        </Card>
       </ProfileContainer>
+
+      <ProfileContainer>
+        <Card>
+          <h3 style={{ textAlign: 'center' }}>Quick Actions</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <Button className="blue">
+              <FaFileAlt /> View Reports
+            </Button>
+            <Button className="green">
+              <FaCalendarAlt /> Book Appointment
+            </Button>
+            <Button className="purple">
+              <FaHospital /> Visit History
+            </Button>
+            <Button className="red" onClick={() => setShowPasswordModal(true)}>
+              <FaKey /> Reset Password
+            </Button>
+          </div>
+        </Card>
+      </ProfileContainer>
+
+      {showEditModal && (
+        <Modal>
+          <ModalContent>
+            <CloseButton onClick={() => setShowEditModal(false)}>
+              <X/>
+            </CloseButton>
+            <h2>Edit Profile</h2>
+            <Form onSubmit={handleProfileUpdate}>
+              <Input
+                type="text"
+                value={patient?.name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Name"
+                required
+              />
+              <Input
+                type="email"
+                value={patient?.email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                required
+              />
+              <Input
+                type="phone"
+                value={patient?.phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Phone"
+                required
+              />
+              <Button type="submit">
+                <FaUser /> Update
+              </Button>
+            </Form>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {showPasswordModal && (
+        <Modal>
+          <ModalContent>
+            <CloseButton onClick={() => setShowPasswordModal(false)}>
+              <X/>
+            </CloseButton>
+            <h2>Reset Password</h2>
+            <Form onSubmit={handlePasswordReset}>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Current Password"
+                required
+              />
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New Password"
+                required
+              />
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm New Password"
+                required
+              />
+              <Button type="submit">
+                <FaKey /> Reset Password
+              </Button>
+            </Form>
+          </ModalContent>
+        </Modal>
+      )}
+
       <Footer />
     </>
   );
