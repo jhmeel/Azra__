@@ -92,8 +92,18 @@ const Home = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [hospital, setHospital] = useState(null);
+  const [patient, setPatient] = useState(null);
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const { hospital, patient } = authRes;
+
+  useEffect(() => {
+    if (authRes?.patient) {
+      setPatient(authRes?.patient);
+    } else if (authRes?.hospital) {
+      setHospital(authRes?.hospital);
+    }
+  }, [authRes]);
+
 
   useEffect(() => {
     if (hospital && hospital?.hospitalName) {
@@ -163,33 +173,31 @@ const Home = () => {
             </div>
             <Nav>
               <NavMain>
-              <NavLink className="active-nav" href="/">Home</NavLink>
-              <NavLink href="/about">About</NavLink>
-              <NavLink href="/blog">Blog</NavLink>
-              {authRes?.role === Role.HOSPITAL ? (
-                <NavLink href="/dashboard">Dashboard</NavLink>
-              ) : (
-                authRes?.role === Role.PATIENT && (
-                  <NavLink href="/profile">Profile</NavLink>
-                )
-              )}
-
+                <NavLink className="active-nav" href="/">
+                  Home
+                </NavLink>
+                <NavLink href="/about">About</NavLink>
+                <NavLink href="/blog">Blog</NavLink>
+                {authRes?.role === Role.HOSPITAL ? (
+                  <NavLink href="/dashboard">Dashboard</NavLink>
+                ) : (
+                  authRes?.role === Role.PATIENT && (
+                    <NavLink href="/profile">Profile</NavLink>
+                  )
+                )}
               </NavMain>
-            
-              <div className="auth-btns">
-                
-              {!authRes?.session && (
-                <>
-                  <ButtonLink href="/login">Login</ButtonLink>
-                  <ButtonLink href="/signup" primary>
-                    Register
-                  </ButtonLink>
-                </>
-              )}
-              </div>
 
+              <div className="auth-btns">
+                {!authRes?.session && (
+                  <>
+                    <ButtonLink href="/login">Login</ButtonLink>
+                    <ButtonLink href="/signup" primary>
+                      Register
+                    </ButtonLink>
+                  </>
+                )}
+              </div>
             </Nav>
-            
 
             <MobileNavToggle onClick={toggleMobileMenu}>
               <Menu />
@@ -330,46 +338,44 @@ const Nav = styled.div`
   @media (max-width: 768px) {
     display: none;
   }
-  .auth-btns{
-    display:flex;
-    gap:8px;
-
+  .auth-btns {
+    display: flex;
+    gap: 8px;
   }
 `;
 const NavMain = styled.nav`
-display: flex;
-height:fit-content;
+  display: flex;
+  height: fit-content;
   gap: 5px;
   align-items: center;
-  background-color:rgba(1, 1, 2, 0.3);
-  padding:5px;
-  border-radius:20px;
+  background-color: rgba(1, 1, 2, 0.3);
+  padding: 5px;
+  border-radius: 20px;
   box-shadow: 0px 0 8px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
-.active-nav{
-    background-color: rgba(204, 179, 35,0.9);
-    padding:2px 8px;
-    border-radius:20px;
+  .active-nav {
+    background-color: rgba(204, 179, 35, 0.9);
+    padding: 2px 8px;
+    border-radius: 20px;
   }
-
-
-`
+`;
 const NavLink = styled.a`
-position: relative;
+  position: relative;
   color: white;
   margin-right: 1.5rem;
   text-decoration: none;
   font-weight: 500;
   transition: opacity 0.3s ease;
-  font-size:14px;
-  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 
-  &::after{
-    content:'▫';
-    font-size:10px;
-    position:absolute;
-    bottom:0;
-    margin-left:10px;
+  &::after {
+    content: "▫";
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    margin-left: 10px;
   }
 
   &:hover {
@@ -440,8 +446,9 @@ const MobileNavLink = styled.a`
   margin-bottom: 1.5rem;
   text-decoration: none;
   transition: opacity 0.3s ease;
-  font-size:14px;
-  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 
   &:hover {
     opacity: 0.8;
@@ -486,7 +493,7 @@ const SectionTitle = styled.h1`
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
-  font-family:Zeitung;
+  font-family: Zeitung;
 
   @media (max-width: 768px) {
     font-size: 2.5rem;
@@ -501,7 +508,7 @@ const SectionText = styled.p`
   font-size: 1.25rem;
   margin-bottom: 2rem;
   opacity: 0.9;
-  font-family:Zeitung;
+  font-family: Zeitung;
 
   @media (max-width: 768px) {
     font-size: 1.1rem;
