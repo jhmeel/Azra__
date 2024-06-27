@@ -354,9 +354,10 @@ const NavMain = styled.nav`
   box-shadow: 0px 0 8px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   .active-nav {
-    background-color: rgba(204, 179, 35, 0.9);
+    background-color:  #ffd700;
     padding: 2px 8px;
     border-radius: 20px;
+    color:#44c2b9;
   }
 `;
 const NavLink = styled.a`
