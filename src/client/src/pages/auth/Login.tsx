@@ -31,7 +31,7 @@ const LoginForm = () => {
       navigate("/dashboard");
     } else if (authRes && authRes.role == Role.PATIENT) {
       toast.success("Logged in successfully");
-      navigate("/dashboard");
+      navigate("/profile");
     }
   }, [authRes, dispatch, error, navigate]);
 

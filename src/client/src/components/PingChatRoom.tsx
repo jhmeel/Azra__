@@ -283,8 +283,8 @@ function PatientChatInterface() {
         ) {
           const newMessage = response.payload as Message;
           if (
-            newMessage.senderId === currentUser.userId &&
-            newMessage.receiverId === pSelectedHospital.userId
+            newMessage.senderId === currentUser?.$id  &&
+            newMessage.receiverId === pSelectedHospital?.$id 
           ) {
             setMessages((prevMessages) => [...prevMessages, newMessage]);
           }
@@ -295,7 +295,7 @@ function PatientChatInterface() {
 
   const subscribeToHospitalStatus = () => {
     return client.subscribe(
-      `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.HOSPITAL_COLLECTION_ID}.documents.${pSelectedHospital.userId}`,
+      `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.HOSPITAL_COLLECTION_ID}.documents.${pSelectedHospital?.$id }`,
       (response) => {
         if (
           response.events.includes(
@@ -315,8 +315,8 @@ function PatientChatInterface() {
         Config.APPWRITE.DATABASE_ID,
         Config.APPWRITE.PINGS_COLLECTION_ID,
         [
-          Query.equal("patientId", currentUser?.userId),
-          Query.equal("hospitalId", pSelectedHospital.userId),
+          Query.equal("patientId", currentUser?.$id),
+          Query.equal("hospitalId", pSelectedHospital?.$id ),
           Query.orderAsc("$createdAt"),
         ]
       );
@@ -345,8 +345,8 @@ function PatientChatInterface() {
         }
 
         const newMessage: Omit<Message, "$id" | "$createdAt" | "$updatedAt"> = {
-          patientId: currentUser.userId,
-          hospitalId: pSelectedHospital.userId,
+          patientId: currentUser?.$id ,
+          hospitalId: pSelectedHospital?.$id ,
           content: inputMessage.trim(),
           mediaUrl,
           isRead: false,
@@ -425,10 +425,10 @@ function PatientChatInterface() {
             messages.map((message) => (
               <MessageItem
                 key={message.$id}
-                isPatient={message.patientId === currentUser.userId}
+                isPatient={message.patientId === currentUser?.$id }
               >
                 <MessageContent
-                  isPatient={message.patientId === currentUser.userId}
+                  isPatient={message.patientId === currentUser?.$id }
                 >
                   <MessageText>{message.content}</MessageText>
                   {message.mediaUrl && (
@@ -439,7 +439,7 @@ function PatientChatInterface() {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
-                    {message.patientId === currentUser.userId && (
+                    {message.patientId === currentUser?.$id  && (
                       <>
                         {message.isRead ? (
                           <CheckCheck size={16} />

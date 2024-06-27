@@ -24,5 +24,4 @@ COPY --from=client-builder /app/package.json ./package.json
 
 EXPOSE 3000
 
-
 CMD ["npm", "run", "start"]

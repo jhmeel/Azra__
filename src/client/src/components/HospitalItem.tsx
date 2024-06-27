@@ -6,11 +6,12 @@ import {
   Send,
   Search,
   Expand,
+  Info,
+  MessageSquareShare,
 } from "lucide-react";
 import { getDistanceFromLatLonInKm } from "../utils/formatter";
 import { Coordinate, Hospital } from "../types";
 import PingForm from "./PingForm";
-import localforage from "localforage";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { bouncy } from "ldrs";
@@ -20,6 +21,7 @@ import { useDispatch } from "react-redux";
 import { CLEAR_ERRORS } from "../constants";
 import { fetchNearByHospitals } from "../actions";
 import Rating from "./Rating";
+import HospitalProfileViewer from "./HospitalProfileViewer";
 
 const SectionWrapper = styled.section`
   width: 100%;
@@ -151,6 +153,7 @@ const HospitalCards = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [pingFormActive, setPingFormActive] = useState<boolean>(false);
+  const [viewProfile, setViewProfile] = useState<boolean>(false);
   const [selectedHospital, setSelectedHospital] = useState<Omit<
     Hospital,
     "$createdAt" | "$updatedAt"
@@ -221,9 +224,12 @@ const HospitalCards = ({
       state: { hospital },
     });
   };
-
-
-
+  const onViewProfile = (
+    hospital: Omit<Hospital, "$createdAt" | "$updatedAt">
+  ) => {
+    setViewProfile(true);
+    setSelectedHospital(hospital);
+  };
   return (
     <>
       <SectionWrapper>
@@ -362,7 +368,7 @@ const HospitalCards = ({
           </div>
         </div>
 
-        {isLoading ? (
+        {isLoading || loading ? (
           <div style={{ display: "flex", justifyContent: "center" }}>
             {" "}
             <l-bouncy size={35} color={"#4a5568"}></l-bouncy>
@@ -483,12 +489,21 @@ const HospitalCards = ({
                       Ping
                     </button>
 
-                    <Expand
-                      size={14}
-                      color="grey"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => openChat(hospital)}
-                    />
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <MessageSquareShare
+                        size={16}
+                        color="grey"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => openChat(hospital)}
+                      />
+
+                      <Info
+                        onClick={() => onViewProfile(hospital)}
+                        size={16}
+                        color="#a49f38"
+                        style={{ cursor: "pointer" }}
+                      />
+                    </div>
                   </div>
                 </Card>
               )
@@ -505,6 +520,8 @@ const HospitalCards = ({
           />
         </div>
       )}
+
+      {viewProfile && !pingFormActive && <HospitalProfileViewer onClose={()=>setViewProfile(false)} hospital={selectedHospital} />}
     </>
   );
 };
