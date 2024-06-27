@@ -6,9 +6,10 @@ interface AxiosInstanceConfig extends AxiosRequestConfig {
   headers: Record<string, string>;
 }
 
+const baseUrl = import.meta.env.NODE_ENV=="production"?'https://distinct-reward-nosy-attraction-beta.pipeops.app/':'http://localhost:3000',
 const axiosInstance = (token?: string, role?: Role): AxiosInstance => {
   const config: AxiosInstanceConfig = {
-    baseURL: "http://localhost:3000",
+    baseURL: baseUrl,
     headers: { "Content-Type": "application/json" },
   };
 

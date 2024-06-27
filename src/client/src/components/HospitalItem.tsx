@@ -371,7 +371,7 @@ const HospitalCards = ({
           </AlertMessage>
         ) : (
           <CardGrid>
-            {nearHospitals?.hospitals.map(
+            {nearHospitals?.hospitals?.map(
               (hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => (
                 <Card key={hospital.$id}>
                   <div
