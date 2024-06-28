@@ -354,7 +354,7 @@ const SignupForm = () => {
   };
 
   const handleGoogleSignup = async () => {
-    await axiosInstance().get("/auth/p-oauth/signup");
+    window.location.href = "https://distinct-reward-nosy-attraction-beta.pipeops.app/api/v1/auth/p-oauth/success";
   };
 
   return (

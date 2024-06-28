@@ -29,39 +29,33 @@ const account = new Account(client);
 const { DATABASE_ID, HOSPITAL_COLLECTION_ID, PATIENT_COLLECTION_ID } =
   Config.APPWRITE;
 
-export const onPatientOauthSignUp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const redirectUrl = await account.createOAuth2Token(
-    OAuthProvider.Google,
-    "http://localhost:8000/api/v1/auth/p-oauth/success",
-    "http://localhost:8000/failure"
-  );
-
-  res.redirect(redirectUrl);
-};
-
-export const OnPatientOauthSignUpSuccess = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { userId, secret } = req.query;
-
-  try {
-    const session = await account.createSession(userId, secret);
-
-    res.status(201).json({
-      success: true,
-      message: "Sign up successful! Please check your email for confirmation.",
-      session,
-    });
-  } catch (error: any) {
-    return next(new ErrorHandler(400, error.message));
-  }
-};
+  export const onPatientOauthSignUp =  catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+    const redirectUrl = await account.createOAuth2Token(
+      OAuthProvider.Google,
+      "https://distinct-reward-nosy-attraction-beta.pipeops.app/api/v1/auth/p-oauth/success",
+      "https://distinct-reward-nosy-attraction-beta.pipeops.app/api/v1/auth/failure"
+    );
+  
+    res.redirect(redirectUrl);
+  });
+  
+  export const OnPatientOauthSignUpSuccess =  catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+    const { userId, secret } = req.query;
+  
+    try {
+      const session = await account.createSession(userId, secret);
+  
+      res.status(201).json({
+        success: true,
+        message: "Sign up successful! Please check your email for confirmation.",
+        session,
+      });
+    } catch (error:any) {
+      return next(new ErrorHandler(400, error.message));
+    }
+  });
 
 export const HospitalSignup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
