@@ -10,12 +10,20 @@ import {
   Check,
   CheckCheck,
 } from "lucide-react";
-import { Hospital, Message } from "../types";
+import { Hospital, Message, Patient } from "../types";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { Client, Databases, Storage, Query, ID } from "appwrite";
+import {
+  Client,
+  Databases,
+  Storage,
+  Query,
+  ID,
+  Permission,
+  Role,
+} from "appwrite";
 import Config from "../Config";
 import azraLight from "../assets/azra_light.png";
 
@@ -228,13 +236,16 @@ function PatientChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<Patient | null>(null);
+
+  const permissions = [Permission.write(Role.user(authRes?.session?.userId))];
 
   useEffect(() => {
     if (authRes?.patient) {
-      setCurrentUser(authRes?.patient);
-    } 
+      setCurrentUser(authRes?.patient?.documents[0]);
+    }
   }, [authRes]);
+
   const location = useLocation();
   const {
     image: pImage,
@@ -283,8 +294,8 @@ function PatientChatInterface() {
         ) {
           const newMessage = response.payload as Message;
           if (
-            newMessage.senderId === currentUser?.$id  &&
-            newMessage.receiverId === pSelectedHospital?.$id 
+            newMessage.senderId === currentUser?.$id &&
+            newMessage.receiverId === pSelectedHospital?.$id
           ) {
             setMessages((prevMessages) => [...prevMessages, newMessage]);
           }
@@ -295,7 +306,7 @@ function PatientChatInterface() {
 
   const subscribeToHospitalStatus = () => {
     return client.subscribe(
-      `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.HOSPITAL_COLLECTION_ID}.documents.${pSelectedHospital?.$id }`,
+      `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.HOSPITAL_COLLECTION_ID}.documents.${pSelectedHospital?.$id}`,
       (response) => {
         if (
           response.events.includes(
@@ -316,7 +327,7 @@ function PatientChatInterface() {
         Config.APPWRITE.PINGS_COLLECTION_ID,
         [
           Query.equal("patientId", currentUser?.$id),
-          Query.equal("hospitalId", pSelectedHospital?.$id ),
+          Query.equal("hospitalId", pSelectedHospital?.$id),
           Query.orderAsc("$createdAt"),
         ]
       );
@@ -345,8 +356,8 @@ function PatientChatInterface() {
         }
 
         const newMessage: Omit<Message, "$id" | "$createdAt" | "$updatedAt"> = {
-          patientId: currentUser?.$id ,
-          hospitalId: pSelectedHospital?.$id ,
+          patientId: currentUser?.$id,
+          hospitalId: pSelectedHospital?.$id,
           content: inputMessage.trim(),
           mediaUrl,
           isRead: false,
@@ -356,7 +367,8 @@ function PatientChatInterface() {
           Config.APPWRITE.DATABASE_ID,
           Config.APPWRITE.PINGS_COLLECTION_ID,
           ID.unique(),
-          newMessage
+          newMessage,
+          permissions
         );
 
         setInputMessage("");
@@ -425,10 +437,10 @@ function PatientChatInterface() {
             messages.map((message) => (
               <MessageItem
                 key={message.$id}
-                isPatient={message.patientId === currentUser?.$id }
+                isPatient={message.patientId === currentUser?.$id}
               >
                 <MessageContent
-                  isPatient={message.patientId === currentUser?.$id }
+                  isPatient={message.patientId === currentUser?.$id}
                 >
                   <MessageText>{message.content}</MessageText>
                   {message.mediaUrl && (
@@ -439,7 +451,7 @@ function PatientChatInterface() {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
-                    {message.patientId === currentUser?.$id  && (
+                    {message.patientId === currentUser?.$id && (
                       <>
                         {message.isRead ? (
                           <CheckCheck size={16} />
@@ -460,10 +472,10 @@ function PatientChatInterface() {
           ) : (
             <div
               style={{
-                position:'absolute',
-               top:'50%',
-               left:'50%',
-               transform:'translate(-50%,-50%)',
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%,-50%)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",

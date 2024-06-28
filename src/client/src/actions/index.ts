@@ -129,6 +129,7 @@ export const newPing =
   (token?: string, pingData?: Ping) =>
   async (dispatch: (action: Action) => void) => {
     try {
+
       dispatch({ type: NEW_PING_REQUEST });
       const { data } = await axiosInstance(token,Role.PATIENT).post(
         `/api/v1/ping`,

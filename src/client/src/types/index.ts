@@ -69,7 +69,7 @@ export enum Role {
 
 export interface Patient extends Models.Document {
   userId: string;
-  name: string;
+  fullName: string;
   avatar: string;
   email: string;
   phone: string;
@@ -111,3 +111,4 @@ export interface Action {
   type: string;
   payload?: any;
 }
+

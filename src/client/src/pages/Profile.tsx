@@ -206,13 +206,14 @@ export const Profile: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const [patient, setPatient] = useState(null);
+  const [patient, setPatient] = useState<Patient|null>(null);
 
   useEffect(() => {
     if (authRes?.patient) {
-      setPatient(authRes?.patient);
+      setPatient(authRes?.patient.documents[0]);
     } 
   }, [authRes]);
+
 
   useEffect(() => {
     const getLocation = () => {
@@ -304,7 +305,7 @@ export const Profile: React.FC = () => {
               style={{ display: 'none' }}
             />
           </AvatarContainer>
-          <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>{patient?.name}</h2>
+          <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>{patient?.fullName}</h2>
           <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>{patient?.email}</p>
           <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>{patient?.phone}</p>
           <Button className="blue" onClick={() => setShowEditModal(true)}>
@@ -352,7 +353,7 @@ export const Profile: React.FC = () => {
             <Form onSubmit={handleProfileUpdate}>
               <Input
                 type="text"
-                value={patient?.name}
+                value={patient?.fullName}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
                 required

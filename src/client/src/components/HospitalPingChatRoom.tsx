@@ -249,7 +249,6 @@ function HospitalPingChatRoom() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { authRes: currentUser } = useSelector((state: RootState) => state.auth);
-  
 
   useEffect(() => {
     if (currentUser) {

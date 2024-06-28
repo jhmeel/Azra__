@@ -17,8 +17,7 @@ const demoReviews = [
     name: "Jane Smith",
     avatar: "https://randomuser.me/api/portraits/women/2.jpg",
     rating: 4,
-    content:
-      "Good experience overall. Clean facilities and professional doctors.",
+    content: "Good experience overall. Clean facilities and professional doctors.",
     date: "June 10, 2024",
   },
   {
@@ -32,16 +31,14 @@ const demoReviews = [
     name: "Emily Brown",
     avatar: "https://randomuser.me/api/portraits/women/4.jpg",
     rating: 5,
-    content:
-      "Outstanding care! The staff went above and beyond to ensure my comfort.",
+    content: "Outstanding care! The staff went above and beyond to ensure my comfort.",
     date: "May 30, 2024",
   },
   {
     name: "David Lee",
     avatar: "https://randomuser.me/api/portraits/men/5.jpg",
     rating: 4,
-    content:
-      "Very satisfied with the treatment. Modern facilities and knowledgeable doctors.",
+    content: "Very satisfied with the treatment. Modern facilities and knowledgeable doctors.",
     date: "May 25, 2024",
   },
 ];
@@ -84,9 +81,14 @@ const HospitalProfileViewer = ({
         </Header>
         <HPInfoRenderer>
           <HAvatar src={hospital?.avatar || "default-avatar.png"} />
+
           <HMetaInfo>
             <div className="name-status">
-              <h2 style={{fontWeight:700}}>{hospital?.hospitalName || "N/A"}</h2>
+              <h2>{hospital?.hospitalName || "N/A"}</h2>
+              {hospital?.availabilityStatus == "Available" && (
+                <span className="active-ripple"></span>
+              )}
+
               <span
                 className="h-p-status"
                 style={{
@@ -124,11 +126,11 @@ const HospitalProfileViewer = ({
               </Button>
             </div>
           </HMetaInfo>
-          <Rating fontSize={24} rating={hospital?.rating || 0} />
+          <Rating fontSize={24} rating={hospital?.rating || 0} showVol={true} />
         </HPInfoRenderer>
         <HospitalProfileReviews>
           <ReviewHeader>
-            <h2 style={{ fontWeight: 700 }}>Reviews</h2>
+            <h2>Reviews</h2>
             <WriteReviewButton onClick={() => setIsReviewModalOpen(true)}>
               Write a Review
             </WriteReviewButton>
@@ -223,6 +225,7 @@ const ReviewModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 export default HospitalProfileViewer;
+
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -234,17 +237,19 @@ const Overlay = styled.div`
   align-items: center;
   background: rgba(31, 41, 55, 0.5);
   padding: 16px;
-  overflow-x: hidden;
+  overflow: hidden;
 `;
 
 const HPRenderer = styled.div`
+  position: relative;
   max-width: 600px;
   width: 100%;
   max-height: 100vh;
-  overflow-x:auto;
+  overflow-y: auto;
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding-bottom: 60px;
 `;
 
 const Header = styled.div`
@@ -267,6 +272,8 @@ const HPInfoRenderer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  align-items: center;
+  text-align: center;
 `;
 
 const HAvatar = styled.img`
@@ -274,7 +281,6 @@ const HAvatar = styled.img`
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  margin: 0 auto;
   @media (max-width: 480px) {
     width: 100px;
     height: 100px;
@@ -285,7 +291,30 @@ const HMetaInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  text-align: center;
+
+  .active-ripple {
+    position: relative;
+  }  .active-ripple::before,
+  .active-ripple::after {
+    position: absolute;
+    content: "";
+    height: 4px;
+    width: 4px;
+    border-radius: 50%;
+    left: -12px;
+    bottom: 5px;
+    background-color: #5bc9d3;
+  }
+  .active-ripple::before {
+    width: 8px;
+    height: 8px;
+    background-color: #5bc9d3;
+  }
+  .active-ripple::after {
+    width: 8px;
+    height: 8px;
+    animation: pulse 1s linear infinite;
+  }
   .h-p-joined {
     font-size: 14px;
     color: #666;
@@ -316,17 +345,19 @@ const HMetaInfo = styled.div`
 const Button = styled.button`
   display: flex;
   align-items: center;
+  justify-content:center;
   gap: 8px;
-  background-color: #4169e1;
+  background-color: #5bc9d3;
   padding: 8px 16px;
   color: #fff;
+  font-size:12px; 
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s;
 
   &:hover {
-    background-color: #3050c0;
+    background-color: #29787f;
   }
 
   svg {
@@ -336,8 +367,8 @@ const Button = styled.button`
 
 const HospitalProfileReviews = styled.div`
   padding: 24px;
-  height:100%;
-  width:100%;
+  height: 100%;
+  width: 100%;
   overflow-y: auto;
   h2 {
     margin-bottom: 16px;
@@ -361,7 +392,7 @@ const ReviewAvatar = styled.img`
 
 const ReviewContent = styled.div`
   flex: 1;
-  font-size:14px;
+  font-size: 14px;
 `;
 
 const ReviewHeader = styled.div`
@@ -372,7 +403,7 @@ const ReviewHeader = styled.div`
 `;
 
 const WriteReviewButton = styled(Button)`
-  background-color: #233780;
+  background-color: #29787f;
   font-size: 12px;
   border-radius: 0;
   padding: 5px 10px;
@@ -431,16 +462,20 @@ const TextAreaContainer = styled.div`
     outline: none;
     border-radius: 4px;
     font-family: inherit;
+    resize: vertical;
+    width: 100%;
   }
 `;
 
 const SubmitButton = styled(Button)`
   text-align: center;
-  font-size: 12px;
-  width: fit-content;
+  font-size: 14px;
+  width: 100%;
+  padding: 12px;
 `;
 
 const StarContainer = styled.div`
   display: flex;
   gap: 2px;
 `;
+

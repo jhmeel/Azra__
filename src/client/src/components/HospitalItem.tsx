@@ -18,7 +18,7 @@ import { bouncy } from "ldrs";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useDispatch } from "react-redux";
-import { CLEAR_ERRORS } from "../constants";
+import { AVAILABLE_HOSPITALS, CLEAR_ERRORS } from "../constants";
 import { fetchNearByHospitals } from "../actions";
 import Rating from "./Rating";
 import HospitalProfileViewer from "./HospitalProfileViewer";
@@ -139,13 +139,9 @@ const SuggestionItem = styled.li`
 
 const HospitalCards = ({
   userLocation,
-  hospitals,
-  isLoading,
   currentUser,
 }: {
   userLocation: Coordinate;
-  hospitals: Omit<Hospital, "$createdAt" | "$updatedAt">[];
-  isLoading: boolean;
   currentUser: any;
 }) => {
   const [selectedStatus, setSelectedStatus] = useState("available");
@@ -164,6 +160,8 @@ const HospitalCards = ({
     error: hospitalFetchErr,
     loading,
   } = useSelector((state: RootState) => state.hospital);
+
+  
   useEffect(() => {
     bouncy.register();
   }, []);
@@ -195,13 +193,9 @@ const HospitalCards = ({
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    const suggestions = hospitals
-      .filter((hospital) =>
-        hospital.hospitalName
-          .toLowerCase()
-          .includes(e.target.value.toLowerCase())
-      )
-      .map((hospital) => hospital.hospitalName);
+    const suggestions = AVAILABLE_HOSPITALS.filter((hospital:string) =>
+      hospital.toLowerCase().includes(e.target.value.toLowerCase())
+    )
     setSearchSuggestions(suggestions);
   };
 
@@ -368,7 +362,7 @@ const HospitalCards = ({
           </div>
         </div>
 
-        {isLoading || loading ? (
+        {loading ? (
           <div style={{ display: "flex", justifyContent: "center" }}>
             {" "}
             <l-bouncy size={35} color={"#4a5568"}></l-bouncy>
@@ -521,7 +515,12 @@ const HospitalCards = ({
         </div>
       )}
 
-      {viewProfile && !pingFormActive && <HospitalProfileViewer onClose={()=>setViewProfile(false)} hospital={selectedHospital} />}
+      {viewProfile && !pingFormActive && (
+        <HospitalProfileViewer
+          onClose={() => setViewProfile(false)}
+          hospital={selectedHospital}
+        />
+      )}
     </>
   );
 };

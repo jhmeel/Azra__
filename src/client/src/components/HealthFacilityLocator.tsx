@@ -2,9 +2,11 @@ import React, { useEffect } from "react";
 import styled from "styled-components";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { Link } from "react-router-dom";
-import { MessageCircleDashed} from "lucide-react";
+import { MessageCircleDashed } from "lucide-react";
 import { Hospital } from "../types";
 import { bouncy } from "ldrs";
+import { RootState } from "../store";
+import { useSelector } from "react-redux";
 
 const Section = styled.section`
   margin: 4rem auto;
@@ -85,12 +87,12 @@ const LoadingContainer = styled.div`
   border-radius: 8px;
 `;
 
-const HealthFacilityLocator = ({
-  isLoaded,
-  userLocation,
-  hospitals,
-  pinIconUrl,
-}) => {
+const HealthFacilityLocator = ({ isLoaded, userLocation, pinIconUrl }) => {
+  const {
+    hospitals,
+    error: hospitalFetchErr,
+    loading,
+  } = useSelector((state: RootState) => state.hospital);
   useEffect(() => {
     bouncy.register();
   }, []);
@@ -98,13 +100,11 @@ const HealthFacilityLocator = ({
   return (
     <>
       <Section>
-        <SectionTitle>
-          Health Facility Locator
-        </SectionTitle>
+        <SectionTitle>Health Facility Locator</SectionTitle>
         {isLoaded && userLocation ? (
           <MapContainer>
             <GoogleMap
-              mapContainerStyle={{ width: '100%', height: '100%' }}
+              mapContainerStyle={{ width: "100%", height: "100%" }}
               center={userLocation}
               zoom={12}
             >
@@ -112,7 +112,7 @@ const HealthFacilityLocator = ({
                 position={userLocation}
                 icon={{ url: "https://example.com/location-marker.png" }}
               />
-              {hospitals?.map((hospital: Hospital) => (
+              {hospitals?.hospitals?.length > 0 && hospitals.hospitals.map((hospital: Hospital) => (
                 <Marker
                   key={hospital.$id}
                   position={{
@@ -132,7 +132,7 @@ const HealthFacilityLocator = ({
           </MapContainer>
         ) : (
           <LoadingContainer>
-            <l-bouncy size={40} color={'#319795'}></l-bouncy>
+            <l-bouncy size={40} color={"#319795"}></l-bouncy>
           </LoadingContainer>
         )}
       </Section>

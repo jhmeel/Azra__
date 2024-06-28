@@ -10,7 +10,7 @@ import {
   Permission,
 } from "appwrite";
 import Config from "../Config";
-import { Hospital as THospital, Message as TMessage } from "../types";
+import { Hospital, Hospital as THospital, Message as TMessage } from "../types";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -301,8 +301,14 @@ const Chat = () => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const { hospital: currentUser } = authRes as { hospital: THospital };
-  
+  const [currentUser, setCurrentUser] = useState<Hospital|null>(null);
+
+  useEffect(() => {
+    if (authRes?.hospital) {
+      setCurrentUser(authRes?.hospital?.documents[0]);
+    } 
+  }, [authRes]);
+
   const permissions = [Permission.write(Role.user(authRes?.session?.userId))];
   useEffect(() => {
     if (currentUser) {

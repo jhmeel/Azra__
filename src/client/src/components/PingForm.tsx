@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { CLEAR_ERRORS, NEW_PING_RESET } from "../constants/index.js";
 import { useSelector } from "react-redux";
 import { newPing } from "../actions/index.js";
-import { Hospital } from "../types/index.js";
+import { Hospital, Patient } from "../types/index.js";
 import { useNavigate } from "react-router-dom";
 
 enum Severity {
@@ -25,13 +25,13 @@ function PingForm({
 }) {
   const [complaint, setComplaint] = useState<string>("");
   const [image, setImage] = useState<string | undefined>("");
-  const [severity, setSeverity] = useState<Severity>(Severity.Moderate); // Default to Moderate severity
+  const [severity, setSeverity] = useState<Severity>(Severity.Moderate); 
   const { authRes } = useSelector((state: RootState) => state.auth);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<Patient|null>(null);
 
   useEffect(() => {
     if (authRes?.patient) {
-      setCurrentUser(authRes?.patient);
+      setCurrentUser(authRes?.patient?.documents[0]);
     } 
   }, [authRes]);
 
@@ -303,6 +303,7 @@ const SeveritySelector = styled.div`
 const SeverityButton = styled.button<{ active: boolean; severity: Severity }>`
   padding: 8px 16px;
   border-radius: 4px;
+  font-size:12px;
   background-color: ${(props) =>
     props.active
       ? props.severity === Severity.Critical

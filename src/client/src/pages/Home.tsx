@@ -4,7 +4,7 @@ import { useLoadScript } from "@react-google-maps/api";
 import { Menu, X } from "lucide-react";
 import { FaTwitter, FaInstagram, FaLinkedin, FaFacebook } from "react-icons/fa";
 import styled, { keyframes, createGlobalStyle } from "styled-components";
-import { Coordinate, Role, Hospital as THospital } from "../types";
+import { Coordinate, Hospital, Patient, Role, Hospital as THospital } from "../types";
 import azraLight from "../assets/azra_light.png";
 import HospitalCards from "../components/HospitalItem";
 import HealthFacilityLocator from "../components/HealthFacilityLocator";
@@ -15,59 +15,6 @@ import { RootState } from "../store";
 interface ButtonLink {
   primary?: boolean;
 }
-
-const demoHospitals: Omit<THospital, "$createdAt" | "$updatedAt">[] = [
-  {
-    $id: "1",
-    hospitalName: "Yusuf Dantsoho Memorial Hospital",
-    hospitalNumber: "1234",
-    avatar: "https://images.app.goo.gl/2Csy1sBr372CiKUH7",
-    status: "available",
-    email: "",
-    phone: "",
-    coordinates: "10.5272,7.4396",
-  },
-  {
-    $id: "2",
-    hospitalName: "Ahmadu Bello University Teaching Hospital",
-    hospitalNumber: "5678",
-    avatar: "https://images.app.goo.gl/4DfRj5c9CVQ313yN7",
-    status: "unavailable",
-    email: "",
-    phone: "",
-    coordinates: "11.0801,7.7069",
-  },
-  {
-    $id: "3",
-    hospitalName: "Garki Hospital",
-    hospitalNumber: "91011",
-    avatar: "https://images.app.goo.gl/uovXmwaGaiAGFgf7A",
-    status: "available",
-    email: "",
-    phone: "",
-    coordinates: "9.0765,7.4983",
-  },
-  {
-    $id: "4",
-    hospitalName: "Lagos University Teaching Hospital",
-    hospitalNumber: "121314",
-    avatar: "https://images.app.goo.gl/cahna6dyT2Ny7ceW6",
-    status: "unavailable",
-    email: "",
-    phone: "",
-    coordinates: "6.5244,3.3792",
-  },
-  {
-    $id: "5",
-    hospitalName: "Aminu Kano Teaching Hospital",
-    hospitalNumber: "151617",
-    avatar: "https://images.app.goo.gl/8e3gb4K2oxC2xBEV7",
-    status: "available",
-    email: "",
-    phone: "",
-    coordinates: "12.0022,8.5167",
-  },
-];
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -91,16 +38,16 @@ const Home = () => {
   });
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [hospital, setHospital] = useState(null);
-  const [patient, setPatient] = useState(null);
+  const [currentUser, setCurrentUser] = useState<Hospital|Patient|null>(null);
+  const [hospital, setHospital] = useState<Hospital|null>(null);
+  const [patient, setPatient] = useState<Patient|null>(null);
   const { authRes } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (authRes?.patient) {
-      setPatient(authRes?.patient);
+      setPatient(authRes?.patient?.documents[0]);
     } else if (authRes?.hospital) {
-      setHospital(authRes?.hospital);
+      setHospital(authRes?.hospital?.documents[0]);
     }
   }, [authRes]);
 
@@ -118,10 +65,6 @@ const Home = () => {
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      setHospitals(demoHospitals);
-      setIsLoading(false);
-    }, 2000);
 
     const sr = ScrollReveal();
     sr.reveal(".reveal-left", {
@@ -286,8 +229,6 @@ const Home = () => {
 
         <section className="reveal-bottom">
           <HospitalCards
-            isLoading={isLoading}
-            hospitals={demoHospitals}
             userLocation={userLocation}
             currentUser={currentUser}
           />
@@ -296,7 +237,6 @@ const Home = () => {
         <section className="reveal-bottom">
           <HealthFacilityLocator
             isLoaded={isLoaded}
-            hospitals={demoHospitals}
             userLocation={userLocation}
             pinIconUrl={""}
           />
