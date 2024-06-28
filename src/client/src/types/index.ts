@@ -17,7 +17,7 @@ export interface PingChatTabProps {
 }
 
 export type HospitalSignupData = {
-  name: string;
+  hospitalName: string;
   hospitalNumber: string;
   email: string;
   phone: string;

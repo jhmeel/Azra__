@@ -13,7 +13,6 @@ import { signup } from "../../actions";
 import { LoaderIcon, X } from "lucide-react";
 import styled from "styled-components";
 import Footer from "../../components/Footer";
-import axiosInstance from "../../utils/axiosInstance";
 
 const Container = styled.div`
   min-height: 100vh;
