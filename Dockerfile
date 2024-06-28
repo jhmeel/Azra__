@@ -1,14 +1,14 @@
 # Stage 1: Build the project
-FROM node:alpine3.17 AS builder
+FROM node:18-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install project dependencies
-RUN npm install
+RUN npm ci
 
 # Copy the rest of the application code
 COPY . .
@@ -17,22 +17,26 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Create a minimal production image
-FROM node:alpine3.17 AS deploy
+FROM node:18-alpine AS runner
 
 # Set the working directory
 WORKDIR /app
 
-COPY package.json ./
+# Set environment to production
+ENV NODE_ENV=production
+
+# Copy only package.json and package-lock.json to install production dependencies
+COPY package.json package-lock.json ./
 
 # Install only production dependencies
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 # Copy only the build artifacts from the previous stage
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src ./src
 
-RUN ls
-# Expose the port your application listens on (if needed)
+# Expose the port your application listens on
 EXPOSE 3000
 
 # Start your application
-CMD ["npm","run", "start"]
+CMD ["npm", "run", "start"]
