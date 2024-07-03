@@ -1,57 +1,69 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FaUser, FaKey, FaMapMarkerAlt, FaEnvelope, FaEdit, FaFileAlt, FaCalendarAlt, FaHospital } from "react-icons/fa";
+import { FaKey, FaMapMarkerAlt, FaEnvelope, FaEdit, FaFileAlt, FaCalendarAlt, FaHospital, FaPhone, FaArrowLeft, FaUserCircle } from "react-icons/fa";
 import { toast } from "sonner";
-import Config from "../Config";
 import reverseGeocode from "reverse-geocode";
 import Footer from "../components/Footer";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-
-
-interface Patient {
-  $id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  country: string;
-  phone: string;
-}
+import { useNavigate } from "react-router-dom";
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
-
   margin: 0 auto;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  padding: 40px 20px;
+  position: relative;
+`;
 
-  @media (min-width: 768px) {
-    grid-template-columns: 1fr;
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #43c0b8;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #35a199;
   }
 `;
 
-const Card = styled.div`
-  background-color:#fff;
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 20px;
-  border: 1px solid #ededed;
-  transition: all 0.3s ease;
+const ProfileHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+  border-radius: 15px;
+  padding: 30px;
 
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+`;
+
+const AvatarSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    margin-bottom: 0;
+    margin-right: 30px;
   }
 `;
 
 const AvatarContainer = styled.div`
+  position: relative;
   width: 150px;
   height: 150px;
-  margin: 0 auto;
-  text-align: center;
+  margin-bottom: 15px;
 `;
 
 const AvatarImage = styled.img`
@@ -59,83 +71,116 @@ const AvatarImage = styled.img`
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.3);
+  border: 4px solid #43c0b8;
+  box-shadow: 0 2px 10px rgba(67, 192, 184, 0.3);
 `;
 
-const AvatarUpload = styled.label`
+const ProfileEditBtn = styled.label`
   position: absolute;
-  bottom: 0;
-  right: 0;
-  background: #007bff;
+  bottom: 5px;
+  right: 5px;
+  background: #43c0b8;
   color: white;
   border-radius: 50%;
   padding: 8px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    background: #35a199;
+    transform: scale(1.1);
+  }
+`;
+
+const UserInfo = styled.div`
+  text-align: center;
+
+  @media (min-width: 768px) {
+    text-align: left;
+  }
+`;
+
+const UserName = styled.h2`
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 15px;
+`;
+
+const UserDetail = styled.p`
+  display: flex;
+  align-items: center;
+  color: #555;
+  margin-bottom: 8px;
+  font-size: 1rem;
+
+  svg {
+    margin-right: 10px;
+    color: #43c0b8;
+  }
+`;
+
+const ProfileContent = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 2fr 1fr;
+  }
+`;
+
+const Card = styled.div`
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const CardTitle = styled.h3`
+  font-size: 1.3rem;
+  color: #43c0b8;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #43c0b8;
+  padding-bottom: 10px;
 `;
 
 const Button = styled.button`
   padding: 10px 20px;
-  background: linear-gradient(45deg, #007bff, #00bcd4);
+  background-color: #43c0b8;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  font-size: 1rem;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
   &:hover {
+    background-color: #35a199;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  &.red {
-    background-color: #ef4444;
-    &:hover {
-      background-color: #dc2626;
-    }
-  }
-
-  &.green {
-    background-color: #10b981;
-    &:hover {
-      background-color: #047857;
-    }
-  }
-
-  &.purple {
-    background-color: #8b5cf6;
-    &:hover {
-      background-color: #7c3aed;
-    }
-  }
-
-  &.blue {
-    background-color: #3b82f6;
-    &:hover {
-      background-color: #2563eb;
-    }
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 `;
 
-const StatCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-`;
+const ActionButtons = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
 
-const StatValue = styled.div`
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 5px;
-`;
-
-const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: #888;
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr 1fr;
+  }
 `;
 
 const Modal = styled.div`
@@ -152,38 +197,62 @@ const Modal = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  background: #fff;
   padding: 30px;
-  border-radius: 20px;
+  border-radius: 15px;
   width: 90%;
-  max-width: 500px;
-  border: 1px solid #ededed;
+  max-width: 450px;
+  position: relative;
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 15px;
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
+  color: #43c0b8;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #35a199;
+  }
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 `;
 
 const Input = styled.input`
   padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #333;
-  outline: 1px solid #3e7dbc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #43c0b8;
+  }
+`;
+
+const AvatarPreview = styled.div`
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 20px;
+  border: 3px solid #43c0b8;
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 export const Profile: React.FC = () => {
@@ -197,15 +266,9 @@ export const Profile: React.FC = () => {
   const [country, setCountry] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const { authRes } = useSelector((state: RootState) => state.auth);
-  const [patient, setPatient] = useState<Patient|null>(null);
-
-  useEffect(() => {
-    if (authRes?.patient) {
-      setPatient(authRes?.patient.documents[0]);
-    } 
-  }, [authRes]);
-
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getLocation = () => {
@@ -236,7 +299,7 @@ export const Profile: React.FC = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Profile update logic here
+      // Implement profile update logic here
       toast.success("Profile updated successfully");
       setShowEditModal(false);
     } catch (error) {
@@ -252,7 +315,7 @@ export const Profile: React.FC = () => {
       return;
     }
     try {
-      // Password reset logic here
+      // Implement password reset logic here
       toast.success("Password reset successfully");
       setCurrentPassword("");
       setNewPassword("");
@@ -264,108 +327,113 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      // Avatar upload logic here
-      toast.success("Avatar uploaded successfully");
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast.error("Failed to upload avatar");
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
     <>
       <ProfileContainer>
-        <Card>
-          <AvatarContainer>
-            <AvatarImage src={patient?.avatar} alt="Patient Avatar" />
-            <AvatarUpload htmlFor="avatar-upload">
-              <FaEdit />
-            </AvatarUpload>
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              style={{ display: 'none' }}
-            />
-          </AvatarContainer>
-          <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>{patient?.fullName}</h2>
-          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>{patient?.email}</p>
-          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>{patient?.phone}</p>
-          <Button className="blue" onClick={() => setShowEditModal(true)}>
-            <FaEdit /> Edit Profile
-          </Button>
-        </Card>
-        <Card>
-        <h3 style={{ textAlign: 'center' }}>Location</h3>
-          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>
-            {country ? `Country: ${country}` : "Country: Not Available"}
-          </p>
-          <p style={{ textAlign: 'center', color: '#888', marginBottom: '10px' }}>
-            {location ? `Location: ${location}` : "Location: Not Available"}
-          </p>
-        </Card>
-      </ProfileContainer>
+        <BackButton onClick={() => navigate("/")}>
+          <FaArrowLeft />
+        </BackButton>
+        <ProfileHeader>
+          <AvatarSection>
+            <AvatarContainer>
+              <AvatarImage src={user?.avatar} alt="Patient Avatar" />
+              <ProfileEditBtn htmlFor="avatar-upload">
+                <FaEdit onClick={()=>setShowEditModal(true)}/>
+              </ProfileEditBtn>
+            </AvatarContainer>
+          </AvatarSection>
+          <UserInfo>
+            <UserName>{user?.fullName}</UserName>
+            <UserDetail><FaEnvelope /> {user?.email}</UserDetail>
+            <UserDetail><FaPhone /> {user?.phone}</UserDetail>
+            <UserDetail><FaMapMarkerAlt /> {country || "N/A"}</UserDetail>
+          </UserInfo>
+        </ProfileHeader>
 
-      <ProfileContainer>
-        <Card>
-          <h3 style={{ textAlign: 'center' }}>Quick Actions</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-            <Button className="blue">
-              <FaFileAlt /> View Reports
-            </Button>
-            <Button className="green">
-              <FaCalendarAlt /> Book Appointment
-            </Button>
-            <Button className="purple">
-              <FaHospital /> Visit History
-            </Button>
-            <Button className="red" onClick={() => setShowPasswordModal(true)}>
-              <FaKey /> Reset Password
-            </Button>
-          </div>
-        </Card>
+        <ProfileContent>
+          <Card>
+            <CardTitle>Quick Actions</CardTitle>
+            <ActionButtons>
+              <Button>
+                <FaFileAlt /> View Medical Records
+              </Button>
+              <Button>
+                <FaCalendarAlt /> Schedule Appointment
+              </Button>
+              <Button>
+                <FaHospital /> Visit History
+              </Button>
+              <Button onClick={() => setShowPasswordModal(true)}>
+                <FaKey /> Change Password
+              </Button>
+            </ActionButtons>
+          </Card>
+          <Card>
+            <CardTitle>Location Details</CardTitle>
+            <UserDetail><FaMapMarkerAlt /> {country || "N/A"}</UserDetail>
+            <UserDetail>{location || "N/A"}</UserDetail>
+          </Card>
+        </ProfileContent>
       </ProfileContainer>
 
       {showEditModal && (
         <Modal>
           <ModalContent>
             <CloseButton onClick={() => setShowEditModal(false)}>
-              <X/>
+              <X />
             </CloseButton>
-            <h2>Edit Profile</h2>
+            <CardTitle>Edit Profile</CardTitle>
             <Form onSubmit={handleProfileUpdate}>
+              <AvatarPreview>
+                {avatarPreview ? (
+                  <PreviewImage src={avatarPreview} alt="Avatar Preview" />
+                ) : (
+                  <FaUserCircle size={100} color="#43c0b8" />
+                )}
+              </AvatarPreview>
+              <Input
+              hidden
+              id='avatarSelector'
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+              <label style={{cursor:'pointer', color:'grey'}} htmlFor="avatarSelector">Select avatar</label>
               <Input
                 type="text"
-                value={patient?.fullName}
+                autoFocus
+                value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
+                placeholder="Full Name"
                 required
               />
               <Input
                 type="email"
-                value={patient?.email}
+                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
               />
               <Input
-                type="phone"
-                value={patient?.phone}
+                type="tel"
+                value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Phone"
                 required
               />
               <Button type="submit">
-                <FaUser /> Update
+              Proceed
               </Button>
             </Form>
           </ModalContent>
@@ -376,9 +444,9 @@ export const Profile: React.FC = () => {
         <Modal>
           <ModalContent>
             <CloseButton onClick={() => setShowPasswordModal(false)}>
-              <X/>
+              <X />
             </CloseButton>
-            <h2>Reset Password</h2>
+            <CardTitle>Change Password</CardTitle>
             <Form onSubmit={handlePasswordReset}>
               <Input
                 type="password"
@@ -402,7 +470,7 @@ export const Profile: React.FC = () => {
                 required
               />
               <Button type="submit">
-                <FaKey /> Reset Password
+             Change
               </Button>
             </Form>
           </ModalContent>

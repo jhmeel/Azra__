@@ -72,7 +72,9 @@ export const getHPMessages = catchAsync(
 
     const conversation = await PatientConversation.findOne({
       participants: { $all: [senderId, hospitalToChatId] },
-    }).populate("messages").populate("ping")
+    })
+      .populate("messages")
+      .populate("ping");
 
     if (!conversation) return res.status(200).json([]);
 
@@ -155,7 +157,7 @@ export const hpSendMessage = catchAsync(
     const senderId = req?.user._id;
     try {
       // Check for an existing conversation
-    
+
       let conversation = await PatientConversation.findOne({
         participants: { $all: [senderId, receiverId] },
       });
@@ -171,7 +173,7 @@ export const hpSendMessage = catchAsync(
       const newMessage = new Message({
         senderId,
         receiverId,
-        message:message,
+        message: message,
       });
 
       await newMessage.save();
@@ -181,7 +183,7 @@ export const hpSendMessage = catchAsync(
 
       res.status(201).json({
         success: true,
-        message: "Message sent successfully!",
+        message: newMessage,
         conversation,
       });
     } catch (error: any) {
@@ -213,9 +215,13 @@ export const hpUpdateMessage = catchAsync(
 
 export const hpDeleteMessage = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
-    const { conversationId, messageId } = req.body;
+    const { messageId, receiverId } = req.params;
+  
+    const senderId = req?.user._id;
 
-    const conversation = await PatientConversation.findById(conversationId);
+    const conversation = await PatientConversation.findOne({
+      participants: { $all: [senderId, receiverId] },
+    });
     if (!conversation) {
       return next(new ErrorHandler(404, "Conversation not found"));
     }
@@ -231,15 +237,21 @@ export const hpDeleteMessage = catchAsync(
     res.status(200).json({
       success: true,
       message: "Message deleted successfully!",
+      messages:conversation.messages,
     });
   }
 );
 
 export const hDeleteMessage = catchAsync(
   async (req: any, res: Response, next: NextFunction) => {
-    const { conversationId, messageId } = req.body;
+    const { messageId, receiverId } = req.params;
+  
+    const senderId = req?.user._id;
 
-    const conversation = await HospitalConversation.findById(conversationId);
+
+    const conversation = await HospitalConversation.findOne({
+      participants: { $all: [senderId, receiverId] },
+    });
     if (!conversation) {
       return next(new ErrorHandler(404, "Conversation not found"));
     }
@@ -255,6 +267,7 @@ export const hDeleteMessage = catchAsync(
     res.status(200).json({
       success: true,
       message: "Message deleted successfully!",
+      messages:conversation.messages,
     });
   }
 );

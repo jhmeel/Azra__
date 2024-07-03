@@ -350,14 +350,13 @@ export const getHPChatHistory =
     }
   };
 
-export const deleteMessage =   (token?: string, conversationId?: string, messageId?: string) =>
+export const deleteMessage =   (token?: string, chatId?: string, messageId?: string) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_CHAT_REQUEST });
-      const { data } = await axiosInstance(token, Role.HOSPITAL).delete(
-        `/api/v1/p-message/delete`,
+      const { data } = await axiosInstance(token, Role.HOSPITAL).post(
+        `/api/v1/h-message/delete/${messageId}/${chatId}`,
         {
-          conversationId,
           messageId,
         }
       );
@@ -375,14 +374,13 @@ export const deleteMessage =   (token?: string, conversationId?: string, message
 };
 
 export const hpDeleteMessage =
-  (token?: string, conversationId?: string, messageId?: string) =>
+  (token?: string, chatId?: string, messageId?: string, role?: Role) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_CHAT_REQUEST });
-      const { data } = await axiosInstance(token, Role.HOSPITAL).delete(
-        `/api/v1/p-message/delete`,
+      const { data } = await axiosInstance(token, role).post(
+        `/api/v1/p-message/delete/${messageId}/${chatId}`,
         {
-          conversationId,
           messageId,
         }
       );

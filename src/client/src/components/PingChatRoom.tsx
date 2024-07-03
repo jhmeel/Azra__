@@ -22,6 +22,7 @@ import {
 } from "../actions";
 import { RootState } from "../store";
 import { BiSolidImageAdd } from "react-icons/bi";
+import { BsX } from "react-icons/bs";
 
 const Container = styled.div`
   height: 100vh;
@@ -173,6 +174,27 @@ const PingBanner = styled.div`
   border-radius: 0.5rem;
   margin-bottom: 1rem;
 `;
+const SelectedImagePreview = styled.div`
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+`;
+
+const RemoveImageButton = styled.button`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #e53e3e;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
 
 const PatientChatInterface = () => {
   const [inputMessage, setInputMessage] = useState("");
@@ -276,14 +298,14 @@ const PatientChatInterface = () => {
 
   const handleDeleteMessage = () => {
     dispatch<any>(
-      hpDeleteMessage(accessToken, selectedHospital._id, contextMenu.messageId)
+      hpDeleteMessage(accessToken, selectedHospital?._id, contextMenu?.messageId, role)
     );
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
   };
 
   const handleCopyMessage = () => {
     const message = chatHistory.messages.find(
-      (m) => m._id === contextMenu.messageId
+      (m) => m?._id === contextMenu?.messageId
     );
     navigator.clipboard.writeText(message.content);
     toast.success("Message copied to clipboard");
@@ -297,12 +319,11 @@ const PatientChatInterface = () => {
 
   const renderPing = (ping: any) => (
     <PingBanner>
-      <h3>Conversation Starter</h3>
-      <p>Complaint: {ping.complaint}</p>
-      <p>Severity: {ping.severity}</p>
-      {ping.image && (
+      <p>Complaint: {ping?.complaint}</p>
+      <p>Severity: {ping?.severity}</p>
+      {ping?.image && (
         <img
-          src={ping.image.secureUrl}
+          src={ping?.image.secureUrl}
           alt="Ping"
           style={{ maxWidth: "100%" }}
         />
@@ -378,23 +399,48 @@ const PatientChatInterface = () => {
       </ChatArea>
 
       <InputArea onSubmit={handleSendMessage}>
+      
         <TextInput
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message"
         />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          ref={fileInputRef}
-          style={{ display: "none" }}
-        />
-        <IconButton type="button" onClick={() => fileInputRef.current?.click()}>
-        <BiSolidImageAdd size={24}/>
-        </IconButton>
+         {image ? (
+              <SelectedImagePreview>
+                <img
+                  src={image}
+                  alt="Selected"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
+                />
+                <RemoveImageButton onClick={() => setImage(null)}>
+                  <BsX size={12} color="#fff" />
+                </RemoveImageButton>
+              </SelectedImagePreview>
+            ) : (
+              <>
+               <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              ref={fileInputRef}
+              style={{ display: "none" }}
+            />
+            <IconButton type="button" onClick={() => fileInputRef.current?.click()}>
+            <BiSolidImageAdd color="#0c2d3b" size={24}/>
+            </IconButton>
+              </>
+             
+            )}
+       
+
+
         <SendButton type="submit">
-          <Send size={24} />
+          <Send color="#d3eef9" size={24} />
         </SendButton>
       </InputArea>
     </Container>

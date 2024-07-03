@@ -15,7 +15,6 @@ import {
 import { toast } from "sonner";
 import { Message as TMessage } from "../types/index.js";
 import azraLight from "../assets/azra_light.png";
-import { Image as ImageIcon } from "lucide-react";
 import { SEND_MESSAGE_RESET } from "../constants/index.js";
 import { BiSolidImageAdd } from "react-icons/bi";
 const Container = styled.div`
@@ -30,12 +29,12 @@ const Container = styled.div`
 `;
 
 const HChatHeader = styled.div`
-  background-color: #40bdb5;
+  background: linear-gradient(to right, #4fd1c5, #38b2ac);
+  color: white;
   padding: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   span {
     color: #ffffff;
@@ -343,7 +342,7 @@ const MessageContainer: React.FC = () => {
                     )}
                     <p>{message.message}</p>
                     <small>
-                     {new Date(message.createdAt).toLocaleTimeString()}
+                      {new Date(message.createdAt).toLocaleTimeString()}
                       {message.senderId === user._id && <BsCheck2All />}
                     </small>
                   </MessageBubble>
@@ -388,7 +387,7 @@ const MessageContainer: React.FC = () => {
               </SelectedImagePreview>
             ) : (
               <ImageUploadButton>
-                <BiSolidImageAdd color="#40bdb5" size={24} />
+                <BiSolidImageAdd color="#0c2d3b" size={24} />
                 <input
                   type="file"
                   accept="image/*"

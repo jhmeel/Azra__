@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Unplug } from "lucide-react";
 
 import MainLoader from "./components/Loaders/MainLoader";
+import HospitalAloneRoute from "./components/HospitalAloneRoute";
+import PatientAloneRoute from "./components/PatientAloneRoute";
 
 const Chat = lazy(() => import("./pages/Chat"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -51,10 +53,38 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/ping-chat" element={<PingChat />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/profile"
+            element={
+              <PatientAloneRoute>
+                <Profile />
+              </PatientAloneRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <HospitalAloneRoute>
+                <Chat />
+              </HospitalAloneRoute>
+            }
+          />
+          <Route
+            path="/ping-chat"
+            element={
+              <PatientAloneRoute>
+                <PingChat />
+              </PatientAloneRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <HospitalAloneRoute>
+                <Dashboard />
+              </HospitalAloneRoute>
+            }
+          />
           <Route path="/blog" element={<Blog />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -62,5 +92,5 @@ function App() {
     </>
   );
 }
- 
+
 export default App;

@@ -60,6 +60,9 @@ import {
   UPDATE_HOSPITAL_PASSWORD_FAIL,
   UPDATE_HOSPITAL_PROFILE_RESET,
   UPDATE_HOSPITAL_PASSWORD_RESET,
+  DELETE_CHAT_REQUEST,
+  DELETE_CHAT_SUCCESS,
+  DELETE_CHAT_FAIL,
 } from "../constants";
 import { Action, Hospital, Message, Patient } from "../types";
 
@@ -296,7 +299,7 @@ interface IInitialChatStateProp {
   loading: boolean;
   hospital: Hospital | null;
   activeChats: Hospital[] | null;
-  chatHistory: Message[] | null;
+  chatHistory: any[];
   selectedChat: Hospital | null;
   message_sent_success: boolean | null;
   error: string | null;
@@ -316,6 +319,7 @@ const chatReducer = (state = initialChatState, action: Action) => {
     case GET_ACTIVE_CHATS_REQUEST:
     case SEND_MESSAGE_REQUEST:
     case GET_HOSPITAL_CHAT_HISTORY_REQUEST:
+    case DELETE_CHAT_REQUEST:
       return {
         ...state,
         loading: true,
@@ -323,8 +327,14 @@ const chatReducer = (state = initialChatState, action: Action) => {
     case SEND_MESSAGE_SUCCESS:
       return {
         ...state,
+        chatHistory: state.chatHistory ? [...state.chatHistory, action.payload.message] : [action.payload.message],
         message_sent_success: true,
         loading: false,
+      };
+    case DELETE_CHAT_SUCCESS:
+      return {
+        loading: false,
+        chatHistory: state.chatHistory?.filter(msg => msg._id !== action.payload.messageId),
       };
     case SEND_MESSAGE_FAIL:
       return {
@@ -366,6 +376,7 @@ const chatReducer = (state = initialChatState, action: Action) => {
 
     case GET_ACTIVE_CHATS_FAIL:
     case GET_HOSPITAL_CHAT_HISTORY_FAIL:
+    case DELETE_CHAT_FAIL:
       return {
         ...state,
         loading: false,

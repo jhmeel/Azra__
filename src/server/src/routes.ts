@@ -91,11 +91,11 @@ Router.get(
 Router.get("/active-chat", authorizer, getHospitals);
 Router.get("/h-chats-history/:id", authorizer, getHMessages);
 Router.post("/h-message-send/:id", authorizer, hSendMessage);
-Router.route("/h-message/delete").delete(authorizer, hDeleteMessage);
+Router.route("/h-message/delete/:messageId/:receiverId").post(authorizer, hDeleteMessage);
 
 Router.post("/p-message-send/:id", authorizer, hpSendMessage);
 Router.get("/p-chats-history/:id", authorizer, getHPMessages);
-Router.route("/p-message/delete").delete(authorizer, hpDeleteMessage);
+Router.route("/p-message/delete/:messageId/:receiverId").post(authorizer, hpDeleteMessage);
 Router.route("/p-message/update").put(authorizer, hpUpdateMessage);
 
 export default Router;
