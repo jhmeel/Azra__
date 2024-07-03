@@ -13,7 +13,7 @@ import {
   deleteMessage,
 } from "../actions";
 import { toast } from "sonner";
-import {Message as TMessage } from "../types/index.js";
+import { Message as TMessage } from "../types/index.js";
 import azraLight from "../assets/azra_light.png";
 import { Image as ImageIcon } from "lucide-react";
 import { SEND_MESSAGE_RESET } from "../constants/index.js";
@@ -159,10 +159,13 @@ const RemoveImageButton = styled.button`
   cursor: pointer;
 `;
 
-const MessageOptionsModal = styled.div<{ fromMe: boolean; position: { x: number; y: number } }>`
+const MessageOptionsModal = styled.div<{
+  fromMe: boolean;
+  position: { x: number; y: number };
+}>`
   position: absolute;
-  left: ${props => props.position.x}px;
-  top: ${props => props.position.y}px;
+  left: ${(props) => props.position.x}px;
+  top: ${(props) => props.position.y}px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -200,7 +203,10 @@ const MessageContainer: React.FC = () => {
   const [message, setMessage] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ messageId: string | null; position: { x: number; y: number } }>({
+  const [contextMenu, setContextMenu] = useState<{
+    messageId: string | null;
+    position: { x: number; y: number };
+  }>({
     messageId: null,
     position: { x: 0, y: 0 },
   });
@@ -250,14 +256,17 @@ const MessageContainer: React.FC = () => {
     }
   };
 
-  const handleMessageRightClick = useCallback((e: React.MouseEvent, messageId: string) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setContextMenu({
-      messageId,
-      position: { x: e.clientX - rect.left, y: e.clientY - rect.top },
-    });
-  }, []);
+  const handleMessageRightClick = useCallback(
+    (e: React.MouseEvent, messageId: string) => {
+      e.preventDefault();
+      const rect = e.currentTarget.getBoundingClientRect();
+      setContextMenu({
+        messageId,
+        position: { x: e.clientX - rect.left, y: e.clientY - rect.top },
+      });
+    },
+    []
+  );
 
   const handleCopy = (message: string) => {
     navigator.clipboard.writeText(message);
@@ -272,14 +281,17 @@ const MessageContainer: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (contextMenu.messageId && !(event.target as Element).closest('.message-options-modal')) {
+      if (
+        contextMenu.messageId &&
+        !(event.target as Element).closest(".message-options-modal")
+      ) {
         setContextMenu({ messageId: null, position: { x: 0, y: 0 } });
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [contextMenu]);
 
@@ -300,7 +312,9 @@ const MessageContainer: React.FC = () => {
           }}
         >
           <img width={200} src={azraLight} alt="Azra Light" />
-          <p style={{ color: "#666666", marginTop: "1rem", fontSize: "1.1rem" }}>
+          <p
+            style={{ color: "#666666", marginTop: "1rem", fontSize: "1.1rem" }}
+          >
             Select a chat to start messaging
           </p>
         </div>
@@ -329,7 +343,7 @@ const MessageContainer: React.FC = () => {
                     )}
                     <p>{message.message}</p>
                     <small>
-                      {extractTime(message.createdAt)}{" "}
+                     {new Date(message.createdAt).toLocaleTimeString()}
                       {message.senderId === user._id && <BsCheck2All />}
                     </small>
                   </MessageBubble>
@@ -339,10 +353,14 @@ const MessageContainer: React.FC = () => {
                       fromMe={message.senderId === user._id}
                       position={contextMenu.position}
                     >
-                      <MessageOptionButton onClick={() => handleCopy(message.message)}>
+                      <MessageOptionButton
+                        onClick={() => handleCopy(message.message)}
+                      >
                         <BsCopy /> Copy
                       </MessageOptionButton>
-                      <MessageOptionButton onClick={() => handleDelete(message._id)}>
+                      <MessageOptionButton
+                        onClick={() => handleDelete(message._id)}
+                      >
                         <BsTrash /> Delete
                       </MessageOptionButton>
                     </MessageOptionsModal>
