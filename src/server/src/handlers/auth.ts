@@ -1,61 +1,59 @@
+import bcrypt from "bcryptjs";
 import catchAsync from "../middlewares/catchAsync.js";
-import {
-  Client,
-  Users,
-  Databases,
-  ID,
-  Account,
-  Query,
-  OAuthProvider,
-} from "node-appwrite";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import passport from "passport";
 import Config from "../config/config.js";
-import ErrorHandler from "./errorHandler.js";
+import Patient from "../models/patient.js";
+import Hospital from "../models/hospital.js";
 import {
-  loginSchema,
   hospitalSignUpSchema,
+  loginSchema,
   patientSignUpSchema,
 } from "../schemas/index.js";
+import ErrorHandler from "./errorHandler.js";
+import { createSession, deleteSession } from "../providers/session.js";
 import { Request, Response, NextFunction } from "express";
-import { Role } from "./types/index.js";
-const client = new Client()
-  .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
-  .setProject(Config.APPWRITE.PROJECT_ID)
-  .setKey(Config.APPWRITE.APPWRITE_SECRET);
 
-const users = new Users(client);
-const database = new Databases(client);
-const account = new Account(client);
-
-const { DATABASE_ID, HOSPITAL_COLLECTION_ID, PATIENT_COLLECTION_ID } =
-  Config.APPWRITE;
-
-  export const onPatientOauthSignUp =  catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-    const redirectUrl = await account.createOAuth2Token(
-      OAuthProvider.Google,
-      "https://distinct-reward-nosy-attraction-beta.pipeops.app/api/v1/auth/p-oauth/success",
-      "https://distinct-reward-nosy-attraction-beta.pipeops.app/api/v1/auth/failure"
-    );
-  
-    res.redirect(redirectUrl);
-  });
-  
-  export const OnPatientOauthSignUpSuccess =  catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-    const { userId, secret } = req.query;
-  
-    try {
-      const session = await account.createSession(userId, secret);
-  
-      res.status(201).json({
-        success: true,
-        message: "Sign up successful! Please check your email for confirmation.",
-        session,
-      });
-    } catch (error:any) {
-      return next(new ErrorHandler(400, error.message));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: Config.GOOGLE.CLIENT_ID,
+      clientSecret: Config.GOOGLE.CLIENT_SECRET,
+      callbackURL: `${Config.BASE_URL}/auth/google/callback`,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let patient = await Patient.findOne({ googleId: profile.id });
+        if (!patient) {
+          patient = await Patient.create({
+            googleId: profile.id,
+            email: profile?.emails[0].value,
+            fullName: profile.displayName,
+            avatar: profile?.photos[0].value,
+          });
+        }
+        return done(null, patient);
+      } catch (error) {
+        return done(error, null);
+      }
     }
-  });
+  )
+);
+
+passport.serializeUser((patient, done) => {
+  done(null, patient?.id);
+});
+
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    const patient = await Patient.findById(id);
+    done(null, patient);
+  } catch (error) {
+    done(error, null);
+  }
+});
+
+export default passport;
 
 export const HospitalSignup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -72,48 +70,25 @@ export const HospitalSignup = catchAsync(
     if (error) return next(new ErrorHandler(400, error.details[0].message));
 
     try {
-      const hospitalList = await users.list([Query.equal("email", email)]);
-
-      if (hospitalList.total > 0) {
+      const existingHospital = await Hospital.findOne({ email });
+      if (existingHospital) {
         return next(new ErrorHandler(400, "Email is already registered."));
       }
 
-      const hospital = await users.create(
-        ID.unique(),
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const newHospital = new Hospital({
         email,
         phone,
-        password,
-        hospitalName
-      );
-      try {
-        await database.createDocument(
-          DATABASE_ID,
-          HOSPITAL_COLLECTION_ID,
-          ID.unique(),
-          {
-            userId: hospital.$id,
-            email,
-            phone,
-            hospitalName: hospitalName.toString(),
-            hospitalNumber,
-            coordinates,
-          }
-        );
-      } catch (documentError) {
-        await users.delete(hospital.$id);
-        throw documentError;
-      }
-
-      const session = await account.createEmailPasswordSession(email, password);
-
-      res.status(201).json({
-        success: true,
-        message:
-          "Sign up successful! Please check your email for confirmation.",
-        role: Role.HOSPITAL,
-        session,
-        hospital,
+        password: hashedPassword,
+        hospitalName,
+        hospitalNumber,
+        coordinates,
       });
+
+      await newHospital.save();
+     
+      return createSession(newHospital, 200, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }
@@ -128,20 +103,16 @@ export const HospitalLogin = catchAsync(
     if (error) return next(new ErrorHandler(400, error.details[0].message));
 
     try {
-      const session = await account.createEmailPasswordSession(email, password);
-      const hospital = await database.listDocuments(
-        DATABASE_ID,
-        HOSPITAL_COLLECTION_ID,
-        [Query.equal("email", [email])]
-      );
+      const hospital = await Hospital.findOne({ email });
+      if (!hospital) {
+        return next(new ErrorHandler(400, "Invalid email or password."));
+      }
 
-      res.status(200).json({
-        success: true,
-        message: "Login successful!",
-        role: Role.HOSPITAL,
-        hospital: hospital.documents[0],
-        session,
-      });
+      const isMatch = await bcrypt.compare(password, hospital.password);
+      if (!isMatch) {
+        return next(new ErrorHandler(400, "Invalid email or password."));
+      }
+      return createSession(hospital, 200, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }
@@ -152,49 +123,29 @@ export const PatientSignup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, fullName, phone } = req.body;
 
-    const { error } = patientSignUpSchema.validate(req.body);
-    if (error) return next(new ErrorHandler(400, error.details[0].message));
+    // const { error } = patientSignUpSchema.validate(req.body);
+
+    // if (error) return next(new ErrorHandler(400, error.details[0].message));
 
     try {
-      const patientList = await users.list([Query.equal("email", email)]);
-
-      if (patientList.total > 0) {
+      const existingPatient = await Patient.findOne({ email });
+      if (existingPatient) {
         return next(new ErrorHandler(400, "Email is already registered."));
       }
 
-      const patient = await users.create(
-        ID.unique(),
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const newPatient = new Patient({
         email,
         phone,
-        password,
-        fullName
-      );
-      try {
-        await database.createDocument(
-          DATABASE_ID,
-          PATIENT_COLLECTION_ID,
-          ID.unique(),
-          {
-            userId: patient.$id,
-            email,
-            phone,
-            fullName,
-          }
-        );
-      } catch (documentError) {
-        await users.delete(patient.$id);
-        throw documentError;
-      }
-
-      const session = await account.createEmailPasswordSession(email, password);
-
-      res.status(201).json({
-        success: true,
-        message: "Sign up successful!.",
-        role: Role.PATIENT,
-        patient,
-        session,
+        password: hashedPassword,
+        fullName,
       });
+
+      await newPatient.save();
+
+    
+      return createSession(newPatient, 200, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }
@@ -209,34 +160,34 @@ export const PatientLogin = catchAsync(
     if (error) return next(new ErrorHandler(400, error.details[0].message));
 
     try {
-      const session = await account.createEmailPasswordSession(email, password);
-      const patient = await database.listDocuments(
-        DATABASE_ID,
-        PATIENT_COLLECTION_ID,
-        [Query.equal("email", [email])]
-      );
-      res.status(200).json({
-        success: true,
-        message: "Login successful!",
-        role: Role.PATIENT,
-        patient,
-        session,
-      });
+      const patient = await Patient.findOne({ email });
+      if (!patient) {
+        return next(new ErrorHandler(400, "Invalid email or password."));
+      }
+
+      const isMatch = await bcrypt.compare(password, patient.password);
+      if (!isMatch) {
+        return next(new ErrorHandler(400, "Invalid email or password."));
+      }
+
+      return createSession(patient, 200, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(400, error.message));
     }
   }
 );
 
-
-
-
 export const BulkHospitalSignup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const hospitals  = req.body;
+    const hospitals = req.body;
 
     if (!Array.isArray(hospitals)) {
-      return next(new ErrorHandler(400, 'Invalid input format. Expected an array of hospitals.'));
+      return next(
+        new ErrorHandler(
+          400,
+          "Invalid input format. Expected an array of hospitals."
+        )
+      );
     }
 
     const results = [];
@@ -252,55 +203,39 @@ export const BulkHospitalSignup = catchAsync(
 
       const { error } = hospitalSignUpSchema.validate(hospitalData);
       if (error) {
-        results.push({ email, success: false, message: error.details[0].message });
+        results.push({
+          email,
+          success: false,
+          message: error.details[0].message,
+        });
         continue;
       }
 
       try {
-        const hospitalList = await users.list([Query.equal("email", email)]);
-
-        if (hospitalList.total > 0) {
-          results.push({ email, success: false, message: "Email is already registered." });
+        const existingHospital = await Hospital.findOne({ email });
+        if (existingHospital) {
+          results.push({
+            email,
+            success: false,
+            message: "Email is already registered.",
+          });
           continue;
         }
 
-        const hospital = await users.create(
-          ID.unique(),
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        const newHospital = new Hospital({
           email,
           phone,
-          password,
-          hospitalName
-        );
+          password: hashedPassword,
+          hospitalName,
+          hospitalNumber,
+          coordinates,
+        });
 
-        try {
-          await database.createDocument(
-            DATABASE_ID,
-            HOSPITAL_COLLECTION_ID,
-            ID.unique(),
-            {
-              userId: hospital.$id,
-              email,
-              phone,
-              hospitalName: hospitalName.toString(),
-              hospitalNumber,
-              coordinates,
-            }
-          );
+        await newHospital.save();
 
-          const session = await account.createEmailPasswordSession(email, password);
-
-          results.push({
-            email,
-            success: true,
-            message: "Sign up successful! Please check your email for confirmation.",
-            role: Role.HOSPITAL,
-            session,
-            hospital,
-          });
-        } catch (documentError) {
-          await users.delete(hospital.$id);
-          results.push({ email, success: false, message: documentError });
-        }
+        results.push({ email, success: true });
       } catch (error: any) {
         results.push({ email, success: false, message: error.message });
       }

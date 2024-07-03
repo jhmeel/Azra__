@@ -10,7 +10,7 @@ import {
   MessageSquareShare,
 } from "lucide-react";
 import { getDistanceFromLatLonInKm } from "../utils/formatter";
-import { Coordinate, Hospital } from "../types";
+import { Coordinate, Hospital, Role } from "../types";
 import PingForm from "./PingForm";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ import HospitalProfileViewer from "./HospitalProfileViewer";
 
 const SectionWrapper = styled.section`
   width: 100%;
-  margin-top: 3rem;
+  margin-top: 1rem;
   padding: 0 1rem;
 
   @media (min-width: 640px) {
@@ -150,10 +150,8 @@ const HospitalCards = ({
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [pingFormActive, setPingFormActive] = useState<boolean>(false);
   const [viewProfile, setViewProfile] = useState<boolean>(false);
-  const [selectedHospital, setSelectedHospital] = useState<Omit<
-    Hospital,
-    "$createdAt" | "$updatedAt"
-  > | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<
+    Hospital|null>(null);
 
   const {
     hospitals: nearHospitals,
@@ -161,6 +159,10 @@ const HospitalCards = ({
     loading,
   } = useSelector((state: RootState) => state.hospital);
 
+  const {
+ accessToken,
+ role
+  } = useSelector((state: RootState) => state.auth);
   
   useEffect(() => {
     bouncy.register();
@@ -175,7 +177,7 @@ const HospitalCards = ({
       dispatch<any>({ type: CLEAR_ERRORS });
     }
     dispatch<any>(
-      fetchNearByHospitals(currentUser?.session?.secret, {
+      fetchNearByHospitals(accessToken, {
         ...userLocation,
         range: Number(selectedDistance),
         status: selectedStatus,
@@ -205,21 +207,21 @@ const HospitalCards = ({
   };
 
   const handlePing = (
-    hospital: Omit<Hospital, "$createdAt" | "$updatedAt">
+    hospital: Hospital
   ) => {
     setPingFormActive(!pingFormActive);
     setSelectedHospital(hospital);
   };
 
   const openChat = async (
-    hospital: Omit<Hospital, "$createdAt" | "$updatedAt">
+    hospital: Hospital
   ) => {
     navigate("/ping-chat", {
       state: { hospital },
     });
   };
   const onViewProfile = (
-    hospital: Omit<Hospital, "$createdAt" | "$updatedAt">
+    hospital: Hospital
   ) => {
     setViewProfile(true);
     setSelectedHospital(hospital);
@@ -365,17 +367,17 @@ const HospitalCards = ({
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center" }}>
             {" "}
-            <l-bouncy size={35} color={"#4a5568"}></l-bouncy>
+            <l-bouncy size={40} color={"#319795"}></l-bouncy>
           </div>
-        ) : nearHospitals?.hospitals?.length === 0 ? (
+        ) : nearHospitals?.length === 0 ? (
           <AlertMessage>
             No hospitals found matching your search criteria
           </AlertMessage>
         ) : (
           <CardGrid>
-            {nearHospitals?.hospitals?.map(
-              (hospital: Omit<Hospital, "$createdAt" | "$updatedAt">) => (
-                <Card key={hospital.$id}>
+            {nearHospitals?.map(
+              (hospital: Hospital) => (
+                <Card key={hospital._id}>
                   <div
                     style={{
                       display: "flex",
@@ -419,18 +421,18 @@ const HospitalCards = ({
                         style={{
                           fontSize: "0.875rem",
                           color:
-                            hospital.availabilityStatus === "Available"
+                            hospital.status === "Available"
                               ? "#48bb78"
                               : "#f56565",
                           marginBottom: "0.5rem",
                         }}
                       >
-                        {hospital.availabilityStatus === "Available"
+                        {hospital.status === "Available"
                           ? "Available"
                           : "Not Available"}
                         <span
                           className={
-                            hospital.availabilityStatus !== "UnAvailable"
+                            hospital.status !== "UnAvailable"
                               ? "ripple-animation"
                               : ""
                           }
@@ -446,9 +448,12 @@ const HospitalCards = ({
                         )}{" "}
                         km
                       </div>
-                      <Rating rating={hospital.rating} />
+                      <Rating fontSize={24} rating={hospital.rating} />
                     </div>
                   </div>
+                  
+                  {role?.toLowerCase() !== Role.HOSPITAL.toLowerCase() && 
+                  <>
                   <div
                     style={{
                       height: "1px",
@@ -499,6 +504,9 @@ const HospitalCards = ({
                       />
                     </div>
                   </div>
+                  </>
+                  }
+                 
                 </Card>
               )
             )}

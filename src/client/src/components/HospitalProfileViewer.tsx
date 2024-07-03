@@ -47,7 +47,7 @@ const HospitalProfileViewer = ({
   hospital,
   onClose,
 }: {
-  hospital: Omit<Hospital, "$updatedAt"> | null;
+  hospital:Hospital | null;
   onClose: () => void;
 }) => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -85,7 +85,7 @@ const HospitalProfileViewer = ({
           <HMetaInfo>
             <div className="name-status">
               <h2>{hospital?.hospitalName || "N/A"}</h2>
-              {hospital?.availabilityStatus == "Available" && (
+              {hospital?.status == "Available" && (
                 <span className="active-ripple"></span>
               )}
 
@@ -93,24 +93,24 @@ const HospitalProfileViewer = ({
                 className="h-p-status"
                 style={{
                   borderColor:
-                    hospital?.availabilityStatus == "Available"
+                    hospital?.status == "Available"
                       ? "green"
                       : "crimson",
                   color:
-                    hospital?.availabilityStatus == "Available"
+                    hospital?.status == "Available"
                       ? "green"
                       : "crimson",
                 }}
               >
-                {hospital?.availabilityStatus == "Available"
-                  ? hospital?.availabilityStatus
+                {hospital?.status == "Available"
+                  ? hospital?.status
                   : "N/A"}
               </span>
             </div>
             <p className="h-p-joined">
               Joined on:{" "}
-              {hospital?.$createdAt
-                ? new Date(hospital.$createdAt).toLocaleDateString("en-US", {
+              {hospital?.createdAt
+                ? new Date(hospital.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",

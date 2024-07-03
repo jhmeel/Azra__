@@ -7,9 +7,6 @@ import { Unplug } from "lucide-react";
 import MainLoader from "./components/Loaders/MainLoader";
 
 const Chat = lazy(() => import("./pages/Chat"));
-const HospitalPingChatRoom = lazy(
-  () => import("./components/HospitalPingChatRoom")
-);
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NotFound = lazy(() => import("./pages/Notfound"));
 const PingChat = lazy(() => import("./components/PingChatRoom"));
@@ -57,7 +54,6 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/ping-chat" element={<PingChat />} />
-          <Route path="/h-ping-chat" element={<HospitalPingChatRoom />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="*" element={<NotFound />} />

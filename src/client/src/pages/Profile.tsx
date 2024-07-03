@@ -3,20 +3,12 @@ import styled from "styled-components";
 import { FaUser, FaKey, FaMapMarkerAlt, FaEnvelope, FaEdit, FaFileAlt, FaCalendarAlt, FaHospital } from "react-icons/fa";
 import { toast } from "sonner";
 import Config from "../Config";
-import { Client, Databases } from "appwrite";
 import reverseGeocode from "reverse-geocode";
 import Footer from "../components/Footer";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 
-const client = new Client()
-  .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
-  .setProject(Config.APPWRITE.PROJECT_ID);
-
-const database = new Databases(client);
-
-const { PATIENT_COLLECTION_ID, DATABASE_ID } = Config.APPWRITE;
 
 interface Patient {
   $id: string;

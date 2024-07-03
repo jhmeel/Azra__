@@ -1,75 +1,61 @@
-import { Account, Client, Databases, Query } from "node-appwrite";
 import Config from "../config/config.js";
 import ErrorHandler from "../handlers/errorHandler.js";
 import { Request, Response, NextFunction } from "express";
+import Hospital from "../models/hospital.js";
+import Patient from "../models/patient.js";
+import catchAsync from "./catchAsync.js";
+import { promisify } from "util";
+import jwt from "jsonwebtoken";
+import { User } from "../types.js";
 
-const client = new Client()
-  .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
-  .setProject(Config.APPWRITE.PROJECT_ID);
-
-const { HOSPITAL_COLLECTION_ID, DATABASE_ID, PATIENT_COLLECTION_ID } =
-  Config.APPWRITE;
-
-const database = new Databases(client);
-const account = new Account(client);
-
-const getInfo = async (id: string, isHospital: boolean) => {
+const getInfo = async (id: string, isHospital: boolean): Promise<User> => {
   try {
-    const entityCollectionId = isHospital
-      ? HOSPITAL_COLLECTION_ID
-      : PATIENT_COLLECTION_ID;
-    const entity = await database.listDocuments(
-      DATABASE_ID,
-      entityCollectionId,
-      [Query.equal("userId", [id])]
-    );
+    let entity;
+  
+    if (isHospital) {
+      entity = await Hospital.findById(id);
+    } else {
+      entity = await Patient.findById(id);
+    }
 
-    return entity.documents[0];
+    if (!entity) {
+      throw new Error("Entity not found");
+    }
+    return entity;
   } catch (error) {
     throw error;
   }
 };
+const authMiddleware = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { JWT_SECRETE_KEY } = Config.JWT;
+    let token;
+    let headers: string = req.headers["Authorization"];
 
-const authMiddleware = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  const role = req.headers.role;
-
-  if (!authHeader || typeof authHeader !== "string") {
-    return next(new ErrorHandler(401, "Unauthorized access"));
-  }
-  if (!role || typeof role !== "string") {
-    return next(new ErrorHandler(401, "Missing entity role"));
-  }
-  const sessionSecret = authHeader.replace("Bearer:", "");
-
-  if (!sessionSecret) {
-    return next(new ErrorHandler(401, "Unauthorized access"));
-  }
-
-  try {
-    // Verify the session
-    client.setSession(sessionSecret);
-    const session = await account.get();
-
-    if (!session) {
-      return next(new ErrorHandler(401, "Invalid session"));
+    if (headers && headers.startsWith("Bearer")) {
+      token = headers.split(":")[1]; // Split by space to get the token part
+    } else if (req.cookies?.accessToken) {
+      token = req.cookies.accessToken;
     }
 
-    const entity = await getInfo(session.$id, role === "HOSPITAL");
-
-    if (!entity) {
-      return next(new ErrorHandler(404, `${role} not found`));
+    const role = req.headers.role;
+    if (!role || typeof role !== "string") {
+      return next(new ErrorHandler(401, "Missing entity role"));
     }
-    (req as any)[role.toLowerCase()] = role;
+
+    if (!token) {
+      return next(new ErrorHandler(401, "Missing auth token"));
+    }
+
+    try {
+      const verified: any = await promisify(jwt.verify)(token, JWT_SECRETE_KEY);
+      req.user = await getInfo(verified?.id, role.toLowerCase() === "hospital");
+    } catch (error: any) {
+      return next(new ErrorHandler(401, error.message));
+    }
 
     next();
-  } catch (error: any) {
-    return next(new ErrorHandler(401, "Unauthorized access", error));
   }
-};
+);
 
 export default authMiddleware;

@@ -25,41 +25,58 @@ import {
   GET_ACTIVE_CHATS_FAIL,
   GET_ACTIVE_CHATS_REQUEST,
   GET_ACTIVE_CHATS_SUCCESS,
-  GET_CHAT_HISTORY_FAIL,
-  GET_CHAT_HISTORY_REQUEST,
-  GET_CHAT_HISTORY_SUCCESS,
   NEW_PING_FAIL,
   NEW_PING_REQUEST,
   NEW_PING_SUCCESS,
   NEW_PING_RESET,
   UPDATE_PING_RESET,
   DELETE_PING_RESET,
+  SET_SELECTED_CHAT,
+  SET_MESSAGES,
+  GET_HOSPITAL_CHAT_HISTORY_REQUEST,
+  GET_HOSPITAL_CHAT_HISTORY_SUCCESS,
+  GET_HOSPITAL_CHAT_HISTORY_FAIL,
+  SEND_MESSAGE_REQUEST,
+  SEND_MESSAGE_SUCCESS,
+  SEND_MESSAGE_FAIL,
+  CREATE_REVIEW_REQUEST,
+  CREATE_REVIEW_SUCCESS,
+  CREATE_REVIEW_FAIL,
+  DELETE_REVIEW_REQUEST,
+  DELETE_REVIEW_SUCCESS,
+  DELETE_REVIEW_FAIL,
+  UPDATE_REVIEW_REQUEST,
+  UPDATE_REVIEW_SUCCESS,
+  UPDATE_REVIEW_FAIL,
+  SEND_MESSAGE_RESET,
+  CREATE_REVIEW_RESET,
+  UPDATE_REVIEW_RESET,
+  DELETE_REVIEW_RESET,
+  UPDATE_HOSPITAL_PROFILE_REQUEST,
+  UPDATE_HOSPITAL_PASSWORD_REQUEST,
+  UPDATE_HOSPITAL_PROFILE_SUCCESS,
+  UPDATE_HOSPITAL_PASSWORD_SUCCESS,
+  UPDATE_HOSPITAL_PROFILE_FAIL,
+  UPDATE_HOSPITAL_PASSWORD_FAIL,
+  UPDATE_HOSPITAL_PROFILE_RESET,
+  UPDATE_HOSPITAL_PASSWORD_RESET,
 } from "../constants";
-import { Action, Hospital, Patient } from "../types";
-
-// Initial states
+import { Action, Hospital, Message, Patient } from "../types";
 
 interface AuthState {
   loading: boolean;
-  authRes:{
-      patient?: Patient;
-      hospital?: Hospital;
-      session?:  any;
-      role?: string;
-    
-  }
-  error?: string;
+  user: Patient | Hospital | null;
+  role: string | null;
+  error: string | null;
+  accessToken: string | null;
 }
 
 const initialAuthState: AuthState = {
   loading: false,
-  authRes: {
-    patient:undefined,
-    hospital: undefined,
-    session: null,
-    role: undefined,
-  },
-  error: undefined,
+  user: null,
+  role: null,
+  error: null,
+  accessToken: null,
 };
 
 const initialDashboardState = {
@@ -83,14 +100,6 @@ const initialHospitalState = {
   error: null,
 };
 
-const initialChatState = {
-  loading: false,
-  hospital: null,
-  activeChats: [],
-  chatHistory: [],
-  error: null,
-};
-
 // Auth reducer
 const authReducer = (state = initialAuthState, action: Action) => {
   switch (action.type) {
@@ -106,7 +115,9 @@ const authReducer = (state = initialAuthState, action: Action) => {
       return {
         ...state,
         loading: false,
-        authRes: action.payload,
+        user: action.payload.user,
+        role: action.payload.role,
+        accessToken: action.payload.accessToken,
       };
 
     case LOGIN_FAIL:
@@ -141,7 +152,7 @@ const dashboardReducer = (state = initialDashboardState, action: Action) => {
       return {
         ...state,
         loading: false,
-        dashboard: action.payload,
+        dashboard: action.payload?.dashboard,
       };
 
     case FETCH_DASHBOARD_FAIL:
@@ -175,20 +186,21 @@ const pingReducer = (state = initialPingState, action: Action) => {
       return {
         ...state,
         loading: false,
-        pings: action.payload,
+        pings: action.payload?.pings,
+        message: action.payload?.message,
       };
     case NEW_PING_SUCCESS:
       return {
         ...state,
         loading: false,
-        message: action.payload,
+        message: action.payload?.message,
       };
 
     case DELETE_PING_SUCCESS:
       return {
         ...state,
         loading: false,
-        message: action.payload,
+        message: action.payload?.message,
       };
 
     case UPDATE_PING_FAIL:
@@ -230,6 +242,8 @@ const hospitalReducer = (state = initialHospitalState, action: Action) => {
   switch (action.type) {
     case FETCH_HOSPITALS_REQUEST:
     case DELETE_HOSPITAL_REQUEST:
+    case UPDATE_HOSPITAL_PROFILE_REQUEST:
+    case UPDATE_HOSPITAL_PASSWORD_REQUEST:
       return {
         ...state,
         loading: true,
@@ -239,18 +253,21 @@ const hospitalReducer = (state = initialHospitalState, action: Action) => {
       return {
         ...state,
         loading: false,
-        hospitals: action.payload,
+        hospitals: action.payload?.hospitals,
       };
-
+    case UPDATE_HOSPITAL_PROFILE_SUCCESS:
+    case UPDATE_HOSPITAL_PASSWORD_SUCCESS:
     case DELETE_HOSPITAL_SUCCESS:
       return {
         ...state,
         loading: false,
-        message: action.payload,
+        message: action.payload.message,
       };
 
     case FETCH_HOSPITALS_FAIL:
     case DELETE_HOSPITAL_FAIL:
+    case UPDATE_HOSPITAL_PROFILE_FAIL:
+    case UPDATE_HOSPITAL_PASSWORD_FAIL:
       return {
         ...state,
         loading: false,
@@ -258,6 +275,8 @@ const hospitalReducer = (state = initialHospitalState, action: Action) => {
       };
 
     case DELETE_HOSPITAL_RESET:
+    case UPDATE_HOSPITAL_PROFILE_RESET:
+    case UPDATE_HOSPITAL_PASSWORD_RESET:
       return {
         ...state,
         loading: false,
@@ -273,33 +292,80 @@ const hospitalReducer = (state = initialHospitalState, action: Action) => {
   }
 };
 
-// Chat reducer
+interface IInitialChatStateProp {
+  loading: boolean;
+  hospital: Hospital | null;
+  activeChats: Hospital[] | null;
+  chatHistory: Message[] | null;
+  selectedChat: Hospital | null;
+  message_sent_success: boolean | null;
+  error: string | null;
+}
+const initialChatState: IInitialChatStateProp = {
+  loading: false,
+  hospital: null,
+  activeChats: [],
+  chatHistory: [],
+  selectedChat: null,
+  message_sent_success: null,
+  error: null,
+};
+
 const chatReducer = (state = initialChatState, action: Action) => {
   switch (action.type) {
     case GET_ACTIVE_CHATS_REQUEST:
-    case GET_CHAT_HISTORY_REQUEST:
+    case SEND_MESSAGE_REQUEST:
+    case GET_HOSPITAL_CHAT_HISTORY_REQUEST:
       return {
         ...state,
         loading: true,
+      };
+    case SEND_MESSAGE_SUCCESS:
+      return {
+        ...state,
+        message_sent_success: true,
+        loading: false,
+      };
+    case SEND_MESSAGE_FAIL:
+      return {
+        ...state,
+        message_sent_success: false,
+        loading: false,
+        error: action.payload,
+      };
+    case SEND_MESSAGE_RESET:
+      return {
+        ...state,
+        message_sent_success: null,
+        loading: false,
       };
 
     case GET_ACTIVE_CHATS_SUCCESS:
       return {
         ...state,
         loading: false,
-        hospital: action.payload?.hospital,
-        activeChats: action.payload?.activeChats,
+        activeChats: action.payload?.hospitals,
       };
 
-    case GET_CHAT_HISTORY_SUCCESS:
+    case GET_HOSPITAL_CHAT_HISTORY_SUCCESS:
       return {
         ...state,
         loading: false,
         chatHistory: action.payload,
       };
+    case SET_SELECTED_CHAT:
+      return {
+        ...state,
+        selectedChat: action.payload,
+      };
+    case SET_MESSAGES:
+      return {
+        ...state,
+        chatHistory: action.payload,
+      };
 
     case GET_ACTIVE_CHATS_FAIL:
-    case GET_CHAT_HISTORY_FAIL:
+    case GET_HOSPITAL_CHAT_HISTORY_FAIL:
       return {
         ...state,
         loading: false,
@@ -315,10 +381,63 @@ const chatReducer = (state = initialChatState, action: Action) => {
   }
 };
 
+const initialReviewState = {
+  loading: false,
+  message: null,
+  error: null,
+};
+
+const reviewReducer = (state = initialReviewState, action: Action) => {
+  switch (action.type) {
+    case CREATE_REVIEW_REQUEST:
+    case DELETE_REVIEW_REQUEST:
+    case UPDATE_REVIEW_REQUEST:
+      return {
+        ...state,
+        loading: true,
+      };
+
+    case CREATE_REVIEW_SUCCESS:
+    case UPDATE_REVIEW_SUCCESS:
+    case DELETE_REVIEW_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        message: action.payload.message,
+      };
+
+    case CREATE_REVIEW_FAIL:
+    case DELETE_REVIEW_FAIL:
+    case UPDATE_REVIEW_FAIL:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+    case CREATE_REVIEW_RESET:
+    case UPDATE_REVIEW_RESET:
+    case DELETE_REVIEW_RESET:
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        message: null,
+      };
+    case CLEAR_ERRORS:
+      return {
+        ...state,
+        error: null,
+      };
+    default:
+      return state;
+  }
+};
+
 export {
   authReducer,
   dashboardReducer,
   pingReducer,
+  reviewReducer,
   hospitalReducer,
   chatReducer,
 };

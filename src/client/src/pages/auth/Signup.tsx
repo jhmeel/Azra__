@@ -300,7 +300,7 @@ const SignupForm = () => {
   } | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>("+234");
 
-  const { authRes, error, loading } = useSelector(
+  const { user, role, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
   const dispatch = useDispatch();
@@ -312,14 +312,14 @@ const SignupForm = () => {
       dispatch({ type: CLEAR_ERRORS });
     }
 
-    if (authRes && authRes.role == Role.HOSPITAL) {
+    if (user && role?.toLowerCase() == Role.HOSPITAL) {
       toast.success("Signup successfully");
       navigate("/dashboard");
-    } else if (authRes && authRes.role == Role.PATIENT) {
+    } else if (user && role?.toLowerCase() == Role.PATIENT) {
       toast.success("Signup successfully");
       navigate("/profile");
     }
-  }, [authRes, dispatch, error, navigate]);
+  }, [user, dispatch, error, navigate]);
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {

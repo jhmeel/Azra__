@@ -9,12 +9,14 @@ import { useSelector } from "react-redux";
 import { newPing } from "../actions/index.js";
 import { Hospital, Patient } from "../types/index.js";
 import { useNavigate } from "react-router-dom";
+import Config from "../Config/index.js";
 
 enum Severity {
   Critical = "Critical",
   Moderate = "Moderate",
   Minor = "Minor",
 }
+
 
 function PingForm({
   selectedHospital,
@@ -26,15 +28,7 @@ function PingForm({
   const [complaint, setComplaint] = useState<string>("");
   const [image, setImage] = useState<string | undefined>("");
   const [severity, setSeverity] = useState<Severity>(Severity.Moderate); 
-  const { authRes } = useSelector((state: RootState) => state.auth);
-  const [currentUser, setCurrentUser] = useState<Patient|null>(null);
-
-  useEffect(() => {
-    if (authRes?.patient) {
-      setCurrentUser(authRes?.patient?.documents[0]);
-    } 
-  }, [authRes]);
-
+  const { user,accessToken } = useSelector((state: RootState) => state.auth);
   const { message, error, loading } = useSelector((state: RootState) => state.ping);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -76,13 +70,13 @@ function PingForm({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+   
     dispatch<any>(
-      newPing(authRes?.session?.secret, {
+      newPing(accessToken, {
         complaint,
-        patientId: currentUser?.$id,
+        patientId: user._id,
         image,
-        hospitalId: selectedHospital?.$id,
+        hospitalId: selectedHospital?._id,
         severity,
       })
     );

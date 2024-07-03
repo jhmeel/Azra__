@@ -131,3 +131,22 @@ export const getAddressFromCoordinates = async (lat: number, lng: number, apiKey
     throw error;
   }
 };
+
+
+export function extractTime(dateString:string) {
+	const date = new Date(dateString);
+	const hours = padZero(date.getHours());
+	const minutes = padZero(date.getMinutes());
+	return `${hours}:${minutes}`;
+}
+
+// Helper function to pad single-digit numbers with a leading zero
+function padZero(val:number) {
+	return val.toString().padStart(2, "0");
+}
+
+export function getAcronym(input: string): string {
+  const words = input.split(' ');
+  const acronym = words.map(word => word[0].toUpperCase()).join('');
+  return acronym;
+}

@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Models } from "appwrite";
-
 export type PatientSignupData = {
   fullName: string;
   email: string;
@@ -14,6 +12,17 @@ export type PatientSignupData = {
 export interface PingChatTabProps {
   pSelectedHospital: Hospital | null;
   pingDetails: Ping;
+}
+
+export interface Message {
+  _id: string;
+  message: string;
+  senderId: string;
+  image?:string;
+  createdAt: string;
+  type?: "text" | "image" | "video" | "document";
+  isEdited?: boolean;
+  isRead?: boolean;
 }
 
 export type HospitalSignupData = {
@@ -33,33 +42,25 @@ export type Coordinate = {
   lng: number;
 };
 
-export interface Message extends Models.Document {
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: string;
-  type: "text" | "image" | "video" | "document";
-  mediaUrl?: string;
-  isEdited: boolean;
-  isRead: boolean;
-}
-
 export type NearbySearchProp = {
   lat: number;
   lng: number;
   range: number;
   status: string;
 };
-export interface Hospital extends Models.Document {
-  userId: string;
+export interface Hospital {
+  _id: string;
   hospitalName: string;
   hospitalNumber: string;
   avatar: string;
-  availabilityStatus: string;
+  status: string;
   email: string;
   phone: string;
   coordinates: string;
+  rating: number;
   lastActive?: string;
+  createdAt: string;
+
 }
 
 export enum Role {
@@ -67,8 +68,8 @@ export enum Role {
   PATIENT = "PATIENT",
 }
 
-export interface Patient extends Models.Document {
-  userId: string;
+export interface Patient {
+  _id: string;
   fullName: string;
   avatar: string;
   email: string;

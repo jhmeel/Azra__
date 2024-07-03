@@ -399,10 +399,10 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { authRes, loading, error } = useSelector(
+  const { user:admin, loading, error, accessToken } = useSelector(
     (state: RootState) => state.auth
   );
-  const { hospital: admin }:{hospital:Hospital} = authRes;
+
 
   useEffect(() => {
     if (error) {
@@ -410,7 +410,7 @@ const Dashboard = () => {
       dispatch({ type: CLEAR_ERRORS });
     }
 
-    dispatch<any>(fetchDashboard(admin?.session?.secret, Role.HOSPITAL));
+    dispatch<any>(fetchDashboard(accessToken));
   }, [error, dispatch, admin]);
 
   const statsData = [

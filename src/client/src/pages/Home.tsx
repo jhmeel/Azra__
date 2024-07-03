@@ -11,6 +11,7 @@ import HealthFacilityLocator from "../components/HealthFacilityLocator";
 import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import { userInfo } from "os";
 
 interface ButtonLink {
   primary?: boolean;
@@ -26,8 +27,6 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const Home = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hospitals, setHospitals] = useState<THospital[]>([]);
   const [userLocation, setUserLocation] = useState<Coordinate>({
     lat: 0,
     lng: 0,
@@ -38,27 +37,8 @@ const Home = () => {
   });
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<Hospital|Patient|null>(null);
-  const [hospital, setHospital] = useState<Hospital|null>(null);
-  const [patient, setPatient] = useState<Patient|null>(null);
-  const { authRes } = useSelector((state: RootState) => state.auth);
+  const { user, role, accessToken } = useSelector((state: RootState) => state.auth);
 
-  useEffect(() => {
-    if (authRes?.patient) {
-      setPatient(authRes?.patient?.documents[0]);
-    } else if (authRes?.hospital) {
-      setHospital(authRes?.hospital?.documents[0]);
-    }
-  }, [authRes]);
-
-
-  useEffect(() => {
-    if (hospital && hospital?.hospitalName) {
-      setCurrentUser(hospital);
-    } else {
-      setCurrentUser(patient);
-    }
-  }, [hospital, patient]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -121,17 +101,17 @@ const Home = () => {
                 </NavLink>
                 <NavLink href="/about">About</NavLink>
                 <NavLink href="/blog">Blog</NavLink>
-                {authRes?.role === Role.HOSPITAL ? (
+                {role?.toLowerCase() === Role.HOSPITAL.toLowerCase() ? (
                   <NavLink href="/dashboard">Dashboard</NavLink>
                 ) : (
-                  authRes?.role === Role.PATIENT && (
+                  role?.toLowerCase() === Role.PATIENT.toLowerCase() && (
                     <NavLink href="/profile">Profile</NavLink>
                   )
                 )}
               </NavMain>
 
               <div className="auth-btns">
-                {!authRes?.session && (
+                {!accessToken && (
                   <>
                     <ButtonLink href="/login">Login</ButtonLink>
                     <ButtonLink href="/signup" primary>
@@ -160,19 +140,19 @@ const Home = () => {
                 <MobileNavLink href="/blog" onClick={toggleMobileMenu}>
                   Blog
                 </MobileNavLink>
-                {authRes?.role === Role.HOSPITAL ? (
+                {role?.toLowerCase() === Role.HOSPITAL.toLowerCase()?  (
                   <MobileNavLink href="/dashboard" onClick={toggleMobileMenu}>
                     Dashboard
                   </MobileNavLink>
                 ) : (
-                  authRes?.role === Role.PATIENT && (
+                  role?.toLowerCase() === Role.PATIENT.toLowerCase() && (
                     <MobileNavLink href="/profile" onClick={toggleMobileMenu}>
                       Profile
                     </MobileNavLink>
                   )
                 )}
 
-                {!authRes?.session && (
+                {!user && (
                   <ButtonGroup>
                     {" "}
                     <ButtonLink href="/login" onClick={toggleMobileMenu}>
@@ -217,7 +197,7 @@ const Home = () => {
               </AnimatedSectionText>
               <ButtonGroup>
                 <ButtonLink href="/about">Learn More</ButtonLink>
-                {!authRes?.session && (
+                {!user && (
                   <ButtonLink primary href="/signup">
                     Register
                   </ButtonLink>
@@ -230,7 +210,7 @@ const Home = () => {
         <section className="reveal-bottom">
           <HospitalCards
             userLocation={userLocation}
-            currentUser={currentUser}
+            currentUser={user}
           />
         </section>
 

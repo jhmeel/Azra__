@@ -1,44 +1,84 @@
 import express from "express";
-import ViteExpress from "vite-express";
+import http from "http";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
-import bodyParser from "body-parser";
-import compression from "compression";
-import cors from "cors";
-import helmet from "helmet";
 import Config from "./src/config/config.js";
+import CloudinaryProvider from "./src/providers/cloudinary.js";
+import DBProvider from "./src/providers/dbProvider.js";
+import { MiddlewaresProvider } from "./src/providers/middlewares.js";
+import { RouteProvider } from "./src/providers/route.js";
 import logger from "./src/utils/logger.js";
-import Router from "./src/routes.js";
-import { errorMiddleware } from "./src/middlewares/error.js";
+import Worker from "./worker.js";
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
-  
-// Middleware 
-app.use(compression());  
-app.use(cors({ origin: "*" }));
-app.use(bodyParser.json({ limit: "50mb" })); 
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+const userSocketMap = new Map();
 
-// Logging Middleware
-app.use((req, res, next) => {
-  if (req.url.includes("/api")) {
-    logger.info(
-      `NEW REQUEST: IP ${req.ip || req.connection.remoteAddress} => ${
-        req.method
-      } ${req.url}`
-    );
+const getReceiverSocketId = (receiverId: string) => {
+  return userSocketMap.get(receiverId);
+};
+
+io.on("connection", (socket) => {
+  logger.info("A user connected", socket.id);
+
+  const userId = socket.handshake.query.userId;
+  if (userId) {
+    userSocketMap.set(userId, socket.id);
+  }
+
+ 
+  socket.on("sendMessage", ({ senderId, receiverId, message }) => {
+    const receiverSocketId = userSocketMap.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageReceived", { senderId, message });
     }
+  });
 
-  next();
+  socket.on("typing", ({ userId, receiverId }) => {
+    const receiverSocketId = userSocketMap.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("typing", { userId });
+    }
+  });
+
+  socket.on("stopTyping", ({ userId, receiverId }) => {
+    const receiverSocketId = userSocketMap.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("stopTyping", { userId });
+    }
+  });
+
+  socket.on("disconnect", () => {
+    logger.info("A user disconnected", socket.id);
+    for (const [key, value] of userSocketMap.entries()) {
+      if (value === socket.id) {
+        userSocketMap.delete(key);
+        break;
+      }
+    }
+  });
 });
 
-// Routes
-app.use("/api/v1", Router);
-app.use(errorMiddleware);
+const dependencyList = [
+  DBProvider.getInstance(Config),
+  new CloudinaryProvider(Config),
+  new MiddlewaresProvider(app),
+  new RouteProvider(app),
+];
 
-// Server Listen
-const PORT = Config.PORT;
-ViteExpress.listen(app, PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-});
+const worker = Worker.getInstance(app, Config);
+
+worker.addDependency(dependencyList);
+worker.initializeDependencies();
+worker.startPolling();
+
+export { io, getReceiverSocketId };
+ 

@@ -1,61 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
+import { useSelector, useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 import {
-  UploadIcon,
+  Send,
   Phone,
-  XIcon,
   Hospital as HospitalIcon,
-  SendIcon,
   Trash2,
+  Edit2,
+  Copy,
+  Share2,
   Check,
   CheckCheck,
 } from "lucide-react";
-import { Hospital, Message, Patient } from "../types";
 import { toast } from "sonner";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
 import {
-  Client,
-  Databases,
-  Storage,
-  Query,
-  ID,
-  Permission,
-  Role,
-} from "appwrite";
-import Config from "../Config";
-import azraLight from "../assets/azra_light.png";
-
-const client = new Client()
-  .setEndpoint(Config.APPWRITE.APPWRITE_ENDPOINT)
-  .setProject(Config.APPWRITE.PROJECT_ID);
-
-const database = new Databases(client);
-const storage = new Storage(client);
+  getHPChatHistory,
+  hpDeleteMessage,
+  clearErrors,
+  hpSendMessage,
+} from "../actions";
+import { RootState } from "../store";
+import { BiSolidImageAdd } from "react-icons/bi";
 
 const Container = styled.div`
   height: 100vh;
-  width: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  max-width: 100%;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    max-width: 768px;
+  }
 `;
 
-const ChatContainer = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-image: url("https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png");
-  background-repeat: repeat;
-`;
-
-const Header = styled.div`
+const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
-  height: 60px;
+  padding: 1rem;
   background: linear-gradient(to right, #4fd1c5, #38b2ac);
   color: white;
 `;
@@ -63,19 +47,14 @@ const Header = styled.div`
 const HospitalInfo = styled.div`
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 `;
 
-const HospitalName = styled.h2`
-  font-size: 16px;
-  margin-left: 12px;
-`;
-
-const StatusIndicator = styled.div<{ isActive: boolean }>`
+const StatusDot = styled.span<{ active: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: ${(props) => (props.isActive ? "#4caf50" : "#bdbdbd")};
-  margin-left: 8px;
+  background-color: ${(props) => (props.active ? "#4caf50" : "#bdbdbd")};
 `;
 
 const CallButton = styled.button`
@@ -85,442 +64,341 @@ const CallButton = styled.button`
   cursor: pointer;
 `;
 
-const MessagesContainer = styled.div`
+const ChatArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-`;
-
-const MessageItem = styled.div<{ isPatient: boolean }>`
+  padding: 1rem;
+  background: #e5ded8;
   display: flex;
-  flex-direction: ${(props) => (props.isPatient ? "row-reverse" : "row")};
-  margin-bottom: 8px;
+  flex-direction: column;
 `;
 
-const MessageContent = styled.div<{ isPatient: boolean }>`
-  max-width: 65%;
-  background-color: ${(props) => (props.isPatient ? "#dcf8c6" : "white")};
-  border-radius: 7.5px;
-  padding: 6px 7px 8px 9px;
-  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+const MessageBubble = styled.div<{ sent: boolean }>`
+  max-width: 70%;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  word-wrap: break-word;
+  ${(props) =>
+    props.sent
+      ? `
+    background-color: #dcf8c6;
+    align-self: flex-end;
+  `
+      : `
+    background-color: white;
+    align-self: flex-start;
+  `}
 
-  @media (max-width: 768px) {
-    max-width: 80%;
+  @media (max-width: 480px) {
+    max-width: 85%;
   }
 `;
 
 const MessageText = styled.p`
   margin: 0;
-  word-wrap: break-word;
-  font-size: 14.2px;
-  line-height: 19px;
-  color: #303030;
 `;
 
 const MessageImage = styled.img`
   max-width: 100%;
-  border-radius: 6px;
-  margin-top: 4px;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
 `;
 
 const MessageMeta = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 2px;
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.45);
-`;
-
-const DeleteButton = styled.button`
-  background: none;
-  border: none;
+  font-size: 0.75rem;
   color: #888;
-  cursor: pointer;
-  margin-left: 4px;
-  padding: 0;
-  font-size: 11px;
+  text-align: right;
 `;
 
-const InputContainer = styled.form`
+const InputArea = styled.form`
   display: flex;
   align-items: center;
-  padding: 10px;
-  background-color: #e0e0e0;
+  padding: 1rem;
+  background-color: #f0f0f0;
 `;
 
 const TextInput = styled.input`
-  flex: 2;
-  padding: 9px 12px;
+  flex: 1;
+  padding: 0.5rem;
   border: none;
-  border-radius: 21px;
-  background-color: white;
-  font-size: 15px;
+  border-radius: 1.5rem;
+  margin-right: 0.5rem;
   outline: none;
 `;
 
-const FileInput = styled.input`
-  display: none;
-`;
-
-const FileLabel = styled.label`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  color: #919191;
-  cursor: pointer;
-  @media (max-width: 768px) {
-    width: 30px;
-    height: 30px;
-  }
-`;
-const ImagePreview = styled.div`
-  position: relative;
-  display: flex;
-  justify-content: center;
-`;
-interface Prev {
-  src: string | null;
-}
-const PreviewImage = styled.img<Prev>`
-  max-width: 45px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  @media (max-width: 768px) {
-    max-width: 35px;
-  }
-`;
-
-const RemoveImageButton = styled.button`
-  position: absolute;
-  top: -8px;
-  right: 0px;
-  background-color: #ef4444;
-  color: white;
-  border-radius: 50%;
-  padding: 4px;
-  &:focus {
-    outline: none;
-  }
-`;
-const SendButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+const IconButton = styled.button`
+  background: none;
   border: none;
-  border-radius: 50%;
-  background: linear-gradient(to right, #15756c, #38b2ac);
-  color: white;
   cursor: pointer;
-  @media (max-width: 768px) {
-    svg {
-      width: 15px;
-      height: 15px;
-    }
-    width: 35px;
-    height: 35px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const SendButton = styled(IconButton)`
+  background-color: #4fd1c5;
+  border-radius: 50%;
+`;
+
+const ContextMenu = styled.div`
+  position: absolute;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+`;
+
+const ContextMenuItem = styled.button`
+  display: flex;
+  align-items: flex-start;
+  gap:5px;
+  padding: 0.5rem 1rem;
+  border: none;
+  font-size:12px;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  &:hover {
+    background-color: #f0f0f0;
   }
 `;
 
-function PatientChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
+const PingBanner = styled.div`
+  background-color: #e1f5fe;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+const PatientChatInterface = () => {
   const [inputMessage, setInputMessage] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isHospitalActive, setIsHospitalActive] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [image, setImage] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    messageId: null,
+  });
+  const [editingMessage, setEditingMessage] = useState(null);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { authRes } = useSelector((state: RootState) => state.auth);
-  const [currentUser, setCurrentUser] = useState<Patient | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
-  const permissions = [Permission.write(Role.user(authRes?.session?.userId))];
-
-  useEffect(() => {
-    if (authRes?.patient) {
-      setCurrentUser(authRes?.patient?.documents[0]);
-    }
-  }, [authRes]);
-
+  const dispatch = useDispatch();
   const location = useLocation();
-  const {
-    image: pImage,
-    complaints: pComplaints,
-    hospital: pSelectedHospital,
-  }: {
-    image: string;
-    complaints: string;
-    hospital: Hospital;
-  } = location.state || {};
-
-  const handleRemoveImage = () => {
-    setImage(null);
-    setImagePreview(null);
-  };
+  const { hospital: selectedHospital } = location.state || {};
+  const { user, role, accessToken } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const { chatHistory, loading, error } = useSelector(
+    (state: RootState) => state.chat
+  );
 
   useEffect(() => {
-    if (currentUser) {
-      const unsubscribeMessages = subscribeToMessages();
-      const unsubscribeHospitalStatus = subscribeToHospitalStatus();
-      fetchMessages();
-
-      return () => {
-        unsubscribeMessages();
-        unsubscribeHospitalStatus();
-      };
+    if (error) {
+      toast.error(error);
+      dispatch<any>(clearErrors());
     }
-  }, [currentUser]);
+    if (selectedHospital) {
+      dispatch<any>(getHPChatHistory(accessToken, selectedHospital._id, role));
+    }
+  }, [selectedHospital, dispatch, accessToken, error]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [chatHistory]);
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const subscribeToMessages = () => {
-    return client.subscribe(
-      `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.PINGS_COLLECTION_ID}.documents`,
-      (response) => {
-        if (
-          response.events.includes(
-            "databases.*.collections.*.documents.*.create"
-          )
-        ) {
-          const newMessage = response.payload as Message;
-          if (
-            newMessage.senderId === currentUser?.$id &&
-            newMessage.receiverId === pSelectedHospital?.$id
-          ) {
-            setMessages((prevMessages) => [...prevMessages, newMessage]);
-          }
-        }
-      }
-    );
-  };
-
-  const subscribeToHospitalStatus = () => {
-    return client.subscribe(
-      `databases.${Config.APPWRITE.DATABASE_ID}.collections.${Config.APPWRITE.HOSPITAL_COLLECTION_ID}.documents.${pSelectedHospital?.$id}`,
-      (response) => {
-        if (
-          response.events.includes(
-            "databases.*.collections.*.documents.*.update"
-          )
-        ) {
-          const updatedHospital = response.payload as Hospital;
-          setIsHospitalActive(updatedHospital.isActive);
-        }
-      }
-    );
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const response = await database.listDocuments(
-        Config.APPWRITE.DATABASE_ID,
-        Config.APPWRITE.PINGS_COLLECTION_ID,
-        [
-          Query.equal("patientId", currentUser?.$id),
-          Query.equal("hospitalId", pSelectedHospital?.$id),
-          Query.orderAsc("$createdAt"),
-        ]
-      );
-      setMessages(response.documents as Message[]);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      toast.error("Failed to fetch messages. Please try again.");
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputMessage.trim() || image) {
-      try {
-        let mediaUrl = "";
-        if (image) {
-          const uploadedFile = await storage.createFile(
-            Config.APPWRITE.BUCKET_ID,
-            ID.unique(),
-            image
-          );
-          mediaUrl = storage.getFileView(
-            Config.APPWRITE.BUCKET_ID,
-            uploadedFile.$id
-          ).href;
-        }
+    if (!inputMessage && !image) return;
 
-        const newMessage: Omit<Message, "$id" | "$createdAt" | "$updatedAt"> = {
-          patientId: currentUser?.$id,
-          hospitalId: pSelectedHospital?.$id,
-          content: inputMessage.trim(),
-          mediaUrl,
-          isRead: false,
-        };
+    const messageData: { message?: string; image?: string } = {};
+    if (inputMessage) messageData.message = inputMessage;
+    if (image) messageData.image = image;
 
-        await database.createDocument(
-          Config.APPWRITE.DATABASE_ID,
-          Config.APPWRITE.PINGS_COLLECTION_ID,
-          ID.unique(),
-          newMessage,
-          permissions
-        );
-
-        setInputMessage("");
-        setImage(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      } catch (error) {
-        console.error("Error sending message:", error);
-        toast.error("Failed to send message. Please try again.");
-      }
-    }
+    dispatch<any>(
+      hpSendMessage(accessToken, selectedHospital._id, messageData, role)
+    );
+    setInputMessage("");
+    setImage(null);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImage(file);
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.readyState === 2) {
-        setImagePreview(reader.result as string);
-      }
-    };
-
-    e.target.files && reader.readAsDataURL(e.target.files[0]);
-  };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    try {
-      await database.deleteDocument(
-        Config.APPWRITE.DATABASE_ID,
-        Config.APPWRITE.PINGS_COLLECTION_ID,
-        messageId
-      );
-      setMessages((prevMessages) =>
-        prevMessages.filter((msg) => msg.$id !== messageId)
-      );
-      toast.success("Message deleted successfully.");
-    } catch (error) {
-      console.error("Error deleting message:", error);
-      toast.error("Failed to delete message. Please try again.");
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleCall = () => {
-    window.location.href = `tel:${pSelectedHospital.phone}`;
+  const handleContextMenu = (e: React.MouseEvent, messageId: string) => {
+    e.preventDefault();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setContextMenu({ visible: true, x, y, messageId });
   };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+      setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+    }
+  };
+
+  const handleEditMessage = () => {
+    const message = chatHistory.messages.find(
+      (m) => m._id === contextMenu.messageId
+    );
+    setEditingMessage(message);
+    setInputMessage(message.content);
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+  };
+
+  const handleDeleteMessage = () => {
+    dispatch<any>(
+      hpDeleteMessage(accessToken, selectedHospital._id, contextMenu.messageId)
+    );
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+  };
+
+  const handleCopyMessage = () => {
+    const message = chatHistory.messages.find(
+      (m) => m._id === contextMenu.messageId
+    );
+    navigator.clipboard.writeText(message.content);
+    toast.success("Message copied to clipboard");
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+  };
+
+  const handleShareMessage = () => {
+    toast.info("Share functionality not implemented");
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+  };
+
+  const renderPing = (ping: any) => (
+    <PingBanner>
+      <h3>Conversation Starter</h3>
+      <p>Complaint: {ping.complaint}</p>
+      <p>Severity: {ping.severity}</p>
+      {ping.image && (
+        <img
+          src={ping.image.secureUrl}
+          alt="Ping"
+          style={{ maxWidth: "100%" }}
+        />
+      )}
+    </PingBanner>
+  );
 
   return (
     <Container>
-      <ChatContainer>
-        <Header>
-          <HospitalInfo>
-            <HospitalIcon size={24} />
-            <HospitalName>{pSelectedHospital.hospitalName}</HospitalName>
-            <StatusIndicator isActive={isHospitalActive} />
-          </HospitalInfo>
-          <CallButton onClick={handleCall}>
-            <Phone size={24} />
-          </CallButton>
-        </Header>
-        <MessagesContainer>
-          {messages.length > 0 ? (
-            messages.map((message) => (
-              <MessageItem
-                key={message.$id}
-                isPatient={message.patientId === currentUser?.$id}
-              >
-                <MessageContent
-                  isPatient={message.patientId === currentUser?.$id}
-                >
-                  <MessageText>{message.content}</MessageText>
-                  {message.mediaUrl && (
-                    <MessageImage src={message.mediaUrl} alt="Attached media" />
-                  )}
-                  <MessageMeta>
-                    {new Date(message.$createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    {message.patientId === currentUser?.$id && (
-                      <>
-                        {message.isRead ? (
-                          <CheckCheck size={16} />
-                        ) : (
-                          <Check size={16} />
-                        )}
-                        <DeleteButton
-                          onClick={() => handleDeleteMessage(message.$id)}
-                        >
-                          <Trash2 size={14} />
-                        </DeleteButton>
-                      </>
-                    )}
-                  </MessageMeta>
-                </MessageContent>
-              </MessageItem>
-            ))
-          ) : (
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%,-50%)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+      <Header>
+        <HospitalInfo>
+          <HospitalIcon size={24} />
+          <h2>{selectedHospital.hospitalName}</h2>
+          <StatusDot active={selectedHospital.isActive} />
+        </HospitalInfo>
+        <CallButton
+          onClick={() =>
+            (window.location.href = `tel:${selectedHospital.phone}`)
+          }
+        >
+          <Phone size={24} />
+        </CallButton>
+      </Header>
+
+      <ChatArea ref={chatAreaRef}>
+        {chatHistory.ping &&
+          chatHistory.ping.length > 0 &&
+          renderPing(chatHistory.ping[0])}
+        {chatHistory.messages &&
+          chatHistory.messages.map((message: any) => (
+            <MessageBubble
+              key={message._id}
+              sent={message.senderId === user._id}
+              onContextMenu={(e) => handleContextMenu(e, message._id)}
             >
-              <img width={168.9999} src={azraLight} />
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </MessagesContainer>
-      </ChatContainer>
-      <InputContainer onSubmit={handleSendMessage}>
+              <MessageText>{message.message}</MessageText>
+              {message.image && (
+                <MessageImage src={message?.image} alt="Sent" />
+              )}
+              <MessageMeta>
+                {new Date(message.createdAt).toLocaleTimeString()}
+                {message.senderId === user._id &&
+                  (message?.isRead ? (
+                    <CheckCheck size={16} />
+                  ) : (
+                    <Check size={16} />
+                  ))}
+              </MessageMeta>
+              {contextMenu.visible && contextMenu.messageId === message._id && (
+                <ContextMenu
+                  ref={contextMenuRef}
+                  style={{
+                    top: `${contextMenu.y+30}px`,
+                    left: `${contextMenu.x-30}px`,
+                  }}
+                >
+                  <ContextMenuItem onClick={handleEditMessage}>
+                    <Edit2 size={18} /> Edit
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={handleDeleteMessage}>
+                    <Trash2 size={18} /> Delete
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={handleCopyMessage}>
+                    <Copy size={18} /> Copy
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={handleShareMessage}>
+                    <Share2 size={18} /> Share
+                  </ContextMenuItem>
+                </ContextMenu>
+              )}
+            </MessageBubble>
+          ))}
+      </ChatArea>
+
+      <InputArea onSubmit={handleSendMessage}>
         <TextInput
-          type="text"
-          autoFocus
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message"
         />
-        <FileInput
+        <input
           type="file"
-          id="image"
-          onChange={handleImageChange}
           accept="image/*"
+          onChange={handleImageChange}
           ref={fileInputRef}
+          style={{ display: "none" }}
         />
-        {!image ? (
-          <FileLabel htmlFor="image">
-            <UploadIcon size={16} />
-          </FileLabel>
-        ) : (
-          <ImagePreview>
-            <PreviewImage src={imagePreview} alt="Selected" />
-            <RemoveImageButton onClick={handleRemoveImage}>
-              <XIcon size={14} />
-            </RemoveImageButton>
-          </ImagePreview>
-        )}
+        <IconButton type="button" onClick={() => fileInputRef.current?.click()}>
+        <BiSolidImageAdd size={24}/>
+        </IconButton>
         <SendButton type="submit">
-          <SendIcon size={20} />
+          <Send size={24} />
         </SendButton>
-      </InputContainer>
+      </InputArea>
     </Container>
   );
-}
+};
 
 export default PatientChatInterface;

@@ -16,6 +16,7 @@ import {
   dashboardReducer,
   pingReducer,
   hospitalReducer,
+  reviewReducer,
 } from "./slices";
 
 localforage.config({
@@ -28,13 +29,14 @@ localforage.config({
 const persistConfig = {
   key: "root",
   storage: localforage,
-  whitelist: ["auth", "dashboard", "ping", "hospital", "chat"],
+  whitelist: ["auth","review", "dashboard", "ping", "hospital", "chat"],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   hospital: hospitalReducer,
   ping: pingReducer,
+  review:reviewReducer,
   chat: chatReducer,
   dashboard: dashboardReducer,
 });

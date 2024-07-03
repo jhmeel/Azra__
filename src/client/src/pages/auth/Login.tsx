@@ -15,7 +15,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isHospital, setIsHospital] = useState<boolean>(false);
-  const { authRes, error, loading } = useSelector(
+  const { user, role, error, loading } = useSelector(
     (state: RootState) => state.auth
   );
   const dispatch = useDispatch();
@@ -26,21 +26,24 @@ const LoginForm = () => {
       toast.error(error);
       dispatch({ type: CLEAR_ERRORS });
     }
-    if (authRes && authRes.role == Role.HOSPITAL) {
+   
+    if (user && role?.toLowerCase() == Role.HOSPITAL.toLowerCase()) {
       toast.success("Logged in successfully");
       navigate("/dashboard");
-    } else if (authRes && authRes.role == Role.PATIENT) {
+    } else if (user && role?.toLowerCase() == Role.PATIENT.toLowerCase()) {
       toast.success("Logged in successfully");
       navigate("/profile");
     }
-  }, [authRes, dispatch, error, navigate]);
+  }, [role, dispatch, error, navigate]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch<any>(login({ email, password }, isHospital));
   };
 
-  const handleGoogleLogin = () => {};
+  const handleGoogleLogin = () => {
+
+  };
 
   return (
     <Wrapper>
