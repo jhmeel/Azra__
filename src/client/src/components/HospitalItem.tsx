@@ -19,7 +19,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { AVAILABLE_HOSPITALS, CLEAR_ERRORS } from "../constants";
-import { fetchNearByHospitals } from "../actions";
+import { fetchNearByHospitals, setSelectedChat } from "../actions";
 import Rating from "./Rating";
 import HospitalProfileViewer from "./HospitalProfileViewer";
 
@@ -211,14 +211,14 @@ const HospitalCards = ({
   ) => {
     setPingFormActive(!pingFormActive);
     setSelectedHospital(hospital);
+    dispatch<any>(setSelectedChat(hospital))
   };
 
   const openChat = async (
     hospital: Hospital
   ) => {
-    navigate("/ping-chat", {
-      state: { hospital },
-    });
+    navigate("/ping-chat");
+    dispatch<any>(setSelectedChat(hospital))
   };
   const onViewProfile = (
     hospital: Hospital

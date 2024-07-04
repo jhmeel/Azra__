@@ -39,9 +39,9 @@ const Config = {
     KEY:process.env.CRYPTO_KEY||'qwertyuiujhgfbivndcxjbhtyrtertryui',
   },
   CLOUDINARY: {
-    CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
-    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+    CLOUDINARY_NAME: process.env.CLOUDINARY_NAME||'fcstore',
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY||'779893887235886',
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET||'sf0M9K2EDJY3_EUrHnXFmUkLrMs',
   },
   WEBPUSH: {
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,

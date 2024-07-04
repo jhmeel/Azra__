@@ -63,6 +63,14 @@ import {
   DELETE_CHAT_REQUEST,
   DELETE_CHAT_SUCCESS,
   DELETE_CHAT_FAIL,
+  UPDATE_PATIENT_PROFILE_REQUEST,
+  UPDATE_PATIENT_PASSWORD_REQUEST,
+  UPDATE_PATIENT_PROFILE_SUCCESS,
+  UPDATE_PATIENT_PASSWORD_SUCCESS,
+  UPDATE_PATIENT_PROFILE_RESET,
+  UPDATE_PATIENT_PASSWORD_RESET,
+  UPDATE_PATIENT_PROFILE_FAIL,
+  UPDATE_PATIENT_PASSWORD_FAIL,
 } from "../constants";
 import { Action, Hospital, Message, Patient } from "../types";
 
@@ -239,6 +247,53 @@ const pingReducer = (state = initialPingState, action: Action) => {
       return state;
   }
 };
+const initialProfileState ={
+loading: false,
+message:null,
+error: null,
+}
+
+const profileReducer = (state = initialProfileState, action: Action) => {
+  switch (action.type) {
+      case UPDATE_PATIENT_PROFILE_REQUEST:
+        case UPDATE_PATIENT_PASSWORD_REQUEST:
+      return {
+        ...state,
+        loading: true
+      }
+      case UPDATE_PATIENT_PROFILE_SUCCESS:
+        case UPDATE_PATIENT_PASSWORD_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        message: action.payload.message
+      };
+
+      case UPDATE_PATIENT_PROFILE_FAIL:
+        case UPDATE_PATIENT_PASSWORD_FAIL:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+
+      case UPDATE_PATIENT_PROFILE_RESET:
+        case UPDATE_PATIENT_PASSWORD_RESET:
+      return {
+        ...state,
+        loading: false,
+        message: null,
+      };
+    case CLEAR_ERRORS:
+      return {
+        ...state,
+        error: null,
+      };
+    default:
+      return state;
+  }
+};
+
 
 // Hospital reducer
 const hospitalReducer = (state = initialHospitalState, action: Action) => {
@@ -449,6 +504,7 @@ export {
   dashboardReducer,
   pingReducer,
   reviewReducer,
+  profileReducer,
   hospitalReducer,
   chatReducer,
 };

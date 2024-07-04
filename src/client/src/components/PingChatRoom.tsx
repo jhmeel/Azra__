@@ -212,11 +212,10 @@ const PatientChatInterface = () => {
 
   const dispatch = useDispatch();
   const location = useLocation();
-  const { hospital: selectedHospital } = location.state || {};
   const { user, role, accessToken } = useSelector(
     (state: RootState) => state.auth
   );
-  const { chatHistory, loading, error } = useSelector(
+  const { chatHistory,selectedChat:selectedHospital, loading, error } = useSelector(
     (state: RootState) => state.chat
   );
 

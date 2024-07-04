@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { CLEAR_ERRORS, NEW_PING_RESET } from "../constants/index.js";
 import { useSelector } from "react-redux";
-import { newPing } from "../actions/index.js";
+import { newPing, setSelectedChat } from "../actions/index.js";
 import { Hospital, Patient } from "../types/index.js";
 import { useNavigate } from "react-router-dom";
 import Config from "../Config/index.js";
@@ -22,7 +22,7 @@ function PingForm({
   selectedHospital,
   onClose,
 }: {
-  selectedHospital: Omit<Hospital, "$createdAt" | "$updatedAt"> | null;
+  selectedHospital: Hospital | null;
   onClose: () => void;
 }) {
   const [complaint, setComplaint] = useState<string>("");
@@ -42,10 +42,9 @@ function PingForm({
       toast.success(message);
       dispatch({ type: NEW_PING_RESET });
       onClose();
-
-      navigate("/ping-chat", {
-        state: { image, complaint, hospital: selectedHospital, severity },
-      });
+      dispatch<any>(setSelectedChat(selectedHospital))
+      navigate("/ping-chat");
+     
     }
   }, [dispatch, error, message, onClose]);
 
@@ -74,7 +73,7 @@ function PingForm({
     dispatch<any>(
       newPing(accessToken, {
         complaint,
-        patientId: user._id,
+        patientId: user?._id,
         image,
         hospitalId: selectedHospital?._id,
         severity,

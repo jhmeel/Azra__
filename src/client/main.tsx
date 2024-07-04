@@ -8,7 +8,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { SocketContextProvider } from "./src/socketContext.tsx";
 import "./src/global.css";
-
+import GlobalStyles from "./globalStyles.ts";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
@@ -16,6 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Toaster position="top-right" closeButton={true} />
         <Router>
           <SocketContextProvider>
+            <GlobalStyles/>
             <App />
           </SocketContextProvider>
         </Router>

@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FaKey, FaMapMarkerAlt, FaEnvelope, FaEdit, FaFileAlt, FaCalendarAlt, FaHospital, FaPhone, FaArrowLeft, FaUserCircle } from "react-icons/fa";
+import {
+  FaKey,
+  FaMapMarkerAlt,
+  FaEnvelope,
+  FaEdit,
+  FaFileAlt,
+  FaCalendarAlt,
+  FaHospital,
+  FaPhone,
+  FaArrowLeft,
+  FaUserCircle,
+} from "react-icons/fa";
 import { toast } from "sonner";
 import reverseGeocode from "reverse-geocode";
 import Footer from "../components/Footer";
-import { X } from "lucide-react";
+import { Loader, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useNavigate } from "react-router-dom";
+import { clearErrors, updatePatientProfile } from "../actions";
+import { useDispatch } from "react-redux";
+import { UPDATE_PATIENT_PROFILE_RESET } from "../constants";
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -40,7 +54,6 @@ const ProfileHeader = styled.div`
   border-radius: 15px;
   padding: 30px;
 
-  
   @media (min-width: 768px) {
     flex-direction: row;
     justify-content: space-between;
@@ -153,7 +166,7 @@ const CardTitle = styled.h3`
 
 const Button = styled.button`
   padding: 10px 20px;
-  background-color: #43c0b8;
+  background-color: ${(props)=> (props.disabled ?'#c5c5c7' : '#43c0b8')};
   color: white;
   border: none;
   border-radius: 8px;
@@ -165,12 +178,6 @@ const Button = styled.button`
   font-size: 1rem;
   transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    background-color: #35a199;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
 `;
 
 const ActionButtons = styled.div`
@@ -267,9 +274,25 @@ export const Profile: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, accessToken } = useSelector((state: RootState) => state.auth);
+  const {
+    loading: profileLoading,
+    message: profileMessage,
+    error: profileError,
+  } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (profileError) {
+      toast.error(profileError);
+      dispatch<any>(clearErrors());
+    }
+    if (profileMessage) {
+      toast.success(profileMessage);
+      dispatch({ type: UPDATE_PATIENT_PROFILE_RESET });
+    }
+  });
   useEffect(() => {
     const getLocation = () => {
       if (navigator.geolocation) {
@@ -278,7 +301,7 @@ export const Profile: React.FC = () => {
             const { latitude, longitude } = position.coords;
             setLocation(`${latitude}, ${longitude}`);
 
-            const result = reverseGeocode.lookup(latitude, longitude, "ng");
+            const result = reverseGeocode.lookup(latitude, longitude, "us");
             if (result && result?.city) {
               setCountry(result?.state);
             }
@@ -298,14 +321,14 @@ export const Profile: React.FC = () => {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // Implement profile update logic here
-      toast.success("Profile updated successfully");
-      setShowEditModal(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-    }
+    dispatch<any>(
+      updatePatientProfile(accessToken, user._id, {
+        email,
+        phone,
+        fullName: name,
+        avatar: avatarPreview,
+      })
+    );
   };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -313,17 +336,6 @@ export const Profile: React.FC = () => {
     if (newPassword !== confirmPassword) {
       toast.error("New password and confirm password do not match");
       return;
-    }
-    try {
-      // Implement password reset logic here
-      toast.success("Password reset successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setShowPasswordModal(false);
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      toast.error("Failed to reset password");
     }
   };
 
@@ -349,15 +361,21 @@ export const Profile: React.FC = () => {
             <AvatarContainer>
               <AvatarImage src={user?.avatar} alt="Patient Avatar" />
               <ProfileEditBtn htmlFor="avatar-upload">
-                <FaEdit onClick={()=>setShowEditModal(true)}/>
+                <FaEdit onClick={() => setShowEditModal(true)} />
               </ProfileEditBtn>
             </AvatarContainer>
           </AvatarSection>
           <UserInfo>
             <UserName>{user?.fullName}</UserName>
-            <UserDetail><FaEnvelope /> {user?.email}</UserDetail>
-            <UserDetail><FaPhone /> {user?.phone}</UserDetail>
-            <UserDetail><FaMapMarkerAlt /> {country || "N/A"}</UserDetail>
+            <UserDetail>
+              <FaEnvelope /> {user?.email}
+            </UserDetail>
+            <UserDetail>
+              <FaPhone /> {user?.phone}
+            </UserDetail>
+            <UserDetail>
+              <FaMapMarkerAlt /> {country || "N/A"}
+            </UserDetail>
           </UserInfo>
         </ProfileHeader>
 
@@ -365,10 +383,8 @@ export const Profile: React.FC = () => {
           <Card>
             <CardTitle>Quick Actions</CardTitle>
             <ActionButtons>
-              <Button>
-                <FaFileAlt /> View Medical Records
-              </Button>
-              <Button>
+            
+              <Button onClick={()=> navigate('/')}>
                 <FaCalendarAlt /> Schedule Appointment
               </Button>
               <Button>
@@ -381,7 +397,9 @@ export const Profile: React.FC = () => {
           </Card>
           <Card>
             <CardTitle>Location Details</CardTitle>
-            <UserDetail><FaMapMarkerAlt /> {country || "N/A"}</UserDetail>
+            <UserDetail>
+              <FaMapMarkerAlt /> {country || "N/A"}
+            </UserDetail>
             <UserDetail>{location || "N/A"}</UserDetail>
           </Card>
         </ProfileContent>
@@ -397,44 +415,51 @@ export const Profile: React.FC = () => {
             <Form onSubmit={handleProfileUpdate}>
               <AvatarPreview>
                 {avatarPreview ? (
-                  <PreviewImage src={avatarPreview} alt="Avatar Preview" />
+                  <PreviewImage src={user?.avatar || avatarPreview} alt="Avatar Preview" />
                 ) : (
                   <FaUserCircle size={100} color="#43c0b8" />
                 )}
               </AvatarPreview>
               <Input
-              hidden
-              id='avatarSelector'
+                hidden
+                id="avatarSelector"
                 type="file"
                 accept="image/*"
                 onChange={handleAvatarChange}
               />
-              <label style={{cursor:'pointer', color:'grey'}} htmlFor="avatarSelector">Select avatar</label>
+              <label
+                style={{ cursor: "pointer", color: "grey" }}
+                htmlFor="avatarSelector"
+              >
+                Select avatar
+              </label>
               <Input
                 type="text"
                 autoFocus
-                value={name}
+                value={user?.fullName||name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
                 required
+                disabled={profileLoading}
               />
               <Input
                 type="email"
-                value={email}
+                value={user?.email||email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
+                disabled={profileLoading}
               />
               <Input
                 type="tel"
-                value={phone}
+                value={user?.phone||phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Phone"
                 required
+                disabled={profileLoading}
               />
-              <Button type="submit">
-              Proceed
-              </Button>
+              <Button type="submit" disabled={profileLoading} style={{display:'flex',alignItems:'center',gap:'5px'}}>  {profileLoading && <Loader size={20} className="animate-spin" />}Proceed</Button>
+            
             </Form>
           </ModalContent>
         </Modal>
@@ -454,6 +479,7 @@ export const Profile: React.FC = () => {
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Current Password"
                 required
+                disabled={profileLoading}
               />
               <Input
                 type="password"
@@ -461,6 +487,7 @@ export const Profile: React.FC = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New Password"
                 required
+                disabled={profileLoading}
               />
               <Input
                 type="password"
@@ -468,10 +495,9 @@ export const Profile: React.FC = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm New Password"
                 required
+                disabled={profileLoading}
               />
-              <Button type="submit">
-             Change
-              </Button>
+              <Button type="submit">Change</Button>
             </Form>
           </ModalContent>
         </Modal>

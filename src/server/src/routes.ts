@@ -55,18 +55,23 @@ Router.route("/p/forgot-password").post(forgotPasswordPatient);
 
 Router.route("/reset-password/:resetToken").put(resetPassword);
 
-Router.route("/profile/h/:hospitalId").put(updateHospitalProfile);
-Router.route("/password/h/:hospitalId").put(updatePasswordHospital);
-Router.route("/profile/p/:patientId").put(updatePatientProfile);
+Router.route("/profile/h/:hospitalId").put(authorizer, updateHospitalProfile);
+Router.route("/password/h/:hospitalId").put(authorizer, updatePasswordHospital);
+Router.route("/profile/p/:patientId").put(authorizer, updatePatientProfile);
 Router.route("/password/p/:patientId").put(updatePasswordPatient);
 Router.route("/new-review/:hospitalId").post(authorizer, createReview);
 Router.route("/reviews/:reviewId")
   .delete(authorizer, deleteReview)
   .put(authorizer, updateReview);
 
-Router.route("/ping").post(pingHospital).put(updatePing).delete(deletePing);
+Router.route("/ping")
+  .post(authorizer, pingHospital)
+  .put(authorizer, updatePing)
+  .delete(authorizer, deletePing);
 
-Router.route("/hospital/:id").get(getHospitalById).put(updateHospitalProfile);
+Router.route("/hospital/:id")
+  .get(getHospitalById)
+  .put(authorizer, updateHospitalProfile);
 
 Router.route("/hospital/pings/:id").get(getHospitalPings);
 Router.route("/hospitals").get(getAllHospitals);
@@ -91,11 +96,17 @@ Router.get(
 Router.get("/active-chat", authorizer, getHospitals);
 Router.get("/h-chats-history/:id", authorizer, getHMessages);
 Router.post("/h-message-send/:id", authorizer, hSendMessage);
-Router.route("/h-message/delete/:messageId/:receiverId").post(authorizer, hDeleteMessage);
+Router.route("/h-message/delete/:messageId/:receiverId").post(
+  authorizer,
+  hDeleteMessage
+);
 
 Router.post("/p-message-send/:id", authorizer, hpSendMessage);
 Router.get("/p-chats-history/:id", authorizer, getHPMessages);
-Router.route("/p-message/delete/:messageId/:receiverId").post(authorizer, hpDeleteMessage);
+Router.route("/p-message/delete/:messageId/:receiverId").post(
+  authorizer,
+  hpDeleteMessage
+);
 Router.route("/p-message/update").put(authorizer, hpUpdateMessage);
 
 export default Router;

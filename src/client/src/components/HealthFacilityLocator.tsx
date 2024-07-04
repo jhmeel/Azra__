@@ -1,12 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Link } from "react-router-dom";
 import { MessageCircleDashed } from "lucide-react";
 import { Hospital } from "../types";
 import { bouncy } from "ldrs";
 import { RootState } from "../store";
 import { useSelector } from "react-redux";
+
+mapboxgl.accessToken = "pk.eyJ1IjoiamhtZWVsIiwiYSI6ImNseTZmeGkzNzA5bmwybHFyYzFrbGpwMnYifQ.zLf5q1bwCDE0msuYj8Evaw";
 
 const Section = styled.section`
   margin: 4rem auto;
@@ -23,10 +26,16 @@ const SectionTitle = styled.h2`
 `;
 
 const MapContainer = styled.div`
-  height: 400px;
+  height: 90vh;
+  min-height: 400px;
+  width:100%;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    height: 9+0vh;
+  }
 `;
 
 const GreenSection = styled.section`
@@ -87,49 +96,175 @@ const LoadingContainer = styled.div`
   border-radius: 8px;
 `;
 
-const HealthFacilityLocator = ({ isLoaded, userLocation, pinIconUrl }) => {
+const ErrorMessage = styled.div`
+  color: #e53e3e;
+  text-align: center;
+  padding: 1rem;
+  background-color: #fff5f5;
+  border-radius: 8px;
+  margin-top: 1rem;
+`;
+
+const HealthFacilityLocator = ({ userLocation, pinIconUrl }) => {
+  const mapContainerRef = useRef(null);
+  const [map, setMap] = useState(null);
+  const [selectedHospital, setSelectedHospital] = useState(null);
+
   const {
     hospitals,
     error: hospitalFetchErr,
     loading,
   } = useSelector((state: RootState) => state.hospital);
+
   useEffect(() => {
     bouncy.register();
-  }, []);
+
+    if (mapContainerRef.current && userLocation) {
+      const newMap = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: "mapbox://styles/mapbox/streets-v11",
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 12,
+      });
+
+      newMap.on("load", () => {
+        setMap(newMap);
+
+        // Add user location marker
+        new mapboxgl.Marker({ color: "#3182ce" })
+          .setLngLat([userLocation.lng, userLocation.lat])
+          .addTo(newMap);
+
+        // Add hospital markers and draw paths
+        hospitals?.forEach((hospital: Hospital, index: number) => {
+          const [lat, lng] = hospital.coordinates.split(",").map(parseFloat);
+          addHospitalMarker(newMap, hospital, lat, lng);
+          drawPath(newMap, userLocation, { lat, lng }, index);
+        });
+      });
+
+      return () => newMap.remove();
+    }
+  }, [userLocation, hospitals, pinIconUrl]);
+
+  const addHospitalMarker = (map, hospital, lat, lng) => {
+    const el = document.createElement("div");
+    el.className = "hospital-marker";
+    el.style.backgroundImage = `url(${pinIconUrl})`;
+    el.style.width = "30px";
+    el.style.height = "30px";
+    el.style.backgroundSize = "100%";
+    el.style.cursor = "pointer";
+
+    el.addEventListener("click", () => {
+      setSelectedHospital(hospital);
+      map.flyTo({ center: [lng, lat], zoom: 14 });
+      addRippleEffect(map, lng, lat);
+    });
+
+    new mapboxgl.Marker(el)
+      .setLngLat([lng, lat])
+      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${hospital.hospitalName}</h3>`))
+      .addTo(map);
+  };
+
+  const addRippleEffect = (map, lng, lat) => {
+    const rippleId = "ripple-effect";
+    if (map.getSource(rippleId)) {
+      map.removeLayer(rippleId);
+      map.removeSource(rippleId);
+    }
+
+    map.addSource(rippleId, {
+      type: "geojson",
+      data: {
+        type: "Point",
+        coordinates: [lng, lat],
+      },
+    });
+
+    map.addLayer({
+      id: rippleId,
+      source: rippleId,
+      type: "circle",
+      paint: {
+        "circle-radius": ["interpolate", ["linear"], ["get", "radius"], 0, 0, 50, 50],
+        "circle-color": "#319795",
+        "circle-opacity": ["interpolate", ["linear"], ["get", "radius"], 0, 0.8, 50, 0],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#319795",
+      },
+    });
+
+    let radius = 0;
+    const animateRipple = () => {
+      radius += 0.5;
+      map.getSource(rippleId).setData({
+        type: "Point",
+        coordinates: [lng, lat],
+        properties: { radius },
+      });
+      if (radius < 50) {
+        requestAnimationFrame(animateRipple);
+      }
+    };
+    animateRipple();
+  };
+
+  const drawPath = (map, start, end, index) => {
+    const pathId = `route-${index}`;
+
+    const directionsRequest = `https://api.mapbox.com/directions/v5/mapbox/driving/${start.lng},${start.lat};${end.lng},${end.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+    fetch(directionsRequest)
+      .then(response => response.json())
+      .then(data => {
+        const route = data.routes[0].geometry;
+
+        map.addSource(pathId, {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: {},
+            geometry: route
+          },
+        });
+
+        map.addLayer({
+          id: pathId,
+          type: "line",
+          source: pathId,
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#319795",
+            "line-width": 3,
+            "line-opacity": 0.75,
+          },
+        });
+      });
+  };
+
+  if (loading) {
+    return (
+      <LoadingContainer>
+        <l-bouncy size={40} color={"#319795"}></l-bouncy>
+      </LoadingContainer>
+    );
+  }
+
+  if (hospitalFetchErr) {
+    return <ErrorMessage>Error loading hospitals: {hospitalFetchErr}</ErrorMessage>;
+  }
 
   return (
     <>
       <Section>
         <SectionTitle>Health Facility Locator</SectionTitle>
-        {isLoaded && userLocation ? (
-          <MapContainer>
-            <GoogleMap
-              mapContainerStyle={{ width: "100%", height: "100%" }}
-              center={userLocation}
-              zoom={12}
-            >
-              <Marker
-                position={userLocation}
-                icon={{ url: "https://example.com/location-marker.png" }}
-              />
-              {hospitals?.hospitals?.length > 0 && hospitals.hospitals.map((hospital: Hospital) => (
-                <Marker
-                  key={hospital.$id}
-                  position={{
-                    lat: parseFloat(hospital.coordinates.split(",")[0]),
-                    lng: parseFloat(hospital.coordinates.split(",")[1]),
-                  }}
-                  icon={{ url: pinIconUrl }}
-                  label={{
-                    text: hospital.hospitalName,
-                    color: "white",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
-                />
-              ))}
-            </GoogleMap>
-          </MapContainer>
+        {userLocation ? (
+          <MapContainer ref={mapContainerRef} />
         ) : (
           <LoadingContainer>
             <l-bouncy size={40} color={"#319795"}></l-bouncy>

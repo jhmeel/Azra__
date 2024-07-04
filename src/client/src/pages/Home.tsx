@@ -3,28 +3,20 @@ import ScrollReveal from "scrollreveal";
 import { useLoadScript } from "@react-google-maps/api";
 import { Menu, X } from "lucide-react";
 import { FaTwitter, FaInstagram, FaLinkedin, FaFacebook } from "react-icons/fa";
-import styled, { keyframes, createGlobalStyle } from "styled-components";
-import { Coordinate, Hospital, Patient, Role, Hospital as THospital } from "../types";
+import styled, { keyframes } from "styled-components";
+import { Coordinate, Role } from "../types";
 import azraLight from "../assets/azra_light.png";
 import HospitalCards from "../components/HospitalItem";
 import HealthFacilityLocator from "../components/HealthFacilityLocator";
 import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { userInfo } from "os";
+
 
 interface ButtonLink {
   primary?: boolean;
 }
 
-const GlobalStyle = createGlobalStyle`
-  body {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-`;
 
 const Home = () => {
   const [userLocation, setUserLocation] = useState<Coordinate>({
@@ -87,7 +79,6 @@ const Home = () => {
 
   return (
     <>
-      <GlobalStyle />
       <div className="landing-page">
         <Header className="reveal-top">
           <Container>
@@ -414,7 +405,7 @@ const SectionTitle = styled.h1`
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
-  font-family: Zeitung;
+  font-family: 'ulagadi-bold';
 
   @media (max-width: 768px) {
     font-size: 2.5rem;
