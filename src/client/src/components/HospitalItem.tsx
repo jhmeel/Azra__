@@ -291,6 +291,7 @@ const HospitalCards = ({
   const onViewProfile = (hospital: Hospital) => {
     setViewProfile(true);
     setSelectedHospital(hospital);
+    navigate('/h-profile', { state: { hospital } })
   };
 
   const filteredHospitals = nearHospitals?.filter((hospital: Hospital) =>
@@ -418,12 +419,7 @@ const HospitalCards = ({
         />
       )}
 
-      {viewProfile && !pingFormActive && (
-        <HospitalProfileViewer
-          onClose={() => setViewProfile(false)}
-          hospital={selectedHospital}
-        />
-      )}
+    
     </SectionWrapper>
   );
 };

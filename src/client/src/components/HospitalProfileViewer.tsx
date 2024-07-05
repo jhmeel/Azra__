@@ -3,7 +3,7 @@ import { ArrowLeft, CalendarClock, PhoneCall, Star, X } from "lucide-react";
 import styled from "styled-components";
 import { Hospital } from "../types";
 import Rating from "./Rating";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const demoReviews = [
   {
@@ -43,15 +43,10 @@ const demoReviews = [
   },
 ];
 
-const HospitalProfileViewer = ({
-  hospital,
-  onClose,
-}: {
-  hospital:Hospital | null;
-  onClose: () => void;
-}) => {
+const HospitalProfileViewer = () => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
+  const location = useLocation();
+  const hospital = location.state?.hospital;
   const navigate = useNavigate();
   const handleCall = () => {
     window.location.href = `tel:${hospital?.phone}`;
@@ -68,7 +63,7 @@ const HospitalProfileViewer = ({
       <HPRenderer>
         <Header>
           <ArrowLeft
-            onClick={onClose}
+            onClick={()=> navigate('/')}
             style={{
               background: "#ededed",
               width: "35px",
@@ -235,8 +230,6 @@ const Overlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(31, 41, 55, 0.5);
-  padding: 16px;
   overflow: hidden;
 `;
 

@@ -11,6 +11,7 @@ import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import medicbag from '../assets/Medicbag.png'
+import aider from '../assets/_0044.png'
 
 interface ButtonLink {
   primary?: boolean;
@@ -171,7 +172,7 @@ const Home = () => {
             </MobileNavContainer>
           </Container>
 
-          <Section>
+          <Section className="banner">
             <SectionContent>
               <AnimatedSectionTitle>
                 Your Gateway to{" "}
@@ -181,6 +182,7 @@ const Home = () => {
                 Discover top-rated hospitals, book appointments, and connect
                 with healthcare providers seamlessly.
               </AnimatedSectionText>
+          
               <ButtonGroup>
                 <ButtonLink href="/about">Learn More</ButtonLink>
                 {!user && (
@@ -190,6 +192,7 @@ const Home = () => {
                 )}
               </ButtonGroup>
             </SectionContent>
+            <img width={250} src={aider}/>
           </Section>
         </Header>
 
@@ -219,6 +222,15 @@ const Header = styled.header`
   color: #fff;
   position: relative;
   overflow: hidden;
+    .banner{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  @media(max-width:768px){
+  justifyicontent:center;
+  flex-direction:column;}
+  }
 `;
 
 const Container = styled.div`
@@ -383,6 +395,7 @@ const Section = styled.div`
   max-width: 1200px;
   margin: 4rem auto 0;
   padding: 0 1rem;
+
 `;
 
 const SectionContent = styled.div`

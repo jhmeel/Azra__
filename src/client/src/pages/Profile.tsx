@@ -5,7 +5,6 @@ import {
   FaMapMarkerAlt,
   FaEnvelope,
   FaEdit,
-  FaFileAlt,
   FaCalendarAlt,
   FaHospital,
   FaPhone,
@@ -13,15 +12,16 @@ import {
   FaUserCircle,
 } from "react-icons/fa";
 import { toast } from "sonner";
-import reverseGeocode from "reverse-geocode";
 import Footer from "../components/Footer";
 import { Loader, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { clearErrors, updatePatientProfile } from "../actions";
 import { useDispatch } from "react-redux";
 import { UPDATE_PATIENT_PROFILE_RESET } from "../constants";
+import { Coordinate } from "../types";
+import emptyAvatar from '../assets/emptyAvatar.jpeg'
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -166,7 +166,7 @@ const CardTitle = styled.h3`
 
 const Button = styled.button`
   padding: 10px 20px;
-  background-color: ${(props)=> (props.disabled ?'#c5c5c7' : '#43c0b8')};
+  background-color: ${(props) => (props.disabled ? "#c5c5c7" : "#43c0b8")};
   color: white;
   border: none;
   border-radius: 8px;
@@ -275,6 +275,10 @@ export const Profile: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { user, accessToken } = useSelector((state: RootState) => state.auth);
+  const [userLocation, setUserLocation] = useState<Coordinate>({
+    lat: 0,
+    lng: 0,
+  });
   const {
     loading: profileLoading,
     message: profileMessage,
@@ -292,27 +296,43 @@ export const Profile: React.FC = () => {
       toast.success(profileMessage);
       dispatch({ type: UPDATE_PATIENT_PROFILE_RESET });
     }
-  });
+  }, [profileError, profileMessage, dispatch]);
+  
   useEffect(() => {
-    const getLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setLocation(`${latitude}, ${longitude}`);
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      setUserLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      });
+    },
+    () => {
+      console.log("Error getting user location");
+    }
+  );
+}, []);
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
 
-            const result = reverseGeocode.lookup(latitude, longitude, "us");
-            if (result && result?.city) {
-              setCountry(result?.state);
-            }
-          },
-          (error) => {
-            console.error("Error getting location:", error);
-            toast.error("Failed to get current location");
-          }
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${userLocation.lng},${userLocation.lat}.json?access_token=${'pk.eyJ1IjoiamhtZWVsIiwiYSI6ImNseTZmeGkzNzA5bmwybHFyYzFrbGpwMnYifQ.zLf5q1bwCDE0msuYj8Evaw'}`
         );
-      } else {
-        toast.error("Geolocation is not supported by this browser");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch location data");
+        }
+
+        const data = await response.json();
+
+        if (data.features.length > 0) {
+          const place = data.features[0];
+      
+          setLocation(place?.place_name);
+        }
+      } catch (error) {
+        console.error("Error fetching location:", error);
+        toast.error("Failed to get current location");
       }
     };
 
@@ -359,7 +379,7 @@ export const Profile: React.FC = () => {
         <ProfileHeader>
           <AvatarSection>
             <AvatarContainer>
-              <AvatarImage src={user?.avatar} alt="Patient Avatar" />
+              <AvatarImage src={user?.avatar||emptyAvatar} alt="Patient Avatar" />
               <ProfileEditBtn htmlFor="avatar-upload">
                 <FaEdit onClick={() => setShowEditModal(true)} />
               </ProfileEditBtn>
@@ -374,7 +394,7 @@ export const Profile: React.FC = () => {
               <FaPhone /> {user?.phone}
             </UserDetail>
             <UserDetail>
-              <FaMapMarkerAlt /> {country || "N/A"}
+              <FaMapMarkerAlt /> {location || "N/A"} 
             </UserDetail>
           </UserInfo>
         </ProfileHeader>
@@ -383,8 +403,7 @@ export const Profile: React.FC = () => {
           <Card>
             <CardTitle>Quick Actions</CardTitle>
             <ActionButtons>
-            
-              <Button onClick={()=> navigate('/')}>
+              <Button onClick={() => navigate("/")}>
                 <FaCalendarAlt /> Schedule Appointment
               </Button>
               <Button>
@@ -415,7 +434,10 @@ export const Profile: React.FC = () => {
             <Form onSubmit={handleProfileUpdate}>
               <AvatarPreview>
                 {avatarPreview ? (
-                  <PreviewImage src={user?.avatar || avatarPreview} alt="Avatar Preview" />
+                  <PreviewImage
+                    src={user?.avatar || avatarPreview}
+                    alt="Avatar Preview"
+                  />
                 ) : (
                   <FaUserCircle size={100} color="#43c0b8" />
                 )}
@@ -436,7 +458,7 @@ export const Profile: React.FC = () => {
               <Input
                 type="text"
                 autoFocus
-                value={user?.fullName||name}
+                value={user?.fullName || name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
                 required
@@ -444,7 +466,7 @@ export const Profile: React.FC = () => {
               />
               <Input
                 type="email"
-                value={user?.email||email}
+                value={user?.email || email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
@@ -452,14 +474,16 @@ export const Profile: React.FC = () => {
               />
               <Input
                 type="tel"
-                value={user?.phone||phone}
+                value={user?.phone || phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Phone"
                 required
                 disabled={profileLoading}
               />
-              <Button type="submit" disabled={profileLoading} style={{display:'flex',alignItems:'center',gap:'5px'}}>  {profileLoading && <Loader size={20} className="animate-spin" />}Proceed</Button>
-            
+              <Button type="submit" disabled={profileLoading}>
+                {profileLoading && <Loader size={20} className="animate-spin" />}
+                Update Profile
+              </Button>
             </Form>
           </ModalContent>
         </Modal>
@@ -497,7 +521,9 @@ export const Profile: React.FC = () => {
                 required
                 disabled={profileLoading}
               />
-              <Button type="submit">Change</Button>
+              <Button type="submit" disabled={profileLoading}>
+                Change Password
+              </Button>
             </Form>
           </ModalContent>
         </Modal>

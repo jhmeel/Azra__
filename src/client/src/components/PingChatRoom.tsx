@@ -19,10 +19,12 @@ import {
   hpDeleteMessage,
   clearErrors,
   hpSendMessage,
+  setSelectedChat,
 } from "../actions";
 import { RootState } from "../store";
 import { BiSolidImageAdd } from "react-icons/bi";
 import { BsX } from "react-icons/bs";
+import { Hospital } from "../types";
 
 const Container = styled.div`
   height: 100vh;
@@ -155,10 +157,10 @@ const ContextMenu = styled.div`
 const ContextMenuItem = styled.button`
   display: flex;
   align-items: flex-start;
-  gap:5px;
+  gap: 5px;
   padding: 0.5rem 1rem;
   border: none;
-  font-size:12px;
+  font-size: 12px;
   background: none;
   width: 100%;
   text-align: left;
@@ -209,16 +211,28 @@ const PatientChatInterface = () => {
   const chatAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
-
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
+    null
+  );
   const dispatch = useDispatch();
   const location = useLocation();
   const { user, role, accessToken } = useSelector(
     (state: RootState) => state.auth
   );
-  const { chatHistory,selectedChat:selectedHospital, loading, error } = useSelector(
+  const { chatHistory, selectedChat, loading, error } = useSelector(
     (state: RootState) => state.chat
   );
+  const hospital = location.state?.hospital;
 
+  useEffect(() => {
+    if (selectedChat?._id) {
+      setSelectedHospital(selectedChat);
+    } else if (hospital?._id) {
+      setSelectedHospital(hospital);
+    }
+
+    return () => dispatch(setSelectedChat(null));
+  }, [hospital, selectedChat]);
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -281,7 +295,10 @@ const PatientChatInterface = () => {
   };
 
   const handleClickOutside = (event: MouseEvent) => {
-    if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+    if (
+      contextMenuRef.current &&
+      !contextMenuRef.current.contains(event.target as Node)
+    ) {
       setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     }
   };
@@ -297,7 +314,12 @@ const PatientChatInterface = () => {
 
   const handleDeleteMessage = () => {
     dispatch<any>(
-      hpDeleteMessage(accessToken, selectedHospital?._id, contextMenu?.messageId, role)
+      hpDeleteMessage(
+        accessToken,
+        selectedHospital?._id,
+        contextMenu?.messageId,
+        role
+      )
     );
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
   };
@@ -335,12 +357,12 @@ const PatientChatInterface = () => {
       <Header>
         <HospitalInfo>
           <HospitalIcon size={24} />
-          <h2>{selectedHospital.hospitalName}</h2>
-          <StatusDot active={selectedHospital.isActive} />
+          <h2>{selectedHospital?.hospitalName}</h2>
+          <StatusDot active={selectedHospital?.isActive} />
         </HospitalInfo>
         <CallButton
           onClick={() =>
-            (window.location.href = `tel:${selectedHospital.phone}`)
+            (window.location.href = `tel:${selectedHospital?.phone}`)
           }
         >
           <Phone size={24} />
@@ -348,7 +370,7 @@ const PatientChatInterface = () => {
       </Header>
 
       <ChatArea ref={chatAreaRef}>
-        {chatHistory.ping &&
+        {chatHistory?.ping &&
           chatHistory.ping.length > 0 &&
           renderPing(chatHistory.ping[0])}
         {chatHistory.messages &&
@@ -375,8 +397,8 @@ const PatientChatInterface = () => {
                 <ContextMenu
                   ref={contextMenuRef}
                   style={{
-                    top: `${contextMenu.y+30}px`,
-                    left: `${contextMenu.x-30}px`,
+                    top: `${contextMenu.y + 30}px`,
+                    left: `${contextMenu.x - 30}px`,
                   }}
                 >
                   <ContextMenuItem onClick={handleEditMessage}>
@@ -398,45 +420,44 @@ const PatientChatInterface = () => {
       </ChatArea>
 
       <InputArea onSubmit={handleSendMessage}>
-      
         <TextInput
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message"
         />
-         {image ? (
-              <SelectedImagePreview>
-                <img
-                  src={image}
-                  alt="Selected"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                  }}
-                />
-                <RemoveImageButton onClick={() => setImage(null)}>
-                  <BsX size={12} color="#fff" />
-                </RemoveImageButton>
-              </SelectedImagePreview>
-            ) : (
-              <>
-               <input
+        {image ? (
+          <SelectedImagePreview>
+            <img
+              src={image}
+              alt="Selected"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+            />
+            <RemoveImageButton onClick={() => setImage(null)}>
+              <BsX size={12} color="#fff" />
+            </RemoveImageButton>
+          </SelectedImagePreview>
+        ) : (
+          <>
+            <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
               ref={fileInputRef}
               style={{ display: "none" }}
             />
-            <IconButton type="button" onClick={() => fileInputRef.current?.click()}>
-            <BiSolidImageAdd color="#0c2d3b" size={24}/>
+            <IconButton
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <BiSolidImageAdd color="#0c2d3b" size={24} />
             </IconButton>
-              </>
-             
-            )}
-       
-
+          </>
+        )}
 
         <SendButton type="submit">
           <Send color="#d3eef9" size={24} />

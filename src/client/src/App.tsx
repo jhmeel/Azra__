@@ -7,6 +7,7 @@ import { Unplug } from "lucide-react";
 import MainLoader from "./components/Loaders/MainLoader";
 import HospitalAloneRoute from "./components/HospitalAloneRoute";
 import PatientAloneRoute from "./components/PatientAloneRoute";
+const HospitalProfileViewer = lazy(() => import("./components/HospitalProfileViewer"));
 
 const Chat = lazy(() => import("./pages/Chat"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -67,6 +68,12 @@ function App() {
               <HospitalAloneRoute>
                 <Chat />
               </HospitalAloneRoute>
+            }
+          />
+           <Route
+            path="/h-profile"
+            element={
+             <HospitalProfileViewer/>
             }
           />
           <Route
