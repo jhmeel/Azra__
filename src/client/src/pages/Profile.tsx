@@ -13,18 +13,18 @@ import {
 } from "react-icons/fa";
 import { toast } from "sonner";
 import Footer from "../components/Footer";
-import { Loader, X } from "lucide-react";
+import { Loader, LogOut, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useNavigate, useLocation } from "react-router-dom";
-import { clearErrors, updatePatientProfile } from "../actions";
+import { clearErrors, LogoutUser, updatePatientProfile } from "../actions";
 import { useDispatch } from "react-redux";
 import { UPDATE_PATIENT_PROFILE_RESET } from "../constants";
 import { Coordinate } from "../types";
 import emptyAvatar from '../assets/emptyAvatar.jpeg'
 
 const ProfileContainer = styled.div`
-  max-width: 1200px;
+  max-width: 600px;
   margin: 0 auto;
   padding: 40px 20px;
   position: relative;
@@ -124,7 +124,6 @@ const UserDetail = styled.p`
   display: flex;
   align-items: center;
   color: #555;
-  margin-bottom: 8px;
   font-size: 1rem;
 
   svg {
@@ -135,18 +134,13 @@ const UserDetail = styled.p`
 
 const ProfileContent = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
 
-  @media (min-width: 768px) {
-    grid-template-columns: 2fr 1fr;
-  }
 `;
 
 const Card = styled.div`
   background-color: #fff;
   border-radius: 15px;
-  padding: 25px;
+   padding:5px 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 
@@ -262,6 +256,14 @@ const PreviewImage = styled.img`
   object-fit: cover;
 `;
 
+const LogoutButton = styled.button`
+padding:5px 10px;
+background: teal;
+color:#fff;
+border-radius:6px;
+margin:5px;
+`
+
 export const Profile: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -311,6 +313,11 @@ export const Profile: React.FC = () => {
     }
   );
 }, []);
+
+const handleLogout = ()=>{
+LogoutUser()
+navigate('/')
+}
   useEffect(() => {
     const getLocation = async () => {
       try {
@@ -357,6 +364,7 @@ export const Profile: React.FC = () => {
       toast.error("New password and confirm password do not match");
       return;
     }
+    toast.success('Password updated successfully')
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -413,13 +421,6 @@ export const Profile: React.FC = () => {
                 <FaKey /> Change Password
               </Button>
             </ActionButtons>
-          </Card>
-          <Card>
-            <CardTitle>Location Details</CardTitle>
-            <UserDetail>
-              <FaMapMarkerAlt /> {country || "N/A"}
-            </UserDetail>
-            <UserDetail>{location || "N/A"}</UserDetail>
           </Card>
         </ProfileContent>
       </ProfileContainer>
@@ -528,7 +529,7 @@ export const Profile: React.FC = () => {
           </ModalContent>
         </Modal>
       )}
-
+<LogoutButton onClick={handleLogout}><LogOut size={18}/></LogoutButton>
       <Footer />
     </>
   );

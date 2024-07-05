@@ -340,9 +340,10 @@ const HospitalCards = ({
       </SearchContainer>
 
       <HospitalListContainer>
-        <LeftScrollButton onClick={scrollLeft} disabled={loading}>
+        {!loading &&  <LeftScrollButton onClick={scrollLeft} disabled={loading}>
           <ChevronLeft size={24} />
-        </LeftScrollButton>
+        </LeftScrollButton> }
+       
         <HospitalCarousel id="hospital-carousel">
           {loading ? (
             <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
@@ -380,7 +381,7 @@ const HospitalCards = ({
                     parseFloat(hospital.coordinates.split(",")[1])
                   )} km
                 </HospitalInfo>
-                <Rating fontSize={20} rating={hospital.rating} />
+                <Rating fontSize={20} rating={hospital.rating||4} />
                 
                 {role?.toLowerCase() !== Role.HOSPITAL.toLowerCase() && (
                   <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between" }}>
@@ -407,9 +408,9 @@ const HospitalCards = ({
             ))
           )}
         </HospitalCarousel>
-        <RightScrollButton onClick={scrollRight} disabled={loading}>
+        {!loading && <RightScrollButton onClick={scrollRight} disabled={loading}>
           <ChevronRight size={24} />
-        </RightScrollButton>
+        </RightScrollButton>}
       </HospitalListContainer>
 
       {pingFormActive && (

@@ -21,7 +21,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 1024 * 1024, // Adjusted to 1MB for chunk size warning limit
-    minify: 'terser', // Minify using terser
+    minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,

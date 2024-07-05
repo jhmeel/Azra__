@@ -121,7 +121,7 @@ const HospitalProfileViewer = () => {
               </Button>
             </div>
           </HMetaInfo>
-          <Rating fontSize={24} rating={hospital?.rating || 0} showVol={true} />
+          <Rating fontSize={24} rating={hospital?.rating ||4} showVol={true} />
         </HPInfoRenderer>
         <HospitalProfileReviews>
           <ReviewHeader>

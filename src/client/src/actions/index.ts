@@ -1,4 +1,6 @@
+import { Recommendation } from './../types/index';
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import localforage from "localforage";
 import {
   CLEAR_ERRORS,
   LOGIN_FAIL,
@@ -174,7 +176,7 @@ export const newPing =
       dispatch({
         type: NEW_PING_SUCCESS,
         payload: data,
-      }); 
+      });
     } catch (error) {
       dispatch({
         type: NEW_PING_FAIL,
@@ -310,7 +312,12 @@ export const sendMessage =
   };
 
 export const hpSendMessage =
-  (token: string, chatId: string, message: Record<string, string>, role:Role) =>
+  (
+    token: string,
+    chatId: string,
+    message: Record<string, string>,
+    role: Role
+  ) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: SEND_MESSAGE_REQUEST });
@@ -331,7 +338,7 @@ export const hpSendMessage =
   };
 
 export const getHPChatHistory =
-  (token?: string, chatId?: string, role?:Role) =>
+  (token?: string, chatId?: string, role?: Role) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: GET_HOSPITAL_CHAT_HISTORY_REQUEST });
@@ -350,7 +357,8 @@ export const getHPChatHistory =
     }
   };
 
-export const deleteMessage =   (token?: string, chatId?: string, messageId?: string) =>
+export const deleteMessage =
+  (token?: string, chatId?: string, messageId?: string) =>
   async (dispatch: (action: Action) => void) => {
     try {
       dispatch({ type: DELETE_CHAT_REQUEST });
@@ -370,8 +378,7 @@ export const deleteMessage =   (token?: string, chatId?: string, messageId?: str
         payload: errorParser(error),
       });
     }
-
-};
+  };
 
 export const hpDeleteMessage =
   (token?: string, chatId?: string, messageId?: string, role?: Role) =>
@@ -558,6 +565,10 @@ export const updatePasswordPatient =
       });
     }
   };
+
+export const LogoutUser = async () => {
+  await localforage.clear()
+};
 
 // Clear All Errors
 export const clearErrors = () => (dispatch: (action: Action) => void) => {
