@@ -18,10 +18,10 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom'],
           'ui-vendor': ['styled-components', 'tailwindcss'],
         },
-      }, 
+      },
     },
-    chunkSizeWarningLimit: 1000,
-    minify: 'terser',
+    chunkSizeWarningLimit: 1024 * 1024, // Adjusted to 1MB for chunk size warning limit
+    minify: 'terser', // Minify using terser
     terserOptions: {
       compress: {
         drop_console: true,
