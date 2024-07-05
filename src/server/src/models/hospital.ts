@@ -29,7 +29,6 @@ const hospitalSchema = new Schema({
     type: String, 
     required: true, 
     minlength: [11, 'Phone number must be at least 11 characters long.'],
-    match: [/^\d+$/, 'Phone number must contain only digits.']
   },
   password: { 
     type: String, 
@@ -45,7 +44,7 @@ const hospitalSchema = new Schema({
     required: true 
   },
   coordinates: {
-    type: pointSchema,
+    type: String,
     required: true,
     index: '2dsphere' // This creates the 2dsphere index
   },
@@ -92,7 +91,7 @@ const hospitalSchema = new Schema({
 
 hospitalSchema.pre('save', function(next) {
   if (this.isModified('coordinates') && typeof this.coordinates === 'string') {
-    const [lat, lng] = this.coordinates?.split(',')?.map(Number);
+    const [lat, lng] = this.coordinates.split(',').map(Number);
     this.coordinates = {
       type: 'Point',
       coordinates: [lng, lat] // Note: GeoJSON uses [longitude, latitude] order
@@ -101,10 +100,15 @@ hospitalSchema.pre('save', function(next) {
   next();
 });
 
-hospitalSchema.index({
-  startLocation: "2dsphere",
-})
+hospitalSchema.virtual('coordinatesString').get(function() {
+  if (this.coordinates && this.coordinates.coordinates) {
+    const [lng, lat] = this.coordinates.coordinates;
+    return `${lat},${lng}`;
+  }
+  return '';
+});
 
+hospitalSchema.index({ coordinates: '2dsphere' });
 const Hospital = mongoose.model('Hospital', hospitalSchema);
 
 

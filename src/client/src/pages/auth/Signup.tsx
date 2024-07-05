@@ -1,6 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import signupImage from "../../assets/OnlineDoctor-bro.svg";
 import { Countries } from "../../utils/formatter";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +12,9 @@ import { signup } from "../../actions";
 import { LoaderIcon, X } from "lucide-react";
 import styled from "styled-components";
 import Footer from "../../components/Footer";
+import mapboxgl from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
 const Container = styled.div`
   min-height: 100vh;
@@ -204,10 +206,7 @@ const DrawerContent = styled.div`
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 40rem;
-  height: 75vh;
-  @media (min-width: 768px) {
-    height: auto;
-  }
+  height: 40vh;
 `;
 
 const DrawerHeader = styled.div`
@@ -283,6 +282,54 @@ const GoogleButton = styled.button`
   }
 `;
 
+const LocationSelector: React.FC = () => {
+  const resultRef = useRef<HTMLPreElement>(null);
+  const geocoderContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    mapboxgl.accessToken =
+      "pk.eyJ1IjoiamhtZWVsIiwiYSI6ImNseTZmeGkzNzA5bmwybHFyYzFrbGpwMnYifQ.zLf5q1bwCDE0msuYj8Evaw";
+
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      types: "country,region,place,postcode,locality,neighborhood,poi,poi.landmark",
+      bbox: [2.691701, 4.240594, 14.577222, 13.865924], 
+      marker: false,
+    });
+
+    const geocoderContainer = geocoderContainerRef.current;
+    if (geocoderContainer && !geocoderContainer.firstChild) {
+      geocoderContainer.appendChild(geocoder.onAdd());
+    }
+
+    const handleResult = (e: any) => {
+      if (resultRef.current) {
+        const coordinates = e.result.center;
+        resultRef.current.innerText = `${coordinates[0]}, ${coordinates[1]}`;
+      }
+    };
+
+    const handleClear = () => {
+      if (resultRef.current) {
+        resultRef.current.innerText = "";
+      }
+    };
+
+    geocoder.on("result", handleResult);
+    geocoder.on("clear", handleClear);
+
+    return () => {
+    };
+  }, []);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div id="geocoder" ref={geocoderContainerRef} style={{ zIndex: 1, margin: "20px", }}></div>
+      <pre id="result" ref={resultRef}></pre>
+    </div>
+  );
+};
+
 const SignupForm = () => {
   const [isHospital, setIsHospital] = useState(false);
   const {
@@ -320,18 +367,6 @@ const SignupForm = () => {
       navigate("/profile");
     }
   }, [user, dispatch, error, navigate]);
-
-  const handleMapClick = useCallback(
-    (e: google.maps.MapMouseEvent) => {
-      if (e.latLng) {
-        const location = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-        setSelectedLocation(location);
-        setValue("coordinates", location);
-        setDrawerOpen(false);
-      }
-    },
-    [setValue]
-  );
 
   const handleRemoveLocation = () => {
     setSelectedLocation(null);
@@ -385,17 +420,6 @@ const SignupForm = () => {
               </Message>
             )}
             <Form onSubmit={handleSubmit(onSubmit)}>
-              {!isHospital && (
-                <GoogleButton type="button" onClick={handleGoogleSignup}>
-                  <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google logo"
-                    width="18"
-                    height="18"
-                  />
-                  Sign up with Google
-                </GoogleButton>
-              )}
               {isHospital ? (
                 <>
                   <div>
@@ -544,38 +568,13 @@ const SignupForm = () => {
                     <Drawer open={drawerOpen}>
                       <DrawerContent>
                         <DrawerHeader>
-                          <h3>Select Your Hospital Location</h3>
+                          <h2>Search for your facility</h2>
                           <button onClick={() => handleRemoveLocation()}>
                             <X />
                           </button>
                         </DrawerHeader>
                         <DrawerBody>
-                          <LoadScript
-                            googleMapsApiKey={
-                              import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY ||
-                              ""
-                            }
-                          >
-                            <GoogleMap
-                              mapContainerStyle={{
-                                width: "100%",
-                                height: "100%",
-                              }}
-                              center={{
-                                lat: selectedLocation?.lat,
-                                lng: selectedLocation?.lng,
-                              }}
-                              zoom={15}
-                              onClick={handleMapClick}
-                            >
-                              <Marker
-                                position={{
-                                  lat: selectedLocation?.lat,
-                                  lng: selectedLocation?.lng,
-                                }}
-                              />
-                            </GoogleMap>
-                          </LoadScript>
+                          <LocationSelector />
                         </DrawerBody>
                       </DrawerContent>
                     </Drawer>

@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { MessageCircleDashed } from "lucide-react";
-import { Hospital } from "../types";
-import { bouncy } from "ldrs";
-import { RootState } from "../store";
 import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { bouncy } from "ldrs";
+import { Hospital } from "../types";
+import PingForm from "./PingForm";
 
 mapboxgl.accessToken = "pk.eyJ1IjoiamhtZWVsIiwiYSI6ImNseTZmeGkzNzA5bmwybHFyYzFrbGpwMnYifQ.zLf5q1bwCDE0msuYj8Evaw";
 
@@ -28,13 +29,13 @@ const SectionTitle = styled.h2`
 const MapContainer = styled.div`
   height: 90vh;
   min-height: 400px;
-  width:100%;
+  width: 100%;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 
   @media (max-width: 768px) {
-    height: 9+0vh;
+    height: 90vh;
   }
 `;
 
@@ -87,159 +88,219 @@ const CollaborateLink = styled(Link)`
   }
 `;
 
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 400px;
-  background-color: #f7fafc;
-  border-radius: 8px;
-`;
+interface UserLocation {
+  lat: number;
+  lng: number;
+}
 
-const ErrorMessage = styled.div`
-  color: #e53e3e;
-  text-align: center;
-  padding: 1rem;
-  background-color: #fff5f5;
-  border-radius: 8px;
-  margin-top: 1rem;
-`;
+interface HealthFacilityLocatorProps {
+  userLocation: UserLocation;
+}
 
-const HealthFacilityLocator = ({ userLocation, pinIconUrl }) => {
-  const mapContainerRef = useRef(null);
-  const [map, setMap] = useState(null);
-  const [selectedHospital, setSelectedHospital] = useState(null);
-
-  const {
-    hospitals,
-    error: hospitalFetchErr,
-    loading,
-  } = useSelector((state: RootState) => state.hospital);
+const HealthFacilityLocator: React.FC<HealthFacilityLocatorProps> = ({ userLocation }) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const { hospitals } = useSelector((state: RootState) => state.hospital);
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+  const [pingFormActive, setPingFormActive] = useState<boolean>(false);
+  const location = useLocation();
 
   useEffect(() => {
     bouncy.register();
+  }, []);
 
+  useEffect(() => {
     if (mapContainerRef.current && userLocation) {
-      const newMap = new mapboxgl.Map({
+      mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/streets-v11",
+        style: "mapbox://styles/mapbox/streets-v12",
         center: [userLocation.lng, userLocation.lat],
-        zoom: 12,
+        zoom: 8,
       });
 
-      newMap.on("load", () => {
-        setMap(newMap);
-
-        // Add user location marker
-        new mapboxgl.Marker({ color: "#3182ce" })
-          .setLngLat([userLocation.lng, userLocation.lat])
-          .addTo(newMap);
-
-        // Add hospital markers and draw paths
-        hospitals?.forEach((hospital: Hospital, index: number) => {
-          const [lat, lng] = hospital.coordinates.split(",").map(parseFloat);
-          addHospitalMarker(newMap, hospital, lat, lng);
-          drawPath(newMap, userLocation, { lat, lng }, index);
-        });
+      mapRef.current.on("load", () => {
+        addUserMarker();
+        addHospitals();
       });
-
-      return () => newMap.remove();
     }
-  }, [userLocation, hospitals, pinIconUrl]);
 
-  const addHospitalMarker = (map, hospital, lat, lng) => {
-    const el = document.createElement("div");
-    el.className = "hospital-marker";
-    el.style.backgroundImage = `url(${pinIconUrl})`;
-    el.style.width = "30px";
-    el.style.height = "30px";
-    el.style.backgroundSize = "100%";
-    el.style.cursor = "pointer";
+    return () => mapRef.current?.remove();
+  }, [userLocation]);
 
-    el.addEventListener("click", () => {
-      setSelectedHospital(hospital);
-      map.flyTo({ center: [lng, lat], zoom: 14 });
-      addRippleEffect(map, lng, lat);
-    });
-
-    new mapboxgl.Marker(el)
-      .setLngLat([lng, lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${hospital.hospitalName}</h3>`))
-      .addTo(map);
+  const addUserMarker = () => {
+    if (mapRef.current) {
+      new mapboxgl.Marker({ color: "#FF0000" })
+        .setLngLat([userLocation.lng, userLocation.lat])
+        .addTo(mapRef.current);
+    }
   };
 
-  const addRippleEffect = (map, lng, lat) => {
+  const handlePing = () => {
+    setPingFormActive(!pingFormActive);
+  };
+
+  const addHospitals = () => {
+    hospitals.forEach((hospital: Hospital) => {
+      const el = document.createElement("div");
+      el.className = "hospital-marker";
+      el.style.width = "25px";
+      el.style.height = "25px";
+      el.style.borderRadius = "50%";
+      el.style.backgroundColor = "#4264fb";
+      el.style.cursor = "pointer";
+
+      el.addEventListener("click", () => {
+        setSelectedHospital(hospital);
+
+        const [lng, lat] = hospital.coordinates.split(",").map(Number);
+        mapRef.current?.flyTo({
+          center: [lng, lat],
+          zoom: 14,
+        });
+        addRippleEffect([lng, lat]);
+        drawRoute([lng, lat]);
+      });
+
+      const [lng, lat] = hospital.coordinates.split(",").map(Number);
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([lng, lat])
+        .addTo(mapRef.current!);
+
+      const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: false,
+        closeOnClick: false,
+      });
+
+      marker.getElement().addEventListener("mouseenter", () => {
+        const distance = calculateDistance(
+          userLocation,
+          [lng, lat]
+        );
+        popup
+          .setLngLat([lng, lat])
+          .setHTML(
+            `
+            <h3>${hospital.hospitalName}</h3>
+            <p>Distance: ${distance.toFixed(2)} km</p>
+            <button onclick="handlePing()">Ping</button>
+          `
+          )
+          .addTo(mapRef.current!);
+      });
+
+      marker.getElement().addEventListener("mouseleave", () => {
+        popup.remove();
+      });
+    });
+  };
+
+  const addRippleEffect = (coordinates: [number, number]) => {
     const rippleId = "ripple-effect";
-    if (map.getSource(rippleId)) {
-      map.removeLayer(rippleId);
-      map.removeSource(rippleId);
+    if (mapRef.current?.getSource(rippleId)) {
+      mapRef.current.removeLayer(rippleId);
+      mapRef.current.removeSource(rippleId);
     }
 
-    map.addSource(rippleId, {
+    mapRef.current?.addSource(rippleId, {
       type: "geojson",
       data: {
-        type: "Point",
-        coordinates: [lng, lat],
-      },
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: coordinates,
+        },
+        properties: {
+          radius: 0
+        }
+      }
     });
-
-    map.addLayer({
+    mapRef.current?.addLayer({
       id: rippleId,
       source: rippleId,
       type: "circle",
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["get", "radius"], 0, 0, 50, 50],
-        "circle-color": "#319795",
-        "circle-opacity": ["interpolate", ["linear"], ["get", "radius"], 0, 0.8, 50, 0],
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["get", "radius"],
+          0,
+          0,
+          50,
+          50,
+        ],
+        "circle-color": "#4264fb",
+        "circle-opacity": [
+          "interpolate",
+          ["linear"],
+          ["get", "radius"],
+          0,
+          0.8,
+          50,
+          0,
+        ],
         "circle-stroke-width": 2,
-        "circle-stroke-color": "#319795",
+        "circle-stroke-color": "#4264fb",
       },
     });
 
     let radius = 0;
     const animateRipple = () => {
       radius += 0.5;
-      map.getSource(rippleId).setData({
-        type: "Point",
-        coordinates: [lng, lat],
-        properties: { radius },
-      });
+      if (mapRef.current?.getSource(rippleId)) {
+        (mapRef.current.getSource(rippleId) as mapboxgl.GeoJSONSource).setData({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: coordinates,
+          },
+          properties: { radius },
+        });
+      }
       if (radius < 50) {
         requestAnimationFrame(animateRipple);
+      } else {
+        radius = 0;
+        animateRipple();
       }
     };
     animateRipple();
   };
 
-  const drawPath = (map, start, end, index) => {
-    const pathId = `route-${index}`;
 
-    const directionsRequest = `https://api.mapbox.com/directions/v5/mapbox/driving/${start.lng},${start.lat};${end.lng},${end.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+  const drawRoute = (destination: [number, number]) => {
+    const routeId = "route";
+    if (mapRef.current?.getSource(routeId)) {
+      mapRef.current.removeLayer(routeId);
+      mapRef.current.removeSource(routeId);
+    }
+
+    const directionsRequest = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${destination[0]},${destination[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
 
     fetch(directionsRequest)
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         const route = data.routes[0].geometry;
 
-        map.addSource(pathId, {
+        mapRef.current?.addSource(routeId, {
           type: "geojson",
           data: {
             type: "Feature",
             properties: {},
-            geometry: route
+            geometry: route,
           },
         });
 
-        map.addLayer({
-          id: pathId,
+        mapRef.current?.addLayer({
+          id: routeId,
           type: "line",
-          source: pathId,
+          source: routeId,
           layout: {
             "line-join": "round",
             "line-cap": "round",
           },
           paint: {
-            "line-color": "#319795",
+            "line-color": "#4264fb",
             "line-width": 3,
             "line-opacity": 0.75,
           },
@@ -247,29 +308,30 @@ const HealthFacilityLocator = ({ userLocation, pinIconUrl }) => {
       });
   };
 
-  if (loading) {
-    return (
-      <LoadingContainer>
-        <l-bouncy size={40} color={"#319795"}></l-bouncy>
-      </LoadingContainer>
-    );
-  }
-
-  if (hospitalFetchErr) {
-    return <ErrorMessage>Error loading hospitals: {hospitalFetchErr}</ErrorMessage>;
-  }
+  const calculateDistance = (start: UserLocation, end: [number, number]) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (end[1] - start.lat) * (Math.PI / 180);
+    const dLon = (end[0] - start.lng) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(start.lat * (Math.PI / 180)) *
+        Math.cos(end[1] * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   return (
     <>
       <Section>
         <SectionTitle>Health Facility Locator</SectionTitle>
-        {userLocation ? (
-          <MapContainer ref={mapContainerRef} />
-        ) : (
-          <LoadingContainer>
+        {!location && (
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <l-bouncy size={40} color={"#319795"}></l-bouncy>
-          </LoadingContainer>
+          </div>
         )}
+        <MapContainer ref={mapContainerRef} />
       </Section>
 
       <GreenSection>
@@ -285,6 +347,15 @@ const HealthFacilityLocator = ({ userLocation, pinIconUrl }) => {
           <CollaborateLink to="/chat">Start Collaborating</CollaborateLink>
         </Container>
       </GreenSection>
+
+      {pingFormActive && selectedHospital && (
+        <div>
+          <PingForm
+            selectedHospital={selectedHospital}
+            onClose={() => setPingFormActive(false)}
+          />
+        </div>
+      )}
     </>
   );
 };

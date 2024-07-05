@@ -67,7 +67,7 @@ const LoginForm = () => {
               Hospital
             </ToggleButton>
           </LoginTypeToggle>
-          {!isHospital && (
+          {/* {!isHospital && (
             <GoogleButton type="button" onClick={handleGoogleLogin}>
               <img
                 src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -77,7 +77,7 @@ const LoginForm = () => {
               />
               Login with Google
             </GoogleButton>
-          )}
+          )} */}
           <Form onSubmit={handleSubmit}>
             <FormGroup>
               <Label htmlFor="email">Email</Label>

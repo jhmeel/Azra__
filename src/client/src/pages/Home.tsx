@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import ScrollReveal from "scrollreveal";
-import { useLoadScript } from "@react-google-maps/api";
 import { Menu, X } from "lucide-react";
 import { FaTwitter, FaInstagram, FaLinkedin, FaFacebook } from "react-icons/fa";
 import styled, { keyframes } from "styled-components";
@@ -11,7 +10,7 @@ import HealthFacilityLocator from "../components/HealthFacilityLocator";
 import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-
+import medicbag from '../assets/Medicbag.png'
 
 interface ButtonLink {
   primary?: boolean;
@@ -22,10 +21,6 @@ const Home = () => {
   const [userLocation, setUserLocation] = useState<Coordinate>({
     lat: 0,
     lng: 0,
-  });
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY",
   });
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -180,7 +175,7 @@ const Home = () => {
             <SectionContent>
               <AnimatedSectionTitle>
                 Your Gateway to{" "}
-                <HighlightText>Exceptional Healthcare</HighlightText>
+                <HighlightText>Exceptional Healthcare<img style={{display:'inline-block'}} width={60} src={medicbag}/></HighlightText>
               </AnimatedSectionTitle>
               <AnimatedSectionText>
                 Discover top-rated hospitals, book appointments, and connect
@@ -207,9 +202,7 @@ const Home = () => {
 
         <section className="reveal-bottom">
           <HealthFacilityLocator
-            isLoaded={isLoaded}
             userLocation={userLocation}
-            pinIconUrl={""}
           />
         </section>
         <Footer />
@@ -221,9 +214,9 @@ const Home = () => {
 export default Home;
 
 const Header = styled.header`
-  background: linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
+  background: linear-gradient(135deg, #000 0%, #38b2ac 100%);
   padding: 1rem 0 4rem;
-  color: white;
+  color: #fff;
   position: relative;
   overflow: hidden;
 `;
@@ -401,14 +394,14 @@ const SectionContent = styled.div`
 `;
 
 const SectionTitle = styled.h1`
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
   font-family: 'ulagadi-bold';
 
   @media (max-width: 768px) {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 `;
 
@@ -431,7 +424,7 @@ const ButtonLink = styled.a<ButtonLink>`
   display: inline-block;
   background-color: ${(props) => (props.primary ? "#ffd700" : "transparent")};
   color: ${(props) => (props.primary ? "#38b2ac" : "white")};
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
@@ -448,7 +441,7 @@ const ButtonLink = styled.a<ButtonLink>`
 
   @media (max-width: 768px) {
     font-size: 0.9rem;
-    padding: 0.6rem 1.2rem;
+    padding: 0.5rem 1rem;
   }
 `;
 
