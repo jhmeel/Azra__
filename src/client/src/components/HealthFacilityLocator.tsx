@@ -35,7 +35,7 @@ const MapContainer = styled.div`
   overflow: hidden;
 
   @media (max-width: 768px) {
-    height: 90vh;
+    height: 55vh;
   }
 `;
 

@@ -535,7 +535,7 @@ const Dashboard = () => {
       <DashboardContainer>
         <Header>
           <WelcomeSection>
-            <Avatar src="/path-to-avatar.jpg" alt="Hospital Avatar" />
+            <Avatar src="/path-to-avatar.jpg" alt="" />
             <WelcomeText>
               <h1>{admin.hospitalName}</h1>
               <p>Here's what's happening today</p>

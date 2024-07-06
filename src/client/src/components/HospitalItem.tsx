@@ -340,7 +340,7 @@ const HospitalCards = ({
       </SearchContainer>
 
       <HospitalListContainer>
-        {!loading &&  <LeftScrollButton onClick={scrollLeft} disabled={loading}>
+        {!loading && filteredHospitals?.length > 0 &&  <LeftScrollButton onClick={scrollLeft} disabled={loading}>
           <ChevronLeft size={24} />
         </LeftScrollButton> }
        
@@ -369,7 +369,7 @@ const HospitalCards = ({
                   />
                 )}
                 <HospitalName>{hospital.hospitalName}</HospitalName>
-                {/* <HospitalInfo>{hospital.coordinates}</HospitalInfo> */}
+                { <HospitalInfo>{hospital.email}</HospitalInfo> }
                 <HospitalStatus available={hospital.status === "Available"}>
                   {hospital.status === "Available" ? "Available" : "Not Available"}
                 </HospitalStatus>
@@ -408,7 +408,7 @@ const HospitalCards = ({
             ))
           )}
         </HospitalCarousel>
-        {!loading && <RightScrollButton onClick={scrollRight} disabled={loading}>
+        {!loading && filteredHospitals?.length > 0 && <RightScrollButton onClick={scrollRight} disabled={loading}>
           <ChevronRight size={24} />
         </RightScrollButton>}
       </HospitalListContainer>
