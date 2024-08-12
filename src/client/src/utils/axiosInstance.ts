@@ -5,9 +5,10 @@ interface AxiosInstanceConfig extends AxiosRequestConfig {
   baseURL: string;
   headers: Record<string, string>;
 }
+const baseUrl = window.location.protocol.includes("https")
+  ? "'https://azra.onrender.com'm"
+  : "http://127.0.0.1:3000";
 
-const baseUrl = 'https://distinct-reward-nosy-attraction.pipeops.app'
-//'http://localhost:3000';
 const axiosInstance = (token?: string, role?: Role): AxiosInstance => {
   const config: AxiosInstanceConfig = {
     baseURL: baseUrl,

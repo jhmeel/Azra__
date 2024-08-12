@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
 });
 
 const dependencyList = [ 
-  DBProvider.getInstance(Config),
+ // DBProvider.getInstance(Config),
   new CloudinaryProvider(Config),
   new MiddlewaresProvider(app),
   new RouteProvider(app),
